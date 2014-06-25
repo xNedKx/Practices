@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<title>EAN13產生器</title>
 <script>
 /*
 5碼價格碼規則 0<1011A01B01A01B01A>0
@@ -157,7 +159,7 @@ showBarcode(output,createCodeData(input));
 </script>
 </head>
 <body>
-<span>EAN-13條碼產生器(請輸入前12碼，檢查碼會自動補上)</span><br><input type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'');if(this.value.length!=12){this.style.backgroundColor='rgb(255,100,100)';document.getElementById('checkdigit').value='';}else{this.style.backgroundColor='rgb(255,255,255)';showBarcode(document.getElementById('barcode'),this.value);document.getElementById('checkdigit').value=createCheckCode(this.value);}" maxlength="12"style="width:90px"/><input type="text" id="checkdigit" style="width:12px" disabled><br>
+<span>EAN-13條碼產生器(請輸入前12碼，檢查碼會自動補上)</span><br>請輸入12碼數字：<input type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'');if(this.value.length!=12){this.style.backgroundColor='rgb(255,100,100)';document.getElementById('checkdigit').value='';}else{this.style.backgroundColor='rgb(255,255,255)';showBarcode(document.getElementById('barcode'),this.value);document.getElementById('checkdigit').value=createCheckCode(this.value);}" maxlength="12"style="width:90px"/><input type="text" id="checkdigit" style="width:12px" disabled><br>
 <div id="barcode" style="height:136px;width:340px;border:1px solid rgb(30,30,30);"></div>
 </body>
 </html>
