@@ -80,11 +80,11 @@ return false;
 function createCodeData(input){
 if(checkCode(input,13)){
 code="00000101";
-for(i=0;i<6;i++){
-code+=digitEncode[encodePattern[code[0]][i]][input[i]];
+for(i=1;i<7;i++){
+code+=digitEncode[encodePattern[input[0]][i-1]][input[i]];
 }
 code+="01010";
-for(i=6;i<12;i++){
+for(i=7;i<13;i++){
 code+=digitEncode["C"][input[i]];
 }
 code+="10100000";
