@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+/*
+5碼價格碼規則 0<1011A01B01A01B01A>0
+EAN13規則
+閱讀規則
+[abc][defg][hijkl][m]
+abc→國碼
+defg→廠商碼
+hijkl→自由使用
+m→檢查碼
+條碼編碼規則
+首碼a不直接顯示→決定bcdefg編碼模式
+0:AAAAAA
+1:AABABB
+2:AABBAB
+3:AABBBA
+4:ABAABB
+5:ABBAAB
+6:ABBBAA
+7:ABABAB
+8:ABABBA
+9:ABBABA
+右6碼hijklm則以C模式編碼
+檢查碼m由其他12碼運算得出
+m=10-(((a+c+e+g+i+k)+(b+d+f+h+j+l)*3)%10)
+   A組編碼  B組編碼  C組編碼
+0: 0001101  0100111  1110010
+1: 0011001  0110011  1100110
+2: 0010011  0011011  1101100
+3: 0111101  0100001  1000010
+4: 0100011  0011101  1011100
+5: 0110001  0111001  1001110
+6: 0101111  0000101  1010000
+7: 0111011  0010001  1000100
+8: 0110111  0001001  1001000
+9: 0001011  0010111  1110100
+左邊線(左護線)為0<101
+中邊線(左護線)為01010
+右邊線(右護線)為101>0
+*/
+digitEncode={A:{0:"0001101",1:"0011001",2:"0010011",3:"0111101",4:"0100011",5:"0110001",6:"0101111",7:"0111011",8:"0110111",9:"0001011"},B:{0:"0100111",1:"0110011",2:"0011011",3:"0100001",4:"0011101",5:"0111001",6:"0000101",7:"0010001",8:"0001001",9:"0010111"},C:{0:"1110010",1:"1100110",2:"1101100",3:"1000010",4:"1011100",5:"1001110",6:"1010000",7:"1000100",8:"1001000",9:"1110100"}};
+encodePattern={0:"AAAAAA",1:"AABABB",2:"AABBAB",3:"AABBBA",4:"ABAABB",5:"ABBAAB",6:"ABBBAA",7:"ABABAB",8:"ABABBA",9:"ABBABA"};
+reservedLine=[5,7,51,53,97,99];
+function createCheckCode(str){
+if(checkCode(str,12)){
+total=0;
+for(i=0;i<str.length;i++){
+total+=Number(str[i])*((i%2==1)?3:1);
+}
+return (10-total%10)%10;
+}else{
+return null;
+}
+}
+function addCheckCode(str){
+if(checkCode(str,12)){
+str+=createCheckCode(str);
+return str;
+}else{
+return null;
+}
+}
+function removeNaN(str){
+if(typeof(str)=="string"){
+return str.replace(/[^\d]/g,"");
+}
+}
+function checkCode(str,len){
+if(typeof(str)=="string" && str.length==len){
+return true;
+}else{
+return false;
+}
+}
+function createCodeData(input){
+if(checkCode(input,13)){
+code="00000101";
+for(i=0;i<6;i++){
+code+=digitEncode[encodePattern[code[0]][i]][input[i]];
+}
+code+="01010";
+for(i=6;i<12;i++){
+code+=digitEncode["C"][input[i]];
+}
+code+="10100000";
+//5+3+(7+7+7+7+7+7)+5+(7+7+7+7+7+7)+3+5=105
+return code;
+}else{
+return false;
+}
+}
+function showBarcode(DOM,str){
+input=addCheckCode(removeNaN(str));
+data=createCodeData(input);
+if(typeof(data)=="string" && !/[^01]/.test(data) && typeof(DOM)=='object' && DOM.ownerDocument){
+bar=document.createElement("div");
+bar.style.width="312px";
+bar.style.height="104px";
+bar.style.backgroungColor="rgb(127,127,127)";
+bar.style.overflow="hidden";
+bar.style.position="relative";
+bar.style.margin="16px auto";
+for(i=0;i<data.length;i++){
+tmp=document.createElement("div");
+tmp.style.width="3px";
+tmp.style.height=(reservedLine.indexOf(i)!=-1)?"104px":"78px";
+tmp.style.backgroundColor=data[i]==1?"rgb(0,0,0)":"rgb(255,255,255)";
+tmp.style.left=(i*3)+"px";
+tmp.style.float="left";
+bar.appendChild(tmp);
+}
+tmp=document.createElement("div");
+tmp.style.position='absolute';
+tmp.style.width="15px";
+tmp.style.height="26px";
+tmp.style.left="0px";
+tmp.style.top="84px";
+tmp.style.fontWeight="bold";
+tmp.style.fontSize="14px";
+tmp.innerHTML=input[0];
+bar.appendChild(tmp);
+tmp=document.createElement("div");
+tmp.style.position='absolute';
+tmp.style.width="42px";
+tmp.style.height="26px";
+tmp.style.left="30px";
+tmp.style.top="84px";
+tmp.style.fontWeight="bold";
+tmp.style.fontSize="14px";
+tmp.style.letterSpacing="12px";
+tmp.innerHTML=input.substr(1,6);
+bar.appendChild(tmp);
+tmp=document.createElement("div");
+tmp.style.position='absolute';
+tmp.style.width="42px";
+tmp.style.height="26px";
+tmp.style.left="169px";
+tmp.style.top="84px";
+tmp.style.fontWeight="bold";
+tmp.style.fontSize="14px";
+tmp.style.letterSpacing="12px";
+tmp.innerHTML=input.substr(7,6);
+bar.appendChild(tmp);
+while(DOM.firstChild){DOM.removeChild(DOM.firstChild);}
+DOM.appendChild(bar);
+return true;
+}else{
+return false;
+}
+}
+function encodeBarcode(input,output){
+showBarcode(output,createCodeData(input));
+}
+</script>
+</head>
+<body>
+<span>EAN-13條碼產生器(請輸入前12碼，檢查碼會自動補上)</span><br><input type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'');if(this.value.length!=12){this.style.backgroundColor='rgb(255,100,100)';document.getElementById('checkdigit').value='';}else{this.style.backgroundColor='rgb(255,255,255)';showBarcode(document.getElementById('barcode'),this.value);document.getElementById('checkdigit').value=createCheckCode(this.value);}" maxlength="12"style="width:90px"/><input type="text" id="checkdigit" style="width:12px" disabled><br>
+<div id="barcode" style="height:136px;width:340px;border:1px solid rgb(30,30,30);"></div>
+</body>
+</html>
