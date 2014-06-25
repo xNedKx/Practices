@@ -101,7 +101,6 @@ if(typeof(data)=="string" && !/[^01]/.test(data) && typeof(DOM)=='object' && DOM
 bar=document.createElement("div");
 bar.style.width="312px";
 bar.style.height="104px";
-bar.style.backgroungColor="rgb(127,127,127)";
 bar.style.overflow="hidden";
 bar.style.position="relative";
 bar.style.margin="16px auto";
@@ -128,7 +127,7 @@ tmp=document.createElement("div");
 tmp.style.position='absolute';
 tmp.style.width="42px";
 tmp.style.height="26px";
-tmp.style.left="30px";
+tmp.style.left="32px";
 tmp.style.top="84px";
 tmp.style.fontWeight="bold";
 tmp.style.fontSize="14px";
@@ -139,7 +138,7 @@ tmp=document.createElement("div");
 tmp.style.position='absolute';
 tmp.style.width="42px";
 tmp.style.height="26px";
-tmp.style.left="169px";
+tmp.style.left="171px";
 tmp.style.top="84px";
 tmp.style.fontWeight="bold";
 tmp.style.fontSize="14px";
@@ -159,7 +158,7 @@ showBarcode(output,createCodeData(input));
 </script>
 </head>
 <body>
-<span>EAN-13條碼產生器(請輸入前12碼，檢查碼會自動補上)</span><br>請輸入12碼數字：<input type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'');if(this.value.length!=12){this.style.backgroundColor='rgb(255,100,100)';document.getElementById('checkdigit').value='';}else{this.style.backgroundColor='rgb(255,255,255)';showBarcode(document.getElementById('barcode'),this.value);document.getElementById('checkdigit').value=createCheckCode(this.value);}" maxlength="12"style="width:90px"/><input type="text" id="checkdigit" style="width:12px" disabled><br>
+<span>EAN-13條碼產生器(請輸入前12碼，檢查碼會自動補上)</span><br>輸入12碼數字：<input type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'');if(this.value.length!=12){this.style.backgroundColor='rgb(255,100,100)';document.getElementById('checkdigit').value='';}else{this.style.backgroundColor='rgb(255,255,255)';showBarcode(document.getElementById('barcode'),this.value);document.getElementById('checkdigit').value=createCheckCode(this.value);}" maxlength="12"style="width:90px"/><input type="text" id="checkdigit" style="width:12px" disabled><br>
 <div id="barcode" style="height:136px;width:340px;border:1px solid rgb(30,30,30);"></div>
 </body>
 </html>
