@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width; initial-scale=1.0">
 <title>EAN13產生器</title>
 <script>
 /*
@@ -155,8 +156,8 @@ margin:16px auto;
 overflow:hidden;
 position:relative;
 letter-spacing:12px;
-font-size:14px;
 font-weight:bold;
+font-size:14px;
 font-family:Tahoma;
 }
 .d1{
@@ -180,10 +181,47 @@ height:20px;
 left:169px;
 top:84px;
 }
+body{
+margin:0px;
+padding:0px;
+font-size:16px;
+min-width:320px;
+max-width:100%;
+}
+#barcode{
+margin:1em auto 1.8em;
+}
+#header{
+position:fiexed;
+top:0px;
+width:100%;
+height:1.35em;
+font-size:36px;
+background-color:#E5E4ED;
+text-align:center;
+}
+#content{
+text-align:center;
+padding-top:0.2em;
+}
+#content p{
+margin:0;
+padding:0.1em;
+}
+#content input{
+font-size:24px;
+}
+#footer{
+position:fixed;
+text-align:center;
+width:100%;
+height:24px;
+bottom:0px;
+background-color:#E5E4ED;
+}
 </style>
 </head>
-<body>
-<span>EAN-13條碼產生器(請輸入前12碼，檢查碼會自動補上)</span><br>輸入12碼數字：<input type="text" onkeyup="if(/[^\d]/.test(this.value)){this.value=this.value.replace(/[^\d]/g,'')};if(this.value.length!=12){this.style.backgroundColor='rgb(255,100,100)';document.getElementById('checkdigit').value='';}else{this.style.backgroundColor='rgb(255,255,255)';showBarcode(document.getElementById('barcode'),this.value);document.getElementById('checkdigit').value=createCheckCode(this.value);}" maxlength="12"style="width:90px"/><input type="text" id="checkdigit" style="width:12px" disabled><br>
-<div id="barcode" style="height:136px;width:340px;border:1px solid rgb(30,30,30);"></div><span style="clear:both;"></span>
+<div id="header">EAN-13 Generator</div><div id="content"><p>(請輸入前12碼數字，檢查碼會自動補上)</p><input type="text" onkeyup="if(/[^\d]/.test(this.value)){this.value=this.value.replace(/[^\d]/g,'')};if(this.value.length!=12){this.style.backgroundColor='#FFADAC';document.getElementById('checkdigit').value='';}else{this.style.backgroundColor='#FFFFFF';showBarcode(document.getElementById('barcode'),this.value);document.getElementById('checkdigit').value=createCheckCode(this.value);}" maxlength="12"style="width:164px"/><input type="text" id="checkdigit" style="width:16px" disabled></div>
+<div id="barcode" style="height:136px;min-width:318px;max-width:340px;border:1px solid rgb(30,30,30);"></div><span style="clear:both;"></span><div id="footer">Created by YzC</div>
 </body>
 </html>
