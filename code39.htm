@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width; initial-scale=1.0">
+<title>code39 encoder</title>
+<script>
+code=[
+"110011000001111100111110011",
+"111110011000001100110011111",
+"110011111000001100110011111",
+"111110011111000001100110011",
+"110011000001111100110011111",
+"111110011000001111100110011",
+"110011111000001111100110011",
+"110011000001100111110011111",
+"111110011000001100111110011",
+"110011111000001100111110011",
+"111110011001100000110011111",
+"110011111001100000110011111",
+"111110011111001100000110011",
+"110011001111100000110011111",
+"111110011001111100000110011",
+"110011111001111100000110011",
+"110011001100000111110011111",
+"111110011001100000111110011",
+"110011111001100000111110011",
+"110011001111100000111110011",
+"111110011001100110000011111",
+"110011111001100110000011111",
+"111110011111001100110000011",
+"110011001111100110000011111",
+"111110011001111100110000011",
+"110011111001111100110000011",
+"110011001100111110000011111",
+"111110011001100111110000011",
+"110011111001100111110000011",
+"110011001111100111110000011",
+"111110000011001100110011111",
+"110000011111001100110011111",
+"111110000011111001100110011",
+"110000011001111100110011111",
+"111110000011001111100110011",
+"110000011111001111100110011",
+"110000011001100111110011111",
+"111110000011001100111110011",
+"110000011111001100111110011",
+"110000011000001100000110011",
+"110000011000001100110000011",
+"110000011001100000110000011",
+"110011000001100000110000011",
+"110000011001111100111110011"]
+;
+codeIndex=[
+"0",
+"1",
+"2",
+"3",
+"4",
+"5",
+"6",
+"7",
+"8",
+"9",
+"A",
+"B",
+"C",
+"D",
+"E",
+"F",
+"G",
+"H",
+"I",
+"J",
+"K",
+"L",
+"M",
+"N",
+"O",
+"P",
+"Q",
+"R",
+"S",
+"T",
+"U",
+"V",
+"W",
+"X",
+"Y",
+"Z",
+"-",
+".",
+" ",
+"$",
+"/",
+"+",
+"%",
+"*"];
+function valid(str){
+if(!/[^0-9A-Za-z \+\-\/%$]/.test(str)){return true;}else{return false;}
+}
+function checkStr(str){
+tmp=str.toString().replace(/[^0-9A-Za-z \+\-\/%$]/g,"");
+if(tmp!==str.toString()){return tmp.toUpperCase()}else{return str.toUpperCase();}
+}
+function createCheckDigit(str){
+if(!valid(str)){str=checkStr(str);}
+checkSum=0;
+for(i=0;i<str.length;i++){
+checkSum+=codeIndex.indexOf(str[i]);
+}
+return codeIndex[checkSum%43];
+}
+function addCheckDigit(str){
+if(!valid(str)){str=checkStr(str);}
+return str+createCheckDigit(str);
+}
+function createCodeData(str,checkDigit){
+if(!valid(str)){str=checkStr(str);}else{str=str.toString().toUpperCase();}
+if(checkDigit){str="*"+addCheckDigit(str)+"*";}
+else{str="*"+str+"*";}
+data="";
+for(i=0;i<str.length;i++){
+data+=code[codeIndex.indexOf(str[i])].toString();
+}
+return data;
+}
+function decodeData(data){
+if(data.length%27==0 && !/[^01]/.test(data)){
+leng=data.length/27;
+str="";
+for(i=0;i<leng;i++){
+index=code.indexOf(data.substr(i*27,27));
+if(index!==-1){str+=codeIndex[index];}else{return null;}
+}
+if(str.substr(0,1)=="*" && str.substr(-1,1)=="*"){return str.substr(1,str.length-2);}
+else{return null;}
+}
+}
+function checkCheckDigit(str){
+if(!valid(str)){return null;}
+if(createCheckDigit(str.toUpperCase().substr(0,str.length-1))===str.toUpperCase().substr(-1,1)){return true;}
+else{return false;}
+}
+function showCode(DOM,str,checkD){
+data=createCodeData(str,checkD);
+if(typeof(DOM)=='object' && DOM.ownerDocument){
+bar=document.createElement("div");
+bar.style.width=(data.length+(data.length/27-1))+"px";
+bar.className="barcode";
+for(i=0;i<data.length;i++){
+tmp=document.createElement("div");
+tmp.className=data[i]==1?"blackBar":"whiteBar";
+tmp.style.left=(i)+"px";
+bar.appendChild(tmp);
+if(i%27==26 && i!=data.length-1){
+tmp=document.createElement("div");
+tmp.className="whiteBar";
+tmp.style.left=(i)+"px";
+bar.appendChild(tmp);
+}
+}
+tmp=document.createElement("div");
+tmp.innerHTML="*"+decodeData(data)+"*";
+tmp.style.position="absolute";
+tmp.style.width=(data.length+(data.length/27-1))+"px";
+tmp.style.height="20px";
+tmp.style.left="0px";
+tmp.style.top="30px";
+tmp.style.fontSize="16px";
+tmp.style.textAlign="center";
+bar.appendChild(tmp);
+while(DOM.firstChild){DOM.removeChild(DOM.firstChild);}
+DOM.appendChild(bar);
+return true;
+}else{
+return false;
+}
+}
+</script>
+<style>
+body{
+margin:0px;
+padding:0px;
+}
+#header{
+position:fiexed;
+top:0px;
+width:100%;
+height:1.35em;
+font-size:36px;
+background-color:#E5E4ED;
+text-align:center;
+}
+#content{
+text-align:center;
+padding-top:0.2em;
+}
+#content p{
+margin:0;
+padding:0.1em;
+}
+#content input{
+font-size:24px;
+}
+#barcode{
+margin:1em auto 1.8em;
+height:50px;
+max-width:640px;
+min-width:318px;
+border:1px solid #1F1F1F;
+}
+.barcode{
+height:50px;
+margin:1px auto;
+overflow:hidden;
+position:relative;
+letter-spacing:6px;
+font-size:14px;
+font-family:Tahoma;
+}
+.whiteBar{
+width:1px;
+height:30px;
+float:left;
+background-color:#FFFFFF;
+}
+.blackBar{
+width:1px;
+height:30px;
+float:left;
+background-color:#000000;
+}
+#footer{
+position:fixed;
+text-align:center;
+width:100%;
+height:24px;
+bottom:0px;
+background-color:#E5E4ED;
+}
+</style>
+</head>
+<div id="header">code39 Encoder</div><div id="content"><p style="min-width:200px;max-width:400px;text-align:center;margin:auto;">code39允許輸入數字、大寫英文以及+-*/%$跟空白，雖無限制條碼長度，但過長礙將於辨識，故此編碼器限制輸入17個字元，加上檢查碼為18個字元。</p><input type="text" onkeyup="if(!valid(this.value)){this.value=checkStr(this.value);}if(document.getElementById('checkD').checked){document.getElementById('checkdigit').value=createCheckDigit(this.value);}showCode(document.getElementById('barcode'),this.value,document.getElementById('checkD').checked);" maxlength="17" style="width:320px" id="input"/><input type="text" id="checkdigit" style="width:16px" disabled><input type="checkbox" onchange="showCode(document.getElementById('barcode'),document.getElementById('input').value,this.checked);document.getElementById('checkdigit').value=this.checked?createCheckDigit(document.getElementById('input').value):''" id="checkD" checked><label for="checkD">檢查碼</label></div>
+<div id="barcode"></div><span style="clear:both;"></span><div id="footer">Created by YzC</div>
+</body>
+</html>
