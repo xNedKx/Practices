@@ -183,7 +183,7 @@ top:84px;
 </style>
 </head>
 <body>
-<span>EAN-13條碼產生器(請輸入前12碼，檢查碼會自動補上)</span><br>輸入12碼數字：<input type="text" onkeyup="this.value=this.value.replace(/[^\d]/g,'');if(this.value.length!=12){this.style.backgroundColor='rgb(255,100,100)';document.getElementById('checkdigit').value='';}else{this.style.backgroundColor='rgb(255,255,255)';showBarcode(document.getElementById('barcode'),this.value);document.getElementById('checkdigit').value=createCheckCode(this.value);}" maxlength="12"style="width:90px"/><input type="text" id="checkdigit" style="width:12px" disabled><br>
+<span>EAN-13條碼產生器(請輸入前12碼，檢查碼會自動補上)</span><br>輸入12碼數字：<input type="text" onkeyup="if(/[^\d]/.test(this.value)){this.value=this.value.replace(/[^\d]/g,'')};if(this.value.length!=12){this.style.backgroundColor='rgb(255,100,100)';document.getElementById('checkdigit').value='';}else{this.style.backgroundColor='rgb(255,255,255)';showBarcode(document.getElementById('barcode'),this.value);document.getElementById('checkdigit').value=createCheckCode(this.value);}" maxlength="12"style="width:90px"/><input type="text" id="checkdigit" style="width:12px" disabled><br>
 <div id="barcode" style="height:136px;width:340px;border:1px solid rgb(30,30,30);"></div><span style="clear:both;"></span>
 </body>
 </html>
