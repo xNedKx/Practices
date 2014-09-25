@@ -77,7 +77,7 @@ margin: 0.2em 0.1em;
 padding: 0.2em;
 overflow-wrap: break-word;
 display: inline-block;
-background-color: white;
+background-color: #FFF;
 }
 .card:hover{
 background-color: #F0F0F0;
@@ -174,7 +174,7 @@ function reset(){
         }
     }).on('click', function(){
         if($(this).css('background-color') == $('<div></div>').css('background-color', '#FFAAAA').css('background-color')){
-            $(this).css('background-color', '#FFF');
+            $(this).css('background-color', '');
             x.players.p.discard(new card($(this).attr('type'), $(this).attr('number')));
             x.restore(new card($(this).attr('type'), $(this).attr('number')));
             $('#hand').children('[type=' + $(this).attr('type') + '][number=' + $(this).attr('number') + ']').remove();
