@@ -1,61 +1,63 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>注音文</title>
 <script>
-code={"1":"ㄅ","q":"ㄆ","a":"ㄇ","z":"ㄈ","2":"ㄉ","w":"ㄊ","s":"ㄋ","x":"ㄌ","3":"ˇ","e":"ㄍ","d":"ㄎ","c":"ㄏ","4":"ˋ","r":"ㄐ","f":"ㄑ","v":"ㄒ","5":"ㄓ","t":"ㄔ","g":"ㄕ","b":"ㄖ","6":"ˊ","y":"ㄗ","h":"ㄘ","n":"ㄙ","7":"˙","u":"ㄧ","j":"ㄨ","m":"ㄩ","8":"ㄚ","i":"ㄛ","k":"ㄜ",",":"ㄝ","9":"ㄞ","o":"ㄟ","l":"ㄠ",".":"ㄡ","0":"ㄢ","p":"ㄣ",";":"ㄤ","/":"ㄥ"," ":" ","!":"ㄅ","Q":"ㄆ","A":"ㄇ","Z":"ㄈ","@":"ㄉ","W":"ㄊ","S":"ㄋ","X":"ㄌ","#":"ˇ","E":"ㄍ","D":"ㄎ","C":"ㄏ","$":"ˋ","R":"ㄐ","F":"ㄑ","V":"ㄒ","%":"ㄓ","T":"ㄔ","G":"ㄕ","B":"ㄖ","^":"ˊ","Y":"ㄗ","H":"ㄘ","N":"ㄙ","&":"˙","U":"ㄧ","J":"ㄨ","M":"ㄩ","*":"ㄚ","I":"ㄛ","K":"ㄜ","<":"ㄝ","(":"ㄞ","O":"ㄟ","L":"ㄠ",">":"ㄡ",")":"ㄢ","P":"ㄣ",":":"ㄤ","?":"ㄥ"};
+code={"1": "ㄅ", "q": "ㄆ", "a": "ㄇ", "z": "ㄈ", "2": "ㄉ", "w": "ㄊ", "s": "ㄋ", "x": "ㄌ", "3": "ˇ", "e": "ㄍ", "d": "ㄎ", "c": "ㄏ", "4": "ˋ", "r": "ㄐ", "f": "ㄑ", "v": "ㄒ", "5": "ㄓ", "t": "ㄔ", "g": "ㄕ", "b": "ㄖ", "6": "ˊ", "y": "ㄗ", "h": "ㄘ", "n": "ㄙ", "7": "˙", "u": "ㄧ", "j": "ㄨ", "m": "ㄩ", "8": "ㄚ", "i": "ㄛ", "k": "ㄜ", ", ": "ㄝ", "9": "ㄞ", "o": "ㄟ", "l": "ㄠ", ".": "ㄡ", "0": "ㄢ", "p": "ㄣ", ";": "ㄤ", "/": "ㄥ", " ": " ", "!": "ㄅ", "Q": "ㄆ", "A": "ㄇ", "Z": "ㄈ", "@": "ㄉ", "W": "ㄊ", "S": "ㄋ", "X": "ㄌ", "#": "ˇ", "E": "ㄍ", "D": "ㄎ", "C": "ㄏ", "$": "ˋ", "R": "ㄐ", "F": "ㄑ", "V": "ㄒ", "%": "ㄓ", "T": "ㄔ", "G": "ㄕ", "B": "ㄖ", "^": "ˊ", "Y": "ㄗ", "H": "ㄘ", "N": "ㄙ", "&": "˙", "U": "ㄧ", "J": "ㄨ", "M": "ㄩ", "*": "ㄚ", "I": "ㄛ", "K": "ㄜ", "<": "ㄝ", "(": "ㄞ", "O": "ㄟ", "L": "ㄠ", ">": "ㄡ", ")": "ㄢ", "P": "ㄣ", ": ": "ㄤ", "?": "ㄥ"};
 function w2z(str){
-    var res='';
-    str=str.toString();
-    for(var i=0;i<str.length;i++){
-        res+=code[str[i]]||'';
+    var res = '';
+    str = str.toString();
+    for(var i = 0; i < str.length; i++){
+        res += code[str[i]] || '';
     }
     return res;
 }
 </script>
 <style>
 body{
-margin:0;
-padding:0;
+margin: 0;
+padding: 0;
 }
 #main{
 text-align:center;
 }
 #header{
-font-size:2em;
-font-weight:bold;
-width:100%;
+font-size: 2em;
+font-weight: bold;
+width: 100%;
+margin: 4px auto;
+
 }
 #in{
-min-width:194px;
-width:98%;
-max-width:634px;
-min-height:14px;
-max-height:54px;
-margin:10px auto;
+min-width: 194px;
+width: 98%;
+max-width: 634px;
+min-height: 14px;
+max-height: 54px;
+margin: 10px auto;
 }
 #button{
-width:4em;
-height:1.4em;
-margin:4px auto;
-border:1px solid #DDD;
-cursor:pointer;
+width: 4em;
+height: 1.4em;
+margin: 4px auto;
+border: 1px solid #DDD;
+cursor: pointer;
 }
 #button:hover{
-font-weight:bold;
-background-color:#FDD;
+font-weight: bold;
+background-color: #FDD;
 }
 #re{
-min-width:178px;
-max-width:616px;
-min-height:68px;
-max-height:468px;
-margin:10px auto;
-border:2px groove #333;
-padding:4px 10px;
-text-align:left;
+min-width: 178px;
+max-width: 616px;
+min-height: 68px;
+max-height: 468px;
+margin: 10px auto;
+border: 2px groove #333;
+padding: 4px 10px;
+text-align: left;
 }
 </style>
 </head>
@@ -63,11 +65,11 @@ text-align:left;
 <div id="main">
 <div id="header">注音轉換器</div>
 <script>
-function enter(e){if(e.keyCode==13){e.preventDefault();document.getElementById('re').innerHTML=w2z(document.getElementById('in').value);}}
-window.onload=function(){document.getElementById('in').onkeypress=enter;}
+function enter(e){if(e.keyCode == 13){e.preventDefault(); document.getElementById('re').innerHTML = w2z(document.getElementById('in').value);}}
+window.onload = function(){document.getElementById('in').onkeypress = enter;}
 </script>
 <textarea id="in" placeholder="輸入未轉換的文字串(ENTER直接轉換)"></textarea>
-<div id="button"><a onclick="document.getElementById('re').innerHTML=w2z(document.getElementById('in').value);">轉換</a></div>
+<div id="button"><a onclick="document.getElementById('re').innerHTML = w2z(document.getElementById('in').value);">轉換</a></div>
 <div id="re"></div>
 </div>
 </body>
