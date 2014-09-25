@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="./cards.js"></script>
+<style>
+html, body{
+margin: 0;
+padding: 0;
+position: relative;
+background-color: #DDD;
+}
+#header{
+text-align: center;
+background-color: #FFF;
+font-size: 4em;
+}
+#info{
+text-align: center;
+color: #FFF;
+}
+#cont{
+background-color: #000;
+}
+#main{
+border: 1px solid #CCC;
+width: 56.4em;
+height: 26.2em;
+background-color: #DDD;
+margin: 0 auto;
+}
+#hand{
+width: 21.8em;
+height: 6.5em;
+margin: 1em auto;
+background-color: #DDD;
+position: absolute;
+bottom: 3.5em;
+right: 0.5em;
+}
+#reset{
+width: 5em;
+height: auto;
+background-color: #DDD;
+text-align: center;
+font-size: 20px;
+padding: 10px 0;
+cursor: pointer;
+margin: 0 auto;
+position: absolute;
+bottom: 0.5em;
+right: 0.5em;
+}
+#chance{
+width: 100%;
+height: 12.8em;
+bottom: 0;
+left: 0;
+margin: 1em auto 0;
+background-color: #FFF;
+border-bottom: 1px solid #CCC;
+}
+.card{
+width: 3.6em;
+height: 5.6em;
+border: 1px solid #EEE;
+border-radius: 0.3em;
+margin: 0.2em 0.1em;
+padding: 0.2em;
+overflow-wrap: break-word;
+display: inline-block;
+background-color: white;
+}
+.card:hover{
+background-color: #F0F0F0;
+}
+.Spade, .Club{
+color: #000;
+}
+.Heart, .Diamond{
+color: #F00;
+}
+.Spade::before{
+content: '\02660';
+}
+.Heart::before{
+content: '\02665';
+}
+.Diamond::before{
+content: '\02666';
+}
+.Club::before{
+content: '\02663';
+}
+.ta{
+border-spacing: 1em 0;
+}
+.p{
+text-align: right;
+}
+</style>
+<title>Poker</title>
+</head>
+<body>
+<div id='header'>Poker Chance</div>
+<div id='cont'>
+<div id='info'>left click to select a card; right click to remove a card; click again to unselect/restore a card.</div>
+<div id='main'></div>
+<div id='hand'></div>
+<div id='reset'>RESET</div>
+<div id='chance'></div>
+</div>
+</body>
+<script>
+var x, r;
+function showChance(){
+    $('#chance').children().remove();
+    $('#chance').append('<table><tbody></tbody></table>').children().addClass('ta');
+    r = checkP(x.deck, x.players.p);
+    for(var i = 0; i < 9; i++){
+        $('#chance').children('table').children('tbody')
+        .append('<tr></tr>').children('tr').last()
+        .append('<td></td>').children('td').last().html(rules[i] + ':')
+        .parent().append('<td></td>').children('td').last().html('[')
+        .parent().append('<td></td>').children('td').last().addClass('p').html(r[i].show().replace(/[\[\] ]/g,'').replace(/probility.*$/,''))
+        .parent().append('<td></td>').children('td').last().html(']')
+        .parent().append('<td></td>').children('td').last().html(r[i].show().replace(/^.*(probility)/,'$1'));
+    }
+    $('#chance').children('table').children('tbody')
+        .append('<tr></tr>').children('tr').last()
+        .append('<td></td>').children('td').last().html('Total:')
+        .parent().append('<td></td>').children('td').last().html('[')
+        .parent().append('<td></td>').children('td').last().addClass('p').html(r[i].show().replace(/[\[\] ]/g,'').replace(/probility.*$/,''))
+        .parent().append('<td></td>').children('td').last().html(']')
+        .parent().append('<td></td>').children('td').last().html(r[i].show().replace(/^.*(probility)/,'$1'));
+}
+function reset(){
+    $('#main').children().remove();
+    $('#hand').children().remove();
+    x = new deck('p');
+    var map = x.deck.keyMap();
+    for(var i = 0; i < 4; i++){
+        for(var j = 1; j < 14; j++){
+            $('#main').append('<div></div>').children('div').last().addClass('card').addClass(types[i]).attr({'type': i, 'number': map.ts[i][j]}).html(map.ns[j - 1][i].name);
+        }
+    }
+    showChance();
+    $('.card').on('contextmenu', function(e){
+        if($(this).css('background-color') != $('<div></div>').css('background-color', '#FFAAAA').css('background-color')){
+            if($(this).css('opacity') != 0){
+                $(this).css('opacity', 0);
+                x.discard(new card($(this).attr('type'), $(this).attr('number')));
+                showChance();
+                return false;
+            }else{
+                $(this).css('opacity', 1);
+                x.restore(new card($(this).attr('type'), $(this).attr('number')));
+                showChance();
+                return false;
+            }
+        }else{
+            $(this).click();
+            $(this).contextmenu();
+        }
+    }).on('click', function(){
+        if($(this).css('background-color') == $('<div></div>').css('background-color', '#FFAAAA').css('background-color')){
+            $(this).css('background-color', '#FFF');
+            x.players.p.discard(new card($(this).attr('type'), $(this).attr('number')));
+            x.restore(new card($(this).attr('type'), $(this).attr('number')));
+            $('#hand').children('[type=' + $(this).attr('type') + '][number=' + $(this).attr('number') + ']').remove();
+            showChance();
+        }else if($(this).css('opacity') != 0 && x.players.p.length < 5){
+            x.deal('p', new card($(this).attr('type'), $(this).attr('number')));
+            $('#hand').append($(this).clone());
+            $(this).css('background-color', '#FFAAAA');
+            showChance();
+        }
+    });
+}
+reset();
+$('#reset').on('click', reset);
+$('#main').add('#hand').on('contextmenu',function(){return false;})
+$('#main').on('mousedown', function(e){e.preventDefault();})
+</script>
+</html>
