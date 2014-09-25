@@ -104,9 +104,9 @@ text-align: right;
 <title>Poker</title>
 </head>
 <body>
-<div id='header'>Poker Chance</div>
+<div id='header'>Poker Probability</div>
 <div id='cont'>
-<div id='info'>left click to select a card; right click to remove a card; click again to unselect/restore a card.</div>
+<div id='info'>left click to select a card; right click to remove a card; click again to unselect/restore a card.<br /><span style='color: #999;'>(Beta version, the probability could be wrong.)</span></div>
 <div id='main'></div>
 <div id='hand'></div>
 <div id='reset'>RESET</div>
@@ -124,17 +124,17 @@ function showChance(){
         .append('<tr></tr>').children('tr').last()
         .append('<td></td>').children('td').last().html(rules[i] + ':')
         .parent().append('<td></td>').children('td').last().html('[')
-        .parent().append('<td></td>').children('td').last().addClass('p').html(r[i].show().replace(/[\[\] ]/g,'').replace(/probility.*$/,''))
+        .parent().append('<td></td>').children('td').last().addClass('p').html(r[i].show().replace(/[\[\] ]/g,'').replace(/probability.*$/,''))
         .parent().append('<td></td>').children('td').last().html(']')
-        .parent().append('<td></td>').children('td').last().html(r[i].show().replace(/^.*(probility)/,'$1'));
+        .parent().append('<td></td>').children('td').last().html(r[i].show().replace(/^.*(probability)/,'$1'));
     }
     $('#chance').children('table').children('tbody')
         .append('<tr></tr>').children('tr').last()
         .append('<td></td>').children('td').last().html('Total:')
         .parent().append('<td></td>').children('td').last().html('[')
-        .parent().append('<td></td>').children('td').last().addClass('p').html(r[i].show().replace(/[\[\] ]/g,'').replace(/probility.*$/,''))
+        .parent().append('<td></td>').children('td').last().addClass('p').html(r[i].show().replace(/[\[\] ]/g,'').replace(/probability.*$/,''))
         .parent().append('<td></td>').children('td').last().html(']')
-        .parent().append('<td></td>').children('td').last().html(r[i].show().replace(/^.*(probility)/,'$1'));
+        .parent().append('<td></td>').children('td').last().html(r[i].show().replace(/^.*(probability)/,'$1'));
 }
 function reset(){
     $('#main').children().remove();
