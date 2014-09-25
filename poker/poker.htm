@@ -126,7 +126,8 @@ function showChance(){
         .parent().append('<td></td>').children('td').last().html('[')
         .parent().append('<td></td>').children('td').last().addClass('p').html(r[i].show().replace(/[\[\] ]/g,'').replace(/probability.*$/,''))
         .parent().append('<td></td>').children('td').last().html(']')
-        .parent().append('<td></td>').children('td').last().html(r[i].show().replace(/^.*(probability)/,'$1'));
+        .parent().append('<td></td>').children('td').last().html('probability:')
+        .parent().append('<td></td>').children('td').last().addClass('p').html(r[i].show().replace(/^.*probability:/,''));
     }
     $('#chance').children('table').children('tbody')
         .append('<tr></tr>').children('tr').last()
@@ -134,7 +135,8 @@ function showChance(){
         .parent().append('<td></td>').children('td').last().html('[')
         .parent().append('<td></td>').children('td').last().addClass('p').html(r[i].show().replace(/[\[\] ]/g,'').replace(/probability.*$/,''))
         .parent().append('<td></td>').children('td').last().html(']')
-        .parent().append('<td></td>').children('td').last().html(r[i].show().replace(/^.*(probability)/,'$1'));
+        .parent().append('<td></td>').children('td').last().html('probability:')
+        .parent().append('<td></td>').children('td').last().addClass('p').html(r[i].show().replace(/^.*probability:/,''));
 }
 function reset(){
     $('#main').children().remove();
