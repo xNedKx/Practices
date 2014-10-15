@@ -21,6 +21,7 @@ text-align: center;
 background-color: #FFF;
 font-size: 4em;
 font-family: 'Lobster';
+min-width: 15em;
 }
 #info{
 text-align: center;
@@ -28,6 +29,7 @@ color: #FFF;
 }
 #cont{
 background-color: #000;
+min-width: 60em;
 }
 #main{
 border: 1px solid #CCC;
@@ -37,14 +39,23 @@ background-color: #DDD;
 margin: 0 auto;
 text-align: center;
 }
+#chance{
+min-width: 57.2em;
+width: 100%;
+height: auto;
+bottom: 0;
+left: 0;
+margin: 1em auto 0;
+background-color: #FFF;
+border-bottom: 1px solid #CCC;
+position: relative;
+}
 #hand{
 width: 22em;
 height: 6.6em;
-margin: 1em auto;
+margin: 1em;
 background-color: #DDD;
-position: absolute;
-bottom: 3.5em;
-right: 0.5em;
+float: right;
 }
 #reset{
 width: 5em;
@@ -65,15 +76,6 @@ background-color: #AFD;
 }
 #reset:active{
 background-color: #FDA;
-}
-#chance{
-width: 100%;
-height: auto;
-bottom: 0;
-left: 0;
-margin: 1em auto 0;
-background-color: #FFF;
-border-bottom: 1px solid #CCC;
 }
 .card{
 width: 3.6em;
@@ -122,15 +124,16 @@ text-align: right;
 <div id='cont'>
 <div id='info'>left click to select a card; right click to remove a card; click again to unselect/restore a card.<br /><span style='color: #999;'>(Beta version, the probability could be wrong.)</span></div>
 <div id='main'></div>
+<div id='chance'>
 <div id='hand'></div>
 <div id='reset'>RESET</div>
-<div id='chance'></div>
+</div>
 </div>
 </body>
 <script>
 var x, r;
 function showChance(){
-    $('#chance').children().remove();
+    $('#chance > table').remove();
     $('#chance').append('<table><tbody></tbody></table>').children().addClass('ta');
     r = checkP(x.deck, x.players.p);
     for(var i = 0; i < 9; i++){
