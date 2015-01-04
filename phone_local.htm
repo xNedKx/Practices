@@ -182,23 +182,14 @@ nest:
                 case 'h':
                     if(input[j] != '0'){continue nest}
                 break;
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    if(input[j] != f[i][j]){continue nest}
-                break;
                 case 'f':
                     if(!(input + '0'.repeat(f[i].length-l)).match(re[i])){continue nest}
                 break;
                 case 'd':
                     if(isNaN(input[j])){continue nest}
+                break;
+                default:
+                    if(input[j] != f[i][j]){continue nest}
                 }
             }
             hope = true;
