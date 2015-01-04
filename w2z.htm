@@ -67,13 +67,14 @@ text-align: left;
 <body>
 <div id="main">
 <div id="header">注音轉換器</div>
-<script>
-function enter(e){if(e.keyCode == 13){e.preventDefault(); document.getElementById('re').innerHTML = w2z(document.getElementById('in').value);}}
-window.onload = function(){document.getElementById('in').onkeypress = enter;}
-</script>
-<textarea id="in" placeholder="輸入未轉換的文字串(ENTER直接轉換)"></textarea>
+<textarea id="in" placeholder="輸入未轉換的文字串，如 su3cl3 (ENTER直接轉換)"></textarea>
 <div id="button"><a onclick="document.getElementById('re').innerHTML = w2z(document.getElementById('in').value);">轉換</a></div>
 <div id="re"></div>
 </div>
+<script>
+function enter(e){if(e.keyCode == 13){e.preventDefault(); document.getElementById('re').innerHTML = w2z(document.getElementById('in').value);}}
+window.onload = function(){document.getElementById('in').onkeypress = enter;}
+document.getElementById("in").focus();
+</script>
 </body>
 </html>
