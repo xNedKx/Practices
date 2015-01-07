@@ -165,11 +165,14 @@ function check_local(str){
 }
 
 function check(str){
-    var input = String(str).replace('-', ''), nnr = /^\+?886/, l = 0, hope = false, notValid = "不符市話/行動號碼規範", moreNumber = "號碼數不足";
+    var input = String(str).replace('-', ''), nnr = /^\+?886/, l = 0, hope = false, chance = [], notValid = "不符市話/行動號碼規範", moreNumber = "號碼數不足";
     if(input.match(nnr)){
         input = input.replace(nnr, '0');
     }
     l = input.length;
+    if(l < 2){
+        return moreNumber;
+    }
 nest:
     for(var i in f){
         if(l > f[i].length){
@@ -191,12 +194,13 @@ nest:
                 }
             }
             hope = true;
+            chance.push(n[i])
         }else{
             if(input.match(re[i])){return n[i]}
         }
     }
     if(hope){
-        return moreNumber;
+        return chance.join(' 或 ') + ' (' + moreNumber + ')';
     }else{
         return notValid;
     }
