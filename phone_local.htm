@@ -27,7 +27,14 @@ min-height: 1.2em;
 }
 .or{
 color: #AAA;
-font-size: 0.4em;
+font-size: 0.6em;
+}
+.loc > input{
+border: none;
+margin: 0;
+}
+.blue{
+background-color: #DAE3F2;
 }
 footer{
 width: 100%;
@@ -36,6 +43,7 @@ font-size: 1em;
 color: #CCC;
 font-family: 'Yanone Kaffeesatz', sans-serif;
 }
+
 </style>
 <link href='http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz' rel='stylesheet' type='text/css'>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
@@ -52,9 +60,9 @@ font-family: 'Yanone Kaffeesatz', sans-serif;
 <script type="text/x-handlebars" data-template-name="index">
 <div id="output">{{{output}}}</div>
 <div>{{input maxlength="16" id="input" placeholder="請在此處輸入號碼" value=inp}}</div>
-{{#each d in model}}
-<input {{bind-attr value=d.predict placeholder=d.n x=check}} disabled><br>
-{{/each}}
+<div class="loc">{{#each d in model}}
+<input {{bind-attr value=d.predict placeholder=d.n x=check class="d.predict:blue"}} disabled><br>
+{{/each}}</div>
 </script>
 
 <script>
