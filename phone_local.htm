@@ -74,7 +74,7 @@ font-family: 'Yanone Kaffeesatz', sans-serif;
 <script type="text/x-handlebars" data-template-name="index">
 <div id="output">{{{output}}}</div>
 <div id="main">
-<div id="input">{{input maxlength="16" id="input" placeholder="請在此處輸入號碼" value=inp}}</div>
+<div id="input">{{input maxlength="16" id="input" placeholder="請在此處輸入號碼" autofocus="autofocus" value=inp}}</div>
 <div class="loc">{{#each d in model}}
 <div {{bind-attr x=check class="d.predict:valid"}} disabled>{{d.n}}<div>
 {{/each}}</div>
