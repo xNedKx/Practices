@@ -45,7 +45,7 @@ font-family: 'Yanone Kaffeesatz', sans-serif;
 </head>
 <body>
 
-<header><h1>電話號碼簡易驗證</h1></header>
+<header><h1>國內電話號碼簡易驗證</h1></header>
 <content id="content"></content>
 <footer>Created by xNedKx</footer>
 
@@ -74,14 +74,14 @@ Reap.IndexController = Ember.Controller.extend({
   inp: '',
   output: '',
   check: function(){
-    var inp = this.get('inp'), self = this;
+    var inp = (this.get('inp')||'').replace(/-/g, '').replace(/^\+?886/, '0').replace(/^\+?88?/, ''), self = this;
     this.store.find('data').then(function(d){
         var chance = [], mn = false, f;
         d.forEach(function(d,i,self){
             d.set('inp',inp);
             if(d.get('predict')){
                 chance.push(d.get('predict'));
-                if(d.get('inp').replace('-', '').length < d.get('f').replace(/x/g,'').length){
+                if(d.get('nle')){
                     mn = true;
                 }
             }
@@ -109,21 +109,18 @@ re: function(){
 }.property('r'),
 inp: DS.attr('string'),
 predict: function(){
-    var input = (this.get('inp')||"").replace(/-/g, ''), nnr = /^\+?886/, l = 0, f, notValid = "";
-    if(input.match(nnr)){
-        input = input.replace(nnr, '0');
-    }
-    l = input.length;
-    if(l == (f=this.get('f')).length){
-        if(input.match(this.get('re'))){return this.get('n')}
+    var input = (this.get('inp')||''), inp = input, l = input.length, f = this.get('f'), n = this.get('n'), re = this.get('re'), notValid = "";
+    if(l == f.length){
+        if(input.match(re)){return n}
     }else if(l < f.length){
         for(var j =0; j < l; j++){
             switch(f[j]){
             case 'h':
-                if(input[j] != '0'){return notValid}
+                if(input[j] != "0"){return notValid}
             break;
             case 'f':
-                if(!(input + '0'.repeat(f.length-l)).match(this.get('re'))){return notValid}
+                while(inp.length < f.length){inp += '0'}
+                if(!inp.match(re)){return notValid}
             break;
             case 'x':
             case 'd':
@@ -133,16 +130,12 @@ predict: function(){
                 if(input[j] != f[j]){return notValid}
             }
         }
-        return this.get('n');
+        return n;
     }
     return notValid;
 }.property('inp'),
-check: function(){
-    if((this.get('inp')||"").replace(/-/g, '').match(this.get('re'))){
-        return this.get('n');
-    }else{
-        return "";
-    }
+nle: function(){
+    return this.get('inp').length < this.get('f').replace(/x/g,'').length;
 }.property('inp')
 });
 
@@ -314,7 +307,7 @@ d: "0200-0000|020-000-000|0200-000-000"
 id: 24,
 r: r2s(/^(?:\+?886|0)50\d{5,7}$/),
 f: "h50dddddxx",
-n: "一般費率",
+n: "一般費率(?)",
 d: "0500-0000|050-000-000|0500-000-000"
 },
 {
