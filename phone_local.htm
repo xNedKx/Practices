@@ -21,6 +21,7 @@ background-color: #FFF;
 padding-bottom: 1.2em;
 }
 #output{
+min-width: 12em;
 width: 75%;
 margin: 0 auto;
 min-height: 1.2em;
@@ -29,12 +30,25 @@ min-height: 1.2em;
 color: #AAA;
 font-size: 0.6em;
 }
-.loc > input{
+#main{
+width: 12em;
+margin: 0 auto;
+}
+#input > input{
+width: 100%;
+}
+.loc > div{
+background-color: #F0F0F0;
 border: none;
 margin: 0;
+color: #666;
+font-size: 0.8em;
+width: 100%;
+margin: 1px auto;
 }
 .blue{
-background-color: #DAE3F2;
+background-color: #DAE3F2 !important;
+color: #000 !important;
 }
 footer{
 width: 100%;
@@ -59,10 +73,12 @@ font-family: 'Yanone Kaffeesatz', sans-serif;
 
 <script type="text/x-handlebars" data-template-name="index">
 <div id="output">{{{output}}}</div>
-<div>{{input maxlength="16" id="input" placeholder="請在此處輸入號碼" value=inp}}</div>
+<div id="main">
+<div id="input">{{input maxlength="16" id="input" placeholder="請在此處輸入號碼" value=inp}}</div>
 <div class="loc">{{#each d in model}}
-<input {{bind-attr value=d.predict placeholder=d.n x=check class="d.predict:blue"}} disabled><br>
+<div {{bind-attr x=check class="d.predict:blue"}} disabled>{{d.n}}<div>
 {{/each}}</div>
+</div>
 </script>
 
 <script>
