@@ -30,6 +30,10 @@ min-height: 1.2em;
 color: #AAA;
 font-size: 0.6em;
 }
+.mn{
+color: #333;
+font-size: 0.6em;
+}
 #main{
 width: 12em;
 margin: 0 auto;
@@ -109,7 +113,7 @@ Reap.IndexController = Ember.Controller.extend({
             }
         });
         if(chance.length && inp.length > 1){
-            ctrl.set('output', chance.join('<span class="or"> 或 </span>') + (mn?' (號碼數不足)':''));
+            ctrl.set('output', chance.join('<span class="or"> 或 </span>') + (mn?' <span class="mn">(號碼數不足)</span>':''));
         }else if(inp.length < 2){
             ctrl.set('output', '');
         }else{
