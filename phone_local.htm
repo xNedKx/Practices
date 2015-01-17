@@ -46,7 +46,7 @@ font-size: 0.8em;
 width: 100%;
 margin: 1px auto;
 }
-.blue{
+.valid{
 background-color: #DAE3F2 !important;
 color: #000 !important;
 }
@@ -76,7 +76,7 @@ font-family: 'Yanone Kaffeesatz', sans-serif;
 <div id="main">
 <div id="input">{{input maxlength="16" id="input" placeholder="請在此處輸入號碼" value=inp}}</div>
 <div class="loc">{{#each d in model}}
-<div {{bind-attr x=check class="d.predict:blue"}} disabled>{{d.n}}<div>
+<div {{bind-attr x=check class="d.predict:valid"}} disabled>{{d.n}}<div>
 {{/each}}</div>
 </div>
 </script>
@@ -98,27 +98,25 @@ Reap.IndexController = Ember.Controller.extend({
   inp: '',
   output: '',
   check: function(){
-    var inp = (this.get('inp')||'').replace(/-/g, '').replace(/^\+?886/, '0').replace(/^\+?88?/, ''), self = this;
+    var inp = (this.get('inp')||'').replace(/-/g, '').replace(/^\+?886/, '0').replace(/^\+?88?/, ''), ctrl = this, valid = false;
     this.store.find('data').then(function(d){
-        var chance = [], mn = false, f;
-        d.forEach(function(d,i,self){
+        var chance = [], mn = false;
+        d.forEach(function(d){
             d.set('inp',inp);
             if(d.get('predict')){
                 chance.push(d.get('predict'));
-                if(d.get('nle')){
-                    mn = true;
-                }
+                if(d.get('nle')){mn = true;}
             }
         });
         if(chance.length && inp.length > 1){
-            self.set('output', chance.join('<span class="or"> 或 </span>') + (mn?' (號碼數不足)':''));
+            ctrl.set('output', chance.join('<span class="or"> 或 </span>') + (mn?' (號碼數不足)':''));
         }else if(inp.length < 2){
-            self.set('output', '');
+            ctrl.set('output', '');
         }else{
-            self.set('output', '不符市話/行動號碼規範');
+            ctrl.set('output', '不符市話/行動號碼規範');
         }
     });
-    return inp;
+    return valid;
   }.property('inp')
 });
 
