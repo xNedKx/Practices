@@ -2,234 +2,339 @@
 <html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=utf-8">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 <title>台灣電話號碼簡易驗證</title>
 <style>
+body{
+background-color: #F0F0F0;
+text-align: center;
+margin: 0;
+}
+header{
+padding: 1em;
+}
+h1{
+font-weight: normal;
+margin: 0;
+}
+content > div{
+background-color: #FFF;
+padding-bottom: 1.2em;
+}
+#output{
+width: 75%;
+margin: 0 auto;
+min-height: 1.2em;
+}
+.or{
+color: #AAA;
+font-size: 0.4em;
+}
+footer{
+width: 100%;
+z-index: -1;
+font-size: 1em;
+color: #CCC;
+font-family: 'Yanone Kaffeesatz', sans-serif;
+}
 </style>
+<link href='http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz' rel='stylesheet' type='text/css'>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ember.js/1.9.1/ember.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ember-data.js/1.0.0-beta.14.1/ember-data.min.js"></script>
 </head>
 <body>
-<header>
-電話號碼簡易驗證
-</header>
-<content>
-<input type="text" maxlength="16" id="input" style="width:16em;" placeholder="輸入號碼後按ENTER" />
-<div id="output"></div>
-</content>
+
+<header><h1>電話號碼簡易驗證</h1></header>
+<content id="content"></content>
+<footer>Created by xNedKx</footer>
+
+<script type="text/x-handlebars" data-template-name="index">
+<div id="output">{{{output}}}</div>
+<div>{{input maxlength="16" id="input" placeholder="請在此處輸入號碼" value=inp}}</div>
+{{#each d in model}}
+<input {{bind-attr value=d.predict placeholder=d.n x=check}} disabled><br>
+{{/each}}
+</script>
+
 <script>
 (function(){
-var pnRe = /^(?:\+?886|0)(?:(?:(?:2[2358]|4[23]|8[56]|9[0-9])\d{7})|(?:(?:3[2-689]|4(?:[78]|9[2-9])|5[2-7]|6[235-9]|7[2-9]|8[478])\d{6})|(?:(?:37[2-9]|8(?:2[2-9]|36|9[2-9]))\d{5}))$/;
-function pnValid(str){
-    if(typeof str != 'string'){throw 'pnValid needs input to be a string.'}
-    var r = str.replace(/-/g, '').match(pnRe);
-    return r? r[0] : null;
-}
 
-reTP = /^(?:\+?886|0)2[2358]\d{7}$/;
-fTP = "h2fddddddd";
-nTP = "臺北市、新北市及基隆市";
-dTP = "02-0000-0000";
+var Reap = Ember.Application.create({
+rootElement: "#content"
+});
 
-reTY = /^(?:\+?886|0)3[2-4]\d{6}$/;
-fTY = "h3fdddddd";
-nTY = "桃園縣";
-dTY = "03-000-0000";
+Reap.IndexRoute = Ember.Route.extend({
+  model: function() {
+    return this.store.find('data');
+  }
+});
 
-reHJ = /^(?:\+?886|0)3[56]\d{6}$/;
-fHJ = "h3fdddddd";
-nHJ = "新竹縣市";
-dHJ = "03-000-0000";
-
-reML = /^(?:\+?886|0)37[2-9]\d{5}$/;
-fML = "h37fddddd";
-nML = "苗栗縣";
-dML = "037-000-000";
-
-reHL = /^(?:\+?886|0)38\d{6}$/;
-fHL = "h38dddddd";
-nHL = "花蓮縣";
-dHL = "038-000-000";
-
-reIL = /^(?:\+?886|0)39\d{6}$/;
-fIL = "h39dddddd";
-nIL = "宜蘭縣";
-dIL = "039-000-000";
-
-reTC = /^(?:\+?886|0)4[23]\d{7}$/;
-fTC = "h4fddddddd";
-nTC = "臺中市";
-dTC = "04-0000-0000";
-
-reCH = /^(?:\+?886|0)4[78]\d{6}$/;
-fCH = "h4fdddddd";
-nCH = "彰化縣";
-dCH = "04-000-0000";
-
-reNT = /^(?:\+?886|0)49[2-9]\d{6}$/;
-fNT = "h49fdddddd";
-nNT = "南投縣";
-dNT = "049-000-0000";
-
-reCY = /^(?:\+?886|0)5[2-4]\d{6}$/;
-fCY = "h5fdddddd";
-nCY = "嘉義縣市";
-dCY = "05-000-0000";
-
-reYL = /^(?:\+?886|0)5[5-7]\d{6}$/;
-fYL = "h5fdddddd";
-nYL = "雲林縣";
-dYL = "05-000-0000";
-
-reTN = /^(?:\+?886|0)6[235-7]\d{6}$/;
-fTN = "h6fdddddd";
-nTN = "臺南市";
-dTN = "06-000-0000";
-
-rePH = /^(?:\+?886|0)69\d{6}$/;
-fPH = "h69dddddd";
-nPH = "澎湖縣";
-dPH = "069-000-000";
-
-reKS = /^(?:\+?886|0)7[2-9]\d{6}$/;
-fKS = "h7fdddddd";
-nKS = "高雄市";
-dKS = "07-000-0000";
-
-reCM = /^(?:\+?886|0)82[2-57-9]\d{5}$/;
-fCM = "h82fddddd";
-nCM = "金門";
-dCM = "082-000-000";
-
-reUC = /^(?:\+?886|0)826\d{5}$/;
-fUC = "h826ddddd";
-nUC = "烏坵";
-dUC = "0826-00-000";
-
-reMJ = /^(?:\+?886|0)836\d{5}$/;
-fMJ = "h836ddddd";
-nMJ = "馬祖";
-dMJ = "0836-00-000";
-
-rePT = /^(?:\+?886|0)8[478]\d{6}$/;
-fPT = "h8fdddddd";
-nPT = "屏東縣";
-dPT = "08-000-0000";
-
-reTT = /^(?:\+?886|0)89[2-9]\d{5}$/;
-fTT = "h89fddddd";
-nTT = "臺東縣";
-dTT = "089-000-000";
-
-reM1 = /^(?:\+?886|0)9[0-8]\d{7}$/;
-fM1 = "h9fddddddd";
-nM1 = "行動";
-dM1 = "0900-000-000";
-
-reM2 = /^(?:\+?886|0)8[56]\d{7}$/;
-fM2 = "h8fddddddd";
-nM2 = "行動";
-dM2 = "0800-000-000";
-
-rePR = /^(?:\+?886|0)99\d{7}$/;
-fPR = "h99ddddddd";
-nPR = "個人";
-dPR = "0990-000-000";
-
-reCP = /^(?:\+?886|0)20\d{5,7}$/;
-fCP = ["h20ddddd", "h20dddddd", "h20ddddddd"];
-nCP = "付費";
-dCP = ["0200-0000", "020-000-000", "0200-000-000"];
-
-reNP = /^(?:\+?886|0)50\d{5,7}$/;
-fNP = ["h50ddddd", "h50dddddd", "h50ddddddd"];
-nNP = "一般費率";
-dNP = ["0500-0000", "050-000-000", "0500-000-000"];
-
-reRP = /^(?:\+?886|0)80\d{5,7}$/;
-fRP = ["h80ddddd", "h80dddddd", "h80ddddddd"];
-nRP = "免費";
-dRP = ["0800-0000", "080-000-000", "0800-000-000"];
-
-re = {'TP': reTP, 'TY': reTY, 'HJ': reHJ, 'ML': reML, 'HL': reHL, 'IL': reIL, 'TC': reTC, 'CH': reCH, 'NT': reNT, 'CY': reCY, 'YL': reYL, 'TN': reTN, 'PH': rePH, 'KS': reKS, 'CM': reCM, 'UC': reUC, 'MJ': reMJ, 'PT': rePT, 'TT': reTT, 'M1': reM1, 'M2': reM2, 'PR': rePR/*, 'CP': reCP, 'NP': reNP, 'RP': reRP*/};
-f = {'TP': fTP, 'TY': fTY, 'HJ': fHJ, 'ML': fML, 'HL': fHL, 'IL': fIL, 'TC': fTC, 'CH': fCH, 'NT': fNT, 'CY': fCY, 'YL': fYL, 'TN': fTN, 'PH': fPH, 'KS': fKS, 'CM': fCM, 'UC': fUC, 'MJ': fMJ, 'PT': fPT, 'TT': fTT, 'M1': fM1, 'M2': fM2, 'PR': fPR/*, 'CP': fCP, 'NP': fNP, 'RP': fRP*/};
-n = {'TP': nTP, 'TY': nTY, 'HJ': nHJ, 'ML': nML, 'HL': nHL, 'IL': nIL, 'TC': nTC, 'CH': nCH, 'NT': nNT, 'CY': nCY, 'YL': nYL, 'TN': nTN, 'PH': nPH, 'KS': nKS, 'CM': nCM, 'UC': nUC, 'MJ': nMJ, 'PT': nPT, 'TT': nTT, 'M1': nM1, 'M2': nM2, 'PR': nPR/*, 'CP': nCP, 'NP': nNP, 'RP': nRP*/};
-d = {'TP': dTP, 'TY': dTY, 'HJ': dHJ, 'ML': dML, 'HL': dHL, 'IL': dIL, 'TC': dTC, 'CH': dCH, 'NT': dNT, 'CY': dCY, 'YL': dYL, 'TN': dTN, 'PH': dPH, 'KS': dKS, 'CM': dCM, 'UC': dUC, 'MJ': dMJ, 'PT': dPT, 'TT': dTT, 'M1': dM1, 'M2': dM2, 'PR': dPR/*, 'CP': dCP, 'NP': dNP, 'RP': dRP*/};
-
-function check_local(str){
-    if(typeof str != 'string'){throw 'check_local needs input to be a string.'}
-    for(var i in re){
-        if(str.replace('-', '').match(re[i])){
-            return n[i];
+Reap.IndexController = Ember.Controller.extend({
+  inp: '',
+  output: '',
+  check: function(){
+    var inp = this.get('inp'), self = this;
+    this.store.find('data').then(function(d){
+        var chance = [], mn = false, f;
+        d.forEach(function(d,i,self){
+            d.set('inp',inp);
+            if(d.get('predict')){
+                chance.push(d.get('predict'));
+                if(d.get('inp').replace('-', '').length < d.get('f').replace(/x/g,'').length){
+                    mn = true;
+                }
+            }
+        });
+        if(chance.length && inp.length > 1){
+            self.set('output', chance.join('<span class="or"> 或 </span>') + (mn?' (號碼數不足)':''));
+        }else if(inp.length < 2){
+            self.set('output', '');
+        }else{
+            self.set('output', '不符市話/行動號碼規範');
         }
-    }
-    return "不符市話/行動號碼規範";
-}
+    });
+    return inp;
+  }.property('inp')
+});
 
-function check(str){
-    var input = String(str).replace('-', ''), nnr = /^\+?886/, l = 0, hope = false, chance = [], notValid = "不符市話/行動號碼規範", moreNumber = "號碼數不足";
+Reap.ApplicationAdapter = DS.FixtureAdapter.extend();
+Reap.Data = DS.Model.extend({
+r: DS.attr('string'),
+f: DS.attr('string'),
+n: DS.attr('string'),
+d: DS.attr('string'),
+re: function(){
+    return new RegExp(this.get('r'))
+}.property('r'),
+inp: DS.attr('string'),
+predict: function(){
+    var input = (this.get('inp')||"").replace(/-/g, ''), nnr = /^\+?886/, l = 0, f, notValid = "";
     if(input.match(nnr)){
         input = input.replace(nnr, '0');
     }
     l = input.length;
-    if(l < 2){
-        return moreNumber;
-    }
-nest:
-    for(var i in f){
-        if(l > f[i].length){
-            continue;
-        }else if(l < f[i].length){
-            for(var j =0; j < l; j++){
-                switch(f[i][j]){
-                case 'h':
-                    if(input[j] != '0'){continue nest}
-                break;
-                case 'f':
-                    if(!(input + '0'.repeat(f[i].length-l)).match(re[i])){continue nest}
-                break;
-                case 'd':
-                    if(isNaN(input[j])){continue nest}
-                break;
-                default:
-                    if(input[j] != f[i][j]){continue nest}
-                }
+    if(l == (f=this.get('f')).length){
+        if(input.match(this.get('re'))){return this.get('n')}
+    }else if(l < f.length){
+        for(var j =0; j < l; j++){
+            switch(f[j]){
+            case 'h':
+                if(input[j] != '0'){return notValid}
+            break;
+            case 'f':
+                if(!(input + '0'.repeat(f.length-l)).match(this.get('re'))){return notValid}
+            break;
+            case 'x':
+            case 'd':
+                if(isNaN(input[j])){return notValid}
+            break;
+            default:
+                if(input[j] != f[j]){return notValid}
             }
-            hope = true;
-            chance.push(n[i])
-        }else{
-            if(input.match(re[i])){return n[i]}
         }
+        return this.get('n');
     }
-    if(hope){
-        return chance.join(' 或 ') + ' (' + moreNumber + ')';
+    return notValid;
+}.property('inp'),
+check: function(){
+    if((this.get('inp')||"").replace(/-/g, '').match(this.get('re'))){
+        return this.get('n');
     }else{
-        return notValid;
+        return "";
     }
-}
+}.property('inp')
+});
 
-function clear_input(str){
-    var str = String(str).replace(/[^+0-9\-]/g, ''), c = 0;
-    str = str.replace(/(?!^)\+/g, '');
-    if(c = str.match(/-/g)){
-        c = c.length;
-        while(c-- > 3){
-            str = str.replace(/(.*)-(.*)/,'$1$2');
-        }
-    }
-    if(c = str.match(/\d/g)){
-        c = c.length;
-        while(c-- > 12){
-            str = str.replace(/(.*)\d(.*)/,'$1$2');
-        }
-    }
-    return str;
-}
+function r2s(reg){return reg.toString().replace('\+','\\+').replace(/\//g,'');}
 
-$('#input').change(function(){
-    var r = $(this).val(clear_input($(this).val())).val();
-    $('#output').html(check(r));
-}).keypress(function(e){if(e.keyCode == 13){$(this).change()}});
+Reap.Data.FIXTURES = [
+{
+id: 1,
+r: r2s(/^(?:\+?886|0)2[2358]\d{7}$/),
+f: "h2fddddddd",
+n: "臺北市、新北市及基隆市",
+d: "02-0000-0000"
+},
+{
+id: 2,
+r: r2s(/^(?:\+?886|0)3[2-4]\d{6}$/),
+f: "h3fdddddd",
+n: "桃園縣",
+d: "03-000-0000"
+},
+{
+id: 3,
+r: r2s(/^(?:\+?886|0)3[56]\d{6}$/),
+f: "h3fdddddd",
+n: "新竹縣市",
+d: "03-000-0000"
+},
+{
+id: 4,
+r: r2s(/^(?:\+?886|0)37[2-9]\d{5}$/),
+f: "h37fddddd",
+n: "苗栗縣",
+d: "037-000-000"
+},
+{
+id: 5,
+r: r2s(/^(?:\+?886|0)38\d{6}$/),
+f: "h38dddddd",
+n: "花蓮縣",
+d: "038-000-000"
+},
+{
+id: 6,
+r: r2s(/^(?:\+?886|0)39\d{6}$/),
+f: "h39dddddd",
+n: "宜蘭縣",
+d: "039-000-000"
+},
+{
+id: 7,
+r: r2s(/^(?:\+?886|0)4[23]\d{7}$/),
+f: "h4fddddddd",
+n: "臺中市",
+d: "04-0000-0000"
+},
+{
+id: 8,
+r: r2s(/^(?:\+?886|0)4[78]\d{6}$/),
+f: "h4fdddddd",
+n: "彰化縣",
+d: "04-000-0000"
+},
+{
+id: 9,
+r: r2s(/^(?:\+?886|0)49[2-9]\d{6}$/),
+f: "h49fdddddd",
+n: "南投縣",
+d: "049-000-0000"
+},
+{
+id: 10,
+r: r2s(/^(?:\+?886|0)5[2-4]\d{6}$/),
+f: "h5fdddddd",
+n: "嘉義縣市",
+d: "05-000-0000"
+},
+{
+id: 11,
+r: r2s(/^(?:\+?886|0)5[5-7]\d{6}$/),
+f: "h5fdddddd",
+n: "雲林縣",
+d: "05-000-0000"
+},
+{
+id: 12,
+r: r2s(/^(?:\+?886|0)6[235-7]\d{6}$/),
+f: "h6fdddddd",
+n: "臺南市",
+d: "06-000-0000"
+},
+{
+id: 13,
+r: r2s(/^(?:\+?886|0)69\d{6}$/),
+f: "h69dddddd",
+n: "澎湖縣",
+d: "069-000-000"
+},
+{
+id: 14,
+r: r2s(/^(?:\+?886|0)7[2-9]\d{6}$/),
+f: "h7fdddddd",
+n: "高雄市",
+d: "07-000-0000"
+},
+{
+id: 15,
+r: r2s(/^(?:\+?886|0)82[2-57-9]\d{5}$/),
+f: "h82fddddd",
+n: "金門",
+d: "082-000-000"
+},
+{
+id: 16,
+r: r2s(/^(?:\+?886|0)826\d{5}$/),
+f: "h826ddddd",
+n: "烏坵",
+d: "0826-00-000"
+},
+{
+id: 17,
+r: r2s(/^(?:\+?886|0)836\d{5}$/),
+f: "h836ddddd",
+n: "馬祖",
+d: "0836-00-000"
+},
+{
+id: 18,
+r: r2s(/^(?:\+?886|0)8[478]\d{6}$/),
+f: "h8fdddddd",
+n: "屏東縣",
+d: "08-000-0000"
+},
+{
+id: 19,
+r: r2s(/^(?:\+?886|0)89[2-9]\d{5}$/),
+f: "h89fddddd",
+n: "臺東縣",
+d: "089-000-000"
+},
+{
+id: 20,
+r: r2s(/^(?:\+?886|0)8[56]\d{7}$/),
+f: "h8fddddddd",
+n: "行動-08",
+d: "0800-000-000"
+},
+{
+id: 21,
+r: r2s(/^(?:\+?886|0)9[0-8]\d{7}$/),
+f: "h9fddddddd",
+n: "行動-09",
+d: "0900-000-000"
+},
+{
+id: 22,
+r: r2s(/^(?:\+?886|0)99\d{7}$/),
+f: "h99ddddddd",
+n: "個人",
+d: "0990-000-000"
+},
+{
+id: 23,
+r: r2s(/^(?:\+?886|0)20\d{5,7}$/),
+f: "h20dddddxx",
+n: "付費",
+d: "0200-0000|020-000-000|0200-000-000"
+},
+{
+id: 24,
+r: r2s(/^(?:\+?886|0)50\d{5,7}$/),
+f: "h50dddddxx",
+n: "一般費率",
+d: "0500-0000|050-000-000|0500-000-000"
+},
+{
+id: 25,
+r: r2s(/^(?:\+?886|0)80\d{5,7}$/),
+f: "h80dddddxx",
+n: "免費",
+d: "0800-0000|080-000-000|0800-000-000"
+}
+];
+
+/*var pnRe = /^(?:\+?886|0)(?:(?:(?:2[2358]|4[23]|8[56]|9[0-9])\d{7})|(?:(?:3[2-689]|4(?:[78]|9[2-9])|5[2-7]|6[235-9]|7[2-9]|8[478])\d{6})|(?:(?:37[2-9]|8(?:2[2-9]|36|9[2-9]))\d{5}))$/;
+function pnValid(str){
+    if(typeof str != 'string'){throw 'pnValid needs input to be a string.'}
+    var r = str.replace(/-/g, '').match(pnRe);
+    return r? r[0] : null;
+}*/
 
 })();
 </script>
+
 </body>
 </html>
