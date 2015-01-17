@@ -159,7 +159,10 @@ predict: function(){
 nle: function(){
     return this.get('inp').length < this.get('f').replace(/x/g,'').length;
 }.property('inp'),
-title: function(){return this.get('n') + '\n' + this.get('d').replace(/[|]/g, '\n')}.property()
+title: function(){
+    var f = this.get('f'), ld = f.replace(/x/g,'').length, l = f.length;
+    return this.get('n') + ' [' + ld + (l!=ld?'-'+l:'') + ']\n' + this.get('d').replace(/[|]/g, '\n')
+}.property()
 });
 
 function r2s(reg){return reg.toString().replace('\+','\\+').replace(/\//g,'');}
