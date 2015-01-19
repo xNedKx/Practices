@@ -61,7 +61,6 @@ font-size: 1em;
 color: #CCC;
 font-family: 'Yanone Kaffeesatz', sans-serif;
 }
-
 </style>
 <link href='http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz' rel='stylesheet' type='text/css'>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
@@ -79,9 +78,9 @@ font-family: 'Yanone Kaffeesatz', sans-serif;
 <div id="output">{{{output}}}</div>
 <div id="main">
 <div id="input">{{input maxlength="16" id="input" placeholder="請在此處輸入號碼" autofocus="autofocus" value=inp}}</div>
-<div class="loc">{{#each d in model}}
-<div {{bind-attr x=check class="d.predict:valid" title="d.title"}}>{{d.n}}</div>
-{{/each}}</div>
+<div class="loc">
+{{#each d in model}}<div {{bind-attr x=check class="d.predict:valid" title="d.alt"}}>{{d.n}}</div>{{/each}}
+</div>
 </div>
 </script>
 
@@ -125,14 +124,13 @@ Reap.IndexController = Ember.Controller.extend({
 });
 
 Reap.ApplicationAdapter = DS.FixtureAdapter.extend();
+
 Reap.Data = DS.Model.extend({
 r: DS.attr('string'),
 f: DS.attr('string'),
 n: DS.attr('string'),
 d: DS.attr('string'),
-re: function(){
-    return new RegExp(this.get('r'))
-}.property('r'),
+re: function(){return new RegExp(this.get('r'));}.property('r'),
 inp: DS.attr('string'),
 predict: function(){
     var input = (this.get('inp')||''), inp = input, l = input.length, f = this.get('f'), n = this.get('n'), re = this.get('re'), notValid = "";
@@ -163,10 +161,10 @@ predict: function(){
 nle: function(){
     return this.get('inp').length < this.get('f').replace(/x/g,'').length;
 }.property('inp'),
-title: function(){
+alt: function(){
     var f = this.get('f'), ld = f.replace(/x/g,'').length, l = f.length;
     return this.get('n') + ' [' + ld + (l!=ld?'-'+l:'') + ']\n' + this.get('d').replace(/[|]/g, '\n')
-}.property()
+}.property('n', 'd')
 });
 
 function r2s(reg){return reg.toString().replace('\+','\\+').replace(/\//g,'');}
