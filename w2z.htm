@@ -3,21 +3,10 @@
 <head>
 <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js"></script>
 <title>注音文</title>
-<script>
-code = {"1": "ㄅ", "q": "ㄆ", "a": "ㄇ", "z": "ㄈ", "2": "ㄉ", "w": "ㄊ", "s": "ㄋ", "x": "ㄌ", "3": "ˇ", "e": "ㄍ", "d": "ㄎ", "c": "ㄏ", "4": "ˋ", "r": "ㄐ", "f": "ㄑ", "v": "ㄒ", "5": "ㄓ", "t": "ㄔ", "g": "ㄕ", "b": "ㄖ", "6": "ˊ", "y": "ㄗ", "h": "ㄘ", "n": "ㄙ", "7": "˙", "u": "ㄧ", "j": "ㄨ", "m": "ㄩ", "8": "ㄚ", "i": "ㄛ", "k": "ㄜ", ", ": "ㄝ", "9": "ㄞ", "o": "ㄟ", "l": "ㄠ", ".": "ㄡ", "0": "ㄢ", "p": "ㄣ", ";": "ㄤ", "/": "ㄥ", " ": " ", "!": "ㄅ", "Q": "ㄆ", "A": "ㄇ", "Z": "ㄈ", "@": "ㄉ", "W": "ㄊ", "S": "ㄋ", "X": "ㄌ", "#": "ˇ", "E": "ㄍ", "D": "ㄎ", "C": "ㄏ", "$": "ˋ", "R": "ㄐ", "F": "ㄑ", "V": "ㄒ", "%": "ㄓ", "T": "ㄔ", "G": "ㄕ", "B": "ㄖ", "^": "ˊ", "Y": "ㄗ", "H": "ㄘ", "N": "ㄙ", "&": "˙", "U": "ㄧ", "J": "ㄨ", "M": "ㄩ", "*": "ㄚ", "I": "ㄛ", "K": "ㄜ", "<": "ㄝ", "(": "ㄞ", "O": "ㄟ", "L": "ㄠ", ">": "ㄡ", ")": "ㄢ", "P": "ㄣ", ": ": "ㄤ", "?": "ㄥ"};
-function w2z(str){
-    if(typeof(str) == 'string'){
-        var res = '';
-        for(var i = 0; i < str.length; i++){
-            res += code[str[i]] || '';
-        }
-        return res;
-    }else{
-        return null;
-    }
-}
-</script>
 <style>
 body{
 margin: 0;
@@ -38,19 +27,8 @@ min-width: 194px;
 width: 98%;
 max-width: 634px;
 min-height: 14px;
-max-height: 54px;
+max-height: 114px;
 margin: 10px auto;
-}
-#button{
-width: 4em;
-height: 1.4em;
-margin: 4px auto;
-border: 1px solid #DDD;
-cursor: pointer;
-}
-#button:hover{
-font-weight: bold;
-background-color: #FDD;
 }
 #re{
 min-width: 178px;
@@ -66,15 +44,32 @@ text-align: left;
 </head>
 <body>
 <div id="main">
-<div id="header">注音轉換器</div>
-<textarea id="in" placeholder="輸入未轉換的文字串，如 su3cl3 (ENTER直接轉換)"></textarea>
-<div id="button"><a onclick="document.getElementById('re').innerHTML = w2z(document.getElementById('in').value);">轉換</a></div>
-<div id="re"></div>
+    <div id="header">注音轉換器</div>
+    <textarea id="in" placeholder="輸入未轉換的文字串，如 su3cl3 (ㄋㄧˇㄏㄠˇ)" autofocus ></textarea>
+    <div id="re"></div>
 </div>
 <script>
-function enter(e){if(e.keyCode == 13){e.preventDefault(); document.getElementById('re').innerHTML = w2z(document.getElementById('in').value);}}
-window.onload = function(){document.getElementById('in').onkeypress = enter;}
-document.getElementById("in").focus();
+var view = new (Backbone.View.extend({
+el: '#main',
+events: {
+    "keyup textarea#in": "w2z"
+},
+code: {"1": "ㄅ", "q": "ㄆ", "a": "ㄇ", "z": "ㄈ", "2": "ㄉ", "w": "ㄊ", "s": "ㄋ", "x": "ㄌ", "3": "ˇ", "e": "ㄍ", "d": "ㄎ", "c": "ㄏ", "4": "ˋ", "r": "ㄐ", "f": "ㄑ", "v": "ㄒ", "5": "ㄓ", "t": "ㄔ", "g": "ㄕ", "b": "ㄖ", "6": "ˊ", "y": "ㄗ", "h": "ㄘ", "n": "ㄙ", "7": "˙", "u": "ㄧ", "j": "ㄨ", "m": "ㄩ", "8": "ㄚ", "i": "ㄛ", "k": "ㄜ", ", ": "ㄝ", "9": "ㄞ", "o": "ㄟ", "l": "ㄠ", ".": "ㄡ", "0": "ㄢ", "p": "ㄣ", ";": "ㄤ", "/": "ㄥ", "-": "ㄦ", " ": " ", "!": "ㄅ", "Q": "ㄆ", "A": "ㄇ", "Z": "ㄈ", "@": "ㄉ", "W": "ㄊ", "S": "ㄋ", "X": "ㄌ", "#": "ˇ", "E": "ㄍ", "D": "ㄎ", "C": "ㄏ", "$": "ˋ", "R": "ㄐ", "F": "ㄑ", "V": "ㄒ", "%": "ㄓ", "T": "ㄔ", "G": "ㄕ", "B": "ㄖ", "^": "ˊ", "Y": "ㄗ", "H": "ㄘ", "N": "ㄙ", "&": "˙", "U": "ㄧ", "J": "ㄨ", "M": "ㄩ", "*": "ㄚ", "I": "ㄛ", "K": "ㄜ", "<": "ㄝ", "(": "ㄞ", "O": "ㄟ", "L": "ㄠ", ">": "ㄡ", ")": "ㄢ", "P": "ㄣ", ": ": "ㄤ", "?": "ㄥ", "_": "ㄦ"},
+w2z: function(ev){
+    var str = ev.target.value;
+    if(typeof(str) == 'string'){
+        var res = '';
+        for(var i in str){
+            res += str[i]=="\n"?"<br>":this.code[str[i]] || '';
+        }
+        document.getElementById("re").innerHTML = res;
+        return res;
+    }else{
+        document.getElementById("re").innerHTML = ""
+        return null;
+    }
+}
+}));
 </script>
 </body>
 </html>
