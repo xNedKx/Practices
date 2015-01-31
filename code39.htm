@@ -82,13 +82,8 @@ function decode(str){
     if(str.length%l != 0 || str.length < 4*l){return false;}
     bs = str.slice(0, l);
     be = str.slice(-l);
-    cd = str.slice(-2*l).slice(l);
-    str = str.slice(l, -2*l);
+    str = str.slice(l, -l);
     if(bs != code39["*"].code || be != code39["*"].code){return false;}
-    if(cd != code39[get_check_char(str)].code){
-        console.log("check digit not valid.");
-        str = str + cd;
-    }
     while(str){
         var tmp = str.slice(0, l)
         for(i in code39){
@@ -96,17 +91,21 @@ function decode(str){
         }
         str = str.slice(l);
     }
-    return r;
+    if(r.slice(-1) != get_check_char(r.slice(0,-1))){
+        console.log("check digit not valid.");
+        return [r, ""];
+    }
+    return [r.slice(0,-1), r.slice(-1)];
 }
 function update(){
-    var str = d3.select("#input").node().value, inp = input(str), output = "", cd = d3.select("#cd").node().checked, svg = d3.select("svg"), re, la, p = 2;
+    var str = d3.select("#input").node().value, inp = input(str), output = "", cd = d3.select("#cd").node().checked, re, p = 2;
     if(inp != str.toUpperCase()){
         d3.select("#input").node().value = inp;
     }
     d3.select("#checkdigit").node().value = cd&&inp? get_check_char(inp) : "";
     inp = inp? get_encode_str(inp, cd? get_check_char(inp) : ""): "";
     output = encode(inp);
-    re = svg.attr("width", output.length+p*2)
+    re = d3.select("svg").attr("width", output.length + p*2)
         .selectAll("rect")
         .data(output.split(""));
     re.enter().append("rect")
@@ -116,12 +115,12 @@ function update(){
         .attr("y", 2);
     re.exit().remove();
     re.attr("fill", function(d){return d == "1" ? "#000" : "#FFF";});
-    svg.select("text")
+    d3.select("svg").select("text")
         .text(inp)
         .attr("x", output.length/2);
 }
 function setup(){
-    var svg = d3.select("#barcode").append("svg")
+    d3.select("#barcode").append("svg")
         .attr("height", 50)
         .attr("width", 490)
         .append("text")
