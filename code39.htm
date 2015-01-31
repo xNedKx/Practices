@@ -4,6 +4,7 @@
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
+    <script src="http://gabelerner.github.io/canvg/canvg.js"></script> 
     <title>CODE39 ENCODER</title>
 <script>
 (function(){
@@ -121,18 +122,31 @@ function update(){
 }
 function setup(){
     d3.select("#barcode").append("svg")
+        .attr("xmlns", d3.ns.prefix.svg)
         .attr("height", 50)
         .attr("width", 490)
         .append("text")
             .attr("y", 46)
             .attr("x", 0)
             .attr("stroke", "#000")
-            .attr("text-anchor", "middle");
+            .attr("text-anchor", "middle")
+            .attr("font-size", "14px")
+            .attr("font-family", "Tahoma");
+}
+function dlimg(){
+    var dl = d3.select("#dl").node(), canvas = document.createElement("canvas"), svg = d3.select("svg").node(), par = new XMLSerializer(), data, xml, str = d3.select("#input").node().value;
+    if(!str){return;}
+    xml = par.serializeToString(svg);
+    data = "data:image/svg+xml;base64," + btoa(xml);
+    canvg(canvas, data);
+    dl.href = canvas.toDataURL();
+    dl.download = "code39_" + str.replace(/\//g,"_") + ".png";
 }
 window.onload = function(){
     setup();
     d3.select("#input").on("keyup", update);
     d3.select("#cd").on("change", update);
+    d3.select("#dl").on("click", dlimg);
 }
 })()
 </script>
@@ -181,6 +195,19 @@ body{
     border: 1px solid #1F1F1F;
     text-align: center;
 }
+#link{
+    text-align: center;
+    font-size: small;
+}
+#link > a{
+    color: #AAA;
+}
+#link > a:hover{
+    color: #D9786F;
+}
+#link > a:active{
+    color: #7A8DC1;
+}
 #footer{
     position: fixed;
     text-align: center;
@@ -203,6 +230,7 @@ body{
         <input type="checkbox" id="cd" checked><label for="cd">檢查碼</label>
     </div>
     <div id="barcode"></div>
+    <div id="link"><a id="dl" href="#">download barcode image</a></div>
     <div id="footer">Created by xNedKx</div>
 </body>
 </html>
