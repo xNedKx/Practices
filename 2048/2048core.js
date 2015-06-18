@@ -5,6 +5,7 @@ function square(size,t){
         this.value = 0;
         this.position = {"x": x, "y": y};
         this.lock = false;
+        this.changed = false;
     }
     function createItem(){
         var tmp = [];
@@ -40,7 +41,10 @@ function square(size,t){
             for(var x=0; x<size; x++){
                 for(var y=0; y<size; y++){
                     if((y==0 && self.item[y][x].value != 0)
-                    || (y!=0 && self.item[y-1][x].lock == true && self.item[y][x].value != self.item[y-1][x].value && self.item[y][x].value != 0)){
+                    || (y!=0 && self.item[y-1][x].lock == true && (
+                            (self.item[y][x].value != self.item[y-1][x].value && self.item[y][x].value != 0)
+                         || (self.item[y][x].value == self.item[y-1][x].value && self.item[y-1][x].changed)
+                    ))){
                         self.item[y][x].lock = true;
                     }else if(self.item[y][x].lock != true){
                         break;
@@ -52,7 +56,10 @@ function square(size,t){
             for(var y=0; y<size; y++){
                 for(var x=size-1; x>=0; x--){
                     if((x==size-1 && self.item[y][x].value != 0)
-                    || (x!=size-1 && self.item[y][x+1].lock == true && self.item[y][x].value != self.item[y][x+1].value && self.item[y][x].value != 0)){
+                    || (x!=size-1 && self.item[y][x+1].lock == true && (
+                            (self.item[y][x].value != self.item[y][x+1].value && self.item[y][x].value != 0)
+                          ||(self.item[y][x].value == self.item[y][x+1].value && self.item[y][x+1].changed)
+                    ))){
                         self.item[y][x].lock = true;
                     }else if(self.item[y][x].lock != true){
                         break;
@@ -64,7 +71,10 @@ function square(size,t){
             for(var x=0; x<size; x++){
                 for(var y=size-1; y>=0; y--){
                     if((y==size-1 && self.item[y][x].value != 0)
-                    || (y!=size-1 && self.item[y+1][x].lock == true && self.item[y][x].value != self.item[y+1][x].value && self.item[y][x].value != 0)){
+                    || (y!=size-1 && self.item[y+1][x].lock == true && (
+                            (self.item[y][x].value != self.item[y+1][x].value && self.item[y][x].value != 0)
+                         || (self.item[y][x].value == self.item[y+1][x].value && self.item[y+1][x].changed)
+                    ))){
                         self.item[y][x].lock = true;
                     }else if(self.item[y][x].lock != true){
                         break;
@@ -76,7 +86,10 @@ function square(size,t){
             for(var y=0; y<size; y++){
                 for(var x=0; x<size; x++){
                     if((x==0 && self.item[y][x].value != 0)
-                    || (x!=0 && self.item[y][x-1].lock == true && self.item[y][x].value != self.item[y][x-1].value && self.item[y][x].value != 0)){
+                    || (x!=0 && self.item[y][x-1].lock == true && (
+                            (self.item[y][x].value != self.item[y][x-1].value && self.item[y][x].value != 0)
+                         || (self.item[y][x].value == self.item[y][x-1].value && self.item[y][x-1].changed)
+                    ))){
                         self.item[y][x].lock = true;
                     }else if(self.item[y][x].lock != true){
                         break;
@@ -109,12 +122,20 @@ function square(size,t){
         }
         return true;
     }
+    function resetChanged(){
+        for(var y=0; y<size; y++){
+            for(var x=0; x<size; x++){
+                self.item[y][x].changed = false;
+            }
+        }
+    }
     function move(dir){
         switch(dir){
         case "up":
             for(var x=0; x<size; x++){
                 for(var y=0; y<size; y++){
                     if(!self.item[y][x].lock && y>0){
+                        if(self.item[y-1][x].value != 0){self.item[y-1][x].changed = true;}
                         self.item[y-1][x].value += self.item[y][x].value;
                         self.item[y][x].value = 0;
                     }
@@ -125,6 +146,7 @@ function square(size,t){
             for(var y=0; y<size; y++){
                 for(var x=size-1; x>=0; x--){
                     if(!self.item[y][x].lock && x<size-1){
+                        if(self.item[y][x+1].value != 0){self.item[y][x+1].changed = true;}
                         self.item[y][x+1].value += self.item[y][x].value;
                         self.item[y][x].value = 0;
                     }
@@ -135,6 +157,7 @@ function square(size,t){
             for(var x=0; x<size; x++){
                 for(var y=size-1; y>=0; y--){
                     if(!self.item[y][x].lock && y<size-1){
+                        if(self.item[y+1][x].value != 0){self.item[y+1][x].changed = true;}
                         self.item[y+1][x].value += self.item[y][x].value;
                         self.item[y][x].value = 0;
                     }
@@ -145,6 +168,7 @@ function square(size,t){
             for(var y=0; y<size; y++){
                 for(var x=0; x<size; x++){
                     if(!self.item[y][x].lock && x>0){
+                        if(self.item[y][x-1].value != 0){self.item[y][x-1].changed = true;}
                         self.item[y][x-1].value += self.item[y][x].value;
                         self.item[y][x].value = 0;
                     }
@@ -176,6 +200,7 @@ function square(size,t){
             f = false;
         }while(!allLock());
         resetLock();
+        resetChanged();
         return true;
     }
     function randomBlock(){
@@ -257,7 +282,7 @@ function square(size,t){
         var c = 0;
         for(var y=0; y<size; y++){
             for(var x=0; x<size; x++){
-                c += self.item[y][x].value == 1? 0 : self.item[y][x].value;
+                c += self.item[y][x].value == 1? 0 : self.item[y][x].value * 2;
             }
         }
         return c;
@@ -267,7 +292,7 @@ function square(size,t){
     //this.set = function(ar){self.item = createByValues(ar);}
     //this.get = function(){return getValues(self.item);}
     //this.cha = checkAll;
-    //this.ch = checkMovables;
-    //this.move = move;
+    this.ch = checkMovables;
+    this.move = move;
     this.init();
 }
