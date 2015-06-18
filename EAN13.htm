@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta http-equiv="content-type" content="text/html; charset=utf-8">
-<meta name="viewport" content="width=device-width; initial-scale=1.0">
-<title>EAN13產生器</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EAN13產生器</title>
 <script>
 /*
 EAN13規則
@@ -40,83 +40,83 @@ m=(10-(((a+c+e+g+i+k)+(b+d+f+h+j+l)*3)%10))%10
 8: 0110111  0001001  1001000
 9: 0001011  0010111  1110100
 左邊線(左護線)為0<101
-中邊線(左護線)為01010
+中邊線(中護線)為01010
 右邊線(右護線)為101>0
 */
-digitEncode={A:{0:"0001101",1:"0011001",2:"0010011",3:"0111101",4:"0100011",5:"0110001",6:"0101111",7:"0111011",8:"0110111",9:"0001011"},B:{0:"0100111",1:"0110011",2:"0011011",3:"0100001",4:"0011101",5:"0111001",6:"0000101",7:"0010001",8:"0001001",9:"0010111"},C:{0:"1110010",1:"1100110",2:"1101100",3:"1000010",4:"1011100",5:"1001110",6:"1010000",7:"1000100",8:"1001000",9:"1110100"}};
-encodePattern={0:"AAAAAA",1:"AABABB",2:"AABBAB",3:"AABBBA",4:"ABAABB",5:"ABBAAB",6:"ABBBAA",7:"ABABAB",8:"ABABBA",9:"ABBABA"};
-reservedLine=[5,7,51,53,97,99];
+digitEncode = {A: {0: "0001101", 1: "0011001", 2: "0010011", 3: "0111101", 4: "0100011", 5: "0110001", 6: "0101111", 7: "0111011", 8: "0110111", 9: "0001011"}, B: {0: "0100111", 1: "0110011", 2: "0011011", 3: "0100001", 4: "0011101", 5: "0111001", 6: "0000101", 7: "0010001", 8: "0001001", 9: "0010111"}, C: {0: "1110010", 1: "1100110", 2: "1101100", 3: "1000010", 4: "1011100", 5: "1001110", 6: "1010000", 7: "1000100", 8: "1001000", 9: "1110100"}};
+encodePattern = {0: "AAAAAA", 1: "AABABB", 2: "AABBAB", 3: "AABBBA", 4: "ABAABB", 5: "ABBAAB", 6: "ABBBAA", 7: "ABABAB", 8: "ABABBA", 9: "ABBABA"};
+reservedLine = [5, 7, 51, 53, 97, 99];
 function createCheckCode(str){
-if(checkCode(str,12)){
-total=0;
-for(i=0;i<str.length;i++){
-total+=Number(str[i])*((i%2==1)?3:1);
+if(checkCode(str, 12)){
+total = 0;
+for(i = 0; i<str.length; i++){
+total += Number(str[i]) * ((i % 2 == 1)? 3 : 1);
 }
-return (10-total%10)%10;
+return (10 - total % 10) % 10;
 }else{
 return null;
 }
 }
 function addCheckCode(str){
-if(checkCode(str,12)){
-str+=createCheckCode(str);
+if(checkCode(str, 12)){
+str += createCheckCode(str);
 return str;
 }else{
 return null;
 }
 }
 function removeNaN(str){
-if(typeof(str)=="string"){
-return str.replace(/[^\d]/g,"");
+if(typeof(str) == "string"){
+return str.replace(/[^\d]/g, "");
 }
 }
-function checkCode(str,len){
-if(typeof(str)=="string" && str.length==len){
+function checkCode(str, len){
+if(typeof(str) == "string" && str.length == len){
 return true;
 }else{
 return false;
 }
 }
 function createCodeData(input){
-if(checkCode(input,13)){
-code="00000101";
-for(i=1;i<7;i++){
-code+=digitEncode[encodePattern[input[0]][i-1]][input[i]];
+if(checkCode(input, 13)){
+code = "00000101";
+for(i = 1; i < 7; i++){
+code += digitEncode[encodePattern[input[0]][i - 1]][input[i]];
 }
-code+="01010";
-for(i=7;i<13;i++){
-code+=digitEncode["C"][input[i]];
+code += "01010";
+for(i = 7; i < 13; i++){
+code += digitEncode["C"][input[i]];
 }
-code+="10100000";
+code += "10100000";
 //5+3+(7+7+7+7+7+7)+5+(7+7+7+7+7+7)+3+5=105
 return code;
 }else{
 return false;
 }
 }
-function showBarcode(DOM,str){
-input=addCheckCode(removeNaN(str));
-data=createCodeData(input);
-if(typeof(data)=="string" && !/[^01]/.test(data) && typeof(DOM)=='object' && DOM.ownerDocument){
-bar=document.createElement("div");
-bar.className="barcode";
-for(i=0;i<data.length;i++){
-tmp=document.createElement("div");
-tmp.style.left=(i*3)+"px";
-tmp.className=data[i]==1?((reservedLine.indexOf(i)!=-1)?"borderBar":"blackBar"):"whiteBar";
+function showBarcode(DOM, str){
+input = addCheckCode(removeNaN(str));
+data = createCodeData(input);
+if(typeof(data) == "string" && !/[^01]/.test(data) && typeof(DOM) == 'object' && DOM.ownerDocument){
+bar = document.createElement("div");
+bar.className = "barcode";
+for(i = 0; i < data.length; i++){
+tmp = document.createElement("div");
+tmp.style.left = (i*3)+"px";
+tmp.className = data[i] == 1? ((reservedLine.indexOf(i) != -1)? "borderBar" : "blackBar") : "whiteBar";
 bar.appendChild(tmp);
 }
-tmp=document.createElement("div");
-tmp.className="d1";
-tmp.innerHTML=input[0];
+tmp = document.createElement("div");
+tmp.className = "d1";
+tmp.innerHTML = input[0];
 bar.appendChild(tmp);
-tmp=document.createElement("div");
-tmp.className="d2";
-tmp.innerHTML=input.substr(1,6);
+tmp = document.createElement("div");
+tmp.className = "d2";
+tmp.innerHTML = input.substr(1, 6);
 bar.appendChild(tmp);
-tmp=document.createElement("div");
-tmp.className="d3";
-tmp.innerHTML=input.substr(7,6);
+tmp = document.createElement("div");
+tmp.className = "d3";
+tmp.innerHTML = input.substr(7, 6);
 bar.appendChild(tmp);
 while(DOM.firstChild){DOM.removeChild(DOM.firstChild);}
 DOM.appendChild(bar);
@@ -125,102 +125,125 @@ return true;
 return false;
 }
 }
-function encodeBarcode(input,output){
-showBarcode(output,createCodeData(input));
+function encodeBarcode(input, output){
+showBarcode(output, createCodeData(input));
+}
+function ku(dom){
+if(/[^\d]/.test(dom.value)){dom.value=dom.value.replace(/[^\d]/g, '')}; if(dom.value.length != 12){dom.style.backgroundColor = '#FFADAC'; document.getElementById('checkdigit').value = '';}else{dom.style.backgroundColor = '#FFFFFF'; showBarcode(document.getElementById('barcode'), dom.value);document.getElementById('checkdigit').value=createCheckCode(dom.value);}
 }
 </script>
 <style>
 .whiteBar{
-width:3px;
-height:78px;
-float:left;
-background-color:#FFFFFF;
+    width: 3px;
+    height: 78px;
+    float: left;
+    background-color: #FFFFFF;
 }
 .blackBar{
-width:3px;
-height:78px;
-float:left;
-background-color:#000000;
+    width: 3px;
+    height: 78px;
+    float: left;
+    background-color: #000000;
 }
 .borderBar{
-width:3px;
-height:104px;
-float:left;
-background-color:#000000;
+    width: 3px;
+    height: 104px;
+    float: left;
+    background-color: #000000;
 }
 .barcode{
-width:312px;
-height:104px;
-margin:16px auto;
-overflow:hidden;
-position:relative;
-letter-spacing:12px;
-font-weight:bold;
-font-size:14px;
-font-family:Tahoma;
+    width: 312px;
+    height: 104px;
+    margin: 16px auto;
+    overflow: hidden;
+    position: relative;
+    letter-spacing: 12px;
+    font-weight: bold;
+    font-size: 14px;
+    font-family: Tahoma;
 }
 .d1{
-position:absolute;
-width:15px;
-height:20px;
-left:0px;
-top:84px;
+    position: absolute;
+    width: 15px;
+    height: 20px;
+    left: 0px;
+    top: 84px;
 }
 .d2{
-position:absolute;
-width:114px;
-height:20px;
-left:31px;
-top:84px;
+    position: absolute;
+    width: 114px;
+    height: 20px;
+    left: 31px;
+    top: 84px;
 }
 .d3{
-position:absolute;
-width:114px;
-height:20px;
-left:169px;
-top:84px;
+    position: absolute;
+    width: 114px;
+    height: 20px;
+    left: 169px;
+    top: 84px;
 }
 body{
-margin:0px;
-padding:0px;
-font-size:16px;
-min-width:320px;
-max-width:100%;
+    margin: 0px;
+    padding: 0px;
+    font-size: 16px;
+    min-width: 320px;
+    max-width: 100%;
 }
 #barcode{
-margin:1em auto 1.8em;
+    margin: 1em auto 1.8em;
+    height: 136px;
+    min-width: 318px;
+    max-width: 340px;
+    border: 1px solid rgb(30, 30, 30);
 }
 #header{
-position:fiexed;
-top:0px;
-width:100%;
-height:1.35em;
-font-size:36px;
-background-color:#E5E4ED;
-text-align:center;
+    position: fixed;
+    top: 0px;
+    width: 100%;
+    height: 46px;
+    font-size: 36px;
+    background-color: #E5E4ED;
+    text-align: center;
+    overflow: hidden;
 }
 #content{
-text-align:center;
-padding-top:0.2em;
+    text-align: center;
+    padding-top: 50px;
 }
 #content p{
-margin:0;
-padding:0.1em;
+    margin: 0;
+    padding: 0.1em;
 }
 #content input{
-font-size:24px;
+    font-size: 24px;
+}
+#input{
+    width: 164px;
+}
+#checkdigit{
+    width: 16px;
 }
 #footer{
-position:fixed;
-text-align:center;
-width:100%;
-height:24px;
-bottom:0px;
-background-color:#E5E4ED;
+    position: fixed;
+    text-align: center;
+    width: 100%;
+    height: 20px;
+    bottom: 0px;
+    background-color: #E5E4ED;
+    padding-top: 2px;
+    font-size: small;
+    color: #666;
 }
 </style>
 </head>
-<div id="header">EAN-13 Generator</div><div id="content"><p>(請輸入前12碼數字，檢查碼會自動補上)</p><input type="text" onkeyup="if(/[^\d]/.test(this.value)){this.value=this.value.replace(/[^\d]/g,'')};if(this.value.length!=12){this.style.backgroundColor='#FFADAC';document.getElementById('checkdigit').value='';}else{this.style.backgroundColor='#FFFFFF';showBarcode(document.getElementById('barcode'),this.value);document.getElementById('checkdigit').value=createCheckCode(this.value);}" maxlength="12"style="width:164px"/><input type="text" id="checkdigit" style="width:16px" disabled></div>
-<div id="barcode" style="height:136px;min-width:318px;max-width:340px;border:1px solid rgb(30,30,30);"></div><span style="clear:both;"></span><div id="footer">Created by YzC</div>
+<div id="header">EAN-13 Generator</div>
+<div id="content">
+    <p>(請輸入前12碼數字，檢查碼會自動補上)</p>
+    <input onkeyup="ku(this)" maxlength="12" id="input"/><input id="checkdigit" disabled />
+</div>
+<div id="barcode"></div>
+<span style="clear:both;"></span>
+<div id="footer">Created by xNedKx</div>
 </body>
 </html>
