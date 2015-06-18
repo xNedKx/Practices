@@ -257,7 +257,7 @@ function square(size,t){
         var c = 0;
         for(var y=0; y<size; y++){
             for(var x=0; x<size; x++){
-                c += self.item[y][x].value == 1? 0 : self.item[y][x].value * 2;
+                c += self.item[y][x].value == 1? 0 : self.item[y][x].value;
             }
         }
         return c;
