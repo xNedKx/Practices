@@ -105,9 +105,9 @@ function refresh(){
         }
     }
     if(s.status == "end"){
-        if(confirm("You fail. Restart game?")){s.init();}
+        if(confirm("You fail. Restart game?")){s.init();refresh();}
     }else if(s.status == "win"){
-        if(confirm("You win. Restart game?")){s.init();}
+        if(confirm("You win. Restart game?")){s.init();refresh();}
     }
 }
 refresh();
