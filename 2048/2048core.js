@@ -253,6 +253,15 @@ function square(size,t){
             console.log((Number(i)+1) + ": " + this.item[i].map(function(unit){return unit.value}).join(", "));
         }
     }*/
+    this.score = function(){
+        var c = 0;
+        for(var y=0; y<size; y++){
+            for(var x=0; x<size; x++){
+                c += self.item[y][x].value == 1? 0 : self.item[y][x].value * 2;
+            }
+        }
+        return c;
+    }
     //this.goal = goal;
     //this.nr = randomBlock;
     //this.set = function(ar){self.item = createByValues(ar);}

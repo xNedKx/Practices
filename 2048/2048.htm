@@ -78,11 +78,15 @@ body {
     background-color: #555;
     color: #FFF;
 }
+#footer {
+    text-align: center;
+}
 </style>
 </head>
 <body>
 <div id="header"><h2>2048</h2></div>
 <div id="main"></div>
+<div id="footer">SCORE: <span id="score">0</span></div>
 <script>
 var n = 4, s = new square(4,8192), m = document.getElementById("main"), d, d2, item = [];
 for(var y=0; y<n; y++){
@@ -104,6 +108,7 @@ function refresh(){
             item[y][x].className = "unit v" + s.item[y][x].value;
         }
     }
+    document.getElementById("score").textContent = s.score();
     if(s.status == "end"){
         if(confirm("You fail. Restart game?")){s.init();refresh();}
     }else if(s.status == "win"){
