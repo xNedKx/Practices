@@ -138,14 +138,27 @@ function keyMove(e){
 window.addEventListener("keyup", keyMove, false) ;
 var x, y;
 function startTouch(e){
-    x = e.clientX;
-    y = e.clientY;
+    if(e.touches){
+        x = e.touches[0].clientX;
+        y = e.touches[0].clientY;
+    }else{
+        x = e.clientX;
+        y = e.clientY;
+    }
     window.addEventListener("mousemove", touchMove, false);
     window.addEventListener("touchmove", touchMove, false);
     e.preventDefault();
 }
 function touchMove(e){
-    var range = 20, dx = e.clientX - x, dy = e.clientY - y;
+    var nx, ny;
+    if(e.touches){
+        nx = e.touches[0].clientX;
+        ny = e.touches[0].clientY;
+    }else{
+        nx = e.clientX;
+        ny = e.clientY;
+    }
+    var range = 20, dx = nx - x, dy = ny - y;
     if(Math.pow(dx, 2) + Math.pow(dy, 2) >= Math.pow(range, 2)){
         if(dx > 0){
             if(dy > 0){
