@@ -134,7 +134,7 @@ function square(size,t){
         case "up":
             for(var x=0; x<size; x++){
                 for(var y=0; y<size; y++){
-                    if(!self.item[y][x].lock && y>0){
+                    if(self.item[y][x].value && !self.item[y][x].lock && y>0){
                         if(self.item[y-1][x].value != 0){self.item[y-1][x].changed = true;}
                         self.item[y-1][x].value += self.item[y][x].value;
                         self.item[y][x].value = 0;
@@ -145,7 +145,7 @@ function square(size,t){
         case "right":
             for(var y=0; y<size; y++){
                 for(var x=size-1; x>=0; x--){
-                    if(!self.item[y][x].lock && x<size-1){
+                    if(self.item[y][x].value && !self.item[y][x].lock && x<size-1){
                         if(self.item[y][x+1].value != 0){self.item[y][x+1].changed = true;}
                         self.item[y][x+1].value += self.item[y][x].value;
                         self.item[y][x].value = 0;
@@ -156,7 +156,7 @@ function square(size,t){
         case "down":
             for(var x=0; x<size; x++){
                 for(var y=size-1; y>=0; y--){
-                    if(!self.item[y][x].lock && y<size-1){
+                    if(self.item[y][x].value && !self.item[y][x].lock && y<size-1){
                         if(self.item[y+1][x].value != 0){self.item[y+1][x].changed = true;}
                         self.item[y+1][x].value += self.item[y][x].value;
                         self.item[y][x].value = 0;
@@ -167,7 +167,7 @@ function square(size,t){
         case "left":
             for(var y=0; y<size; y++){
                 for(var x=0; x<size; x++){
-                    if(!self.item[y][x].lock && x>0){
+                    if(self.item[y][x].value && !self.item[y][x].lock && x>0){
                         if(self.item[y][x-1].value != 0){self.item[y][x-1].changed = true;}
                         self.item[y][x-1].value += self.item[y][x].value;
                         self.item[y][x].value = 0;
