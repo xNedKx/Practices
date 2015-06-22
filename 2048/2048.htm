@@ -117,7 +117,7 @@ function refresh(){
     }
 }
 refresh();
-document.body.onkeyup = function(e){
+function keyMove(e){
     switch(e.keyCode){
     case 38:
         s.up();
@@ -135,11 +135,13 @@ document.body.onkeyup = function(e){
     }
     refresh();
 }
+window.addEventListener("keyup", keyMove, false) ;
 var x, y;
 function startTouch(e){
     x = e.clientX;
     y = e.clientY;
     window.addEventListener("mousemove", touchMove, false);
+    window.addEventListener("touchmove", touchMove, false);
     e.preventDefault();
 }
 function touchMove(e){
@@ -180,9 +182,14 @@ function touchMove(e){
 }
 function endTouch(){
     window.removeEventListener("mousemove", touchMove, false);
+    window.removeEventListener("touchmove", touchMove, false);
 }
 window.addEventListener("mousedown", startTouch, false);
 window.addEventListener("mouseup", endTouch, false);
+window.addEventListener("touchstart", startTouch, false);
+window.addEventListener("touchend", endTouch, false);
+window.addEventListener("touchcancel", endTouch, false);
+window.addEventListener("touchleave", endTouch, false);
 
 </script>
 </body>
