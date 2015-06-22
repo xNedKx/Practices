@@ -143,8 +143,8 @@ function startTouch(e){
     e.preventDefault();
 }
 function touchMove(e){
-    var dx = e.clientX - x, dy = e.clientY - y;
-    if(Math.pow(dx, 2) + Math.pow(dy, 2) >= 100){
+    var range = 20, dx = e.clientX - x, dy = e.clientY - y;
+    if(Math.pow(dx, 2) + Math.pow(dy, 2) >= Math.pow(range, 2)){
         if(dx > 0){
             if(dy > 0){
                 if(dx > dy){
