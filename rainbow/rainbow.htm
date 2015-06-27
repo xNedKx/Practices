@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="rgba.js"></script>
+</head>
+<body>
+<div>
+<input type="file" accept="image/jpg, image/jpeg, image/png" id="file"/>
+<input type="button" value="Rainbow!" id="btn_rainbow"/>
+<div id="msg"></div>
+</div>
+<canvas id="can"></canvas>
+<script>
+var canvas, cc, data, put;
+function setup(){
+var bfil = document.getElementById("btn_rainbow"), file = document.getElementById("file"), img, raw, tmp;
+canvas = document.getElementById("can");
+cc = canvas.getContext("2d");
+cc.fillStyle = "#000";
+cc.fillRect(0, 0, canvas.width, canvas.height);
+function getData(){
+    var raw = cc.getImageData(0, 0, canvas.width, canvas.height), arr = [];
+    for(var i = 0; i < canvas.height; i++){
+        arr[i] = [];
+        for(var j = 0; j < canvas.width; j++){
+            //console.log(i,j);
+            var pos = (i * canvas.width + j) * 4;
+            arr[i][j] = [raw.data[pos], raw.data[pos+1], raw.data[pos+2], raw.data[pos+3]];
+        }
+    }
+    return arr;
+}
+function hToLeft(){
+    var color = new RGBA(0,0,0,0), hsva, raw = cc.getImageData(0, 0, canvas.width, canvas.height);
+    for(var i = 0; i < canvas.height; i++){
+        for(var j = 0; j < canvas.width; j++){
+            var pos = (i * canvas.width + j) * 4;
+            color.setByArray([raw.data[pos], raw.data[pos+1], raw.data[pos+2], raw.data[pos+3]]);
+            hsva = color.toHSVArray();
+            switch(Math.floor((i / canvas.height)*6)){
+            case 0:
+                hsva[0] = 0;
+            break;
+            case 1:
+                hsva[0] = 40;
+            break;
+            case 2:
+                hsva[0] = 60;
+            break;
+            case 3:
+                hsva[0] = 110;
+            break;
+            case 4:
+                hsva[0] = 180;
+            break;
+            case 5:
+                hsva[0] = 270;
+            break;
+            }
+            hsva[1] = Math.round(hsva[1] * 0.75) + 25;
+            hsva[2] = Math.round(hsva[2] * 0.85) + 15;
+            color.setByArray(color.parseHSVArray(hsva, true));
+            cc.fillStyle = color.toHex()
+            cc.fillRect(j, i ,1 , 1);
+        }
+    }
+}
+function putData(){
+    var tmp = cc.createImageData(data[0].length, data.length);
+    for(var i = 0; i < data.length; i++){
+        for(var j = 0; j < data[0].length; j++){
+            var pos = (i * data.length + j) * 4;
+            tmp.data[pos] = data[i][j][0];
+            tmp.data[pos+1] = data[i][j][1]
+            tmp.data[pos+2] = data[i][j][2];
+            tmp.data[pos+3] = data[i][j][3];
+        }
+    }
+    cc.putImageData(tmp, 0, 0);
+}
+function img_load(){
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    cc.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
+    //getData();
+    URL.revokeObjectURL(img.src);
+}
+function upload(){
+    img = new Image;
+    img.addEventListener("load", img_load, false);
+    img.src = URL.createObjectURL(file.files[0]);
+}
+function filter(){
+    getData();
+    hToLeft();
+}
+file.addEventListener("change", upload, false);
+bfil.addEventListener("click", filter, false);
+}
+window.addEventListener("load", setup, false);
+</script>
+</body>
+</html>
