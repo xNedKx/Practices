@@ -52,6 +52,7 @@ function getPostMsg(e){
 }
 worker.addEventListener("message", getPostMsg, false);
 function hToLeft(){
+    no_rainbow();
     worker.postMessage({data: cc.getImageData(0, 0, canvas.width, canvas.height), h: canvas.height, w: canvas.width});
 }
 function putData(){
