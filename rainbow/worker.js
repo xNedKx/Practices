@@ -26,7 +26,7 @@ function hToLeft(e){
                 hsva[0] = 270;
             break;
             }
-            hsva[1] = Math.round(hsva[1] * 0.7) + 30;
+            hsva[1] = Math.round(hsva[1] * 0.7) + 15;
             hsva[2] = Math.round(hsva[2] * 0.8) + 20;
             color.setByArray(color.parseHSVArray(hsva, true));
             postMessage({color: color.toString(), x: j, y: i});

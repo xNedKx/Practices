@@ -14,7 +14,7 @@
 <input type="file" accept="image/jpeg, image/png, image/gif" id="file"/>
 <input type="button" value="彩虹！" id="btn_rainbow" disabled />
 <input type="button" value="原始圖片" id="btn_reset" disabled />
-<a id="btn_dl" href="#" style="text-decoration:none;"><input type="button" value="存檔" disabled /></a>
+<a id="btn_dl" href="#" style="text-decoration:none; cursor: default;"><input type="button" value="存檔" disabled /></a>
 <div id="msg"></div>
 </div>
 <canvas id="can"></canvas>
@@ -48,6 +48,7 @@ if(worker){
             allow_reset();
             allow_dl();
             no_rainbow();
+            allow_load();
         }
     }
     function hToLeftWorker(){
@@ -121,7 +122,7 @@ function hToLeft(){
                 hsva[0] = 270;
             break;
             }
-            hsva[1] = Math.round(hsva[1] * 0.7) + 30;
+            hsva[1] = Math.round(hsva[1] * 0.7) + 15;
             hsva[2] = Math.round(hsva[2] * 0.8) + 20;
             color.setByArray(color.parseHSVArray(hsva, true));
             raw.data[pos] = color.r;
@@ -139,12 +140,14 @@ function filter(){
         allow_dl();
         no_rainbow();
     }else{
+        no_load();
         if(worker){
             hToLeftWorker();
         }else{
             hToLeft();
             allow_reset();
             allow_dl();
+            allow_load();
         }
     }
 }
@@ -177,7 +180,15 @@ function no_dl(){
     bdl.removeEventListener("click", dlimg, false);
     bdl.childNodes[0].disabled = true;
 }
-file.addEventListener("change", upload, false);
+function allow_load(){
+    file.addEventListener("change", upload, false);
+    file.disabled = false;
+}
+function no_load(){
+    file.removeEventListener("change", upload, false);
+    file.disabled = true;
+}
+allow_load();
 }
 window.addEventListener("load", setup, false);
 </script>
