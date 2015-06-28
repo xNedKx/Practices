@@ -7,18 +7,20 @@
 <body>
 <div>
 <h2>彩虹化</h2>
-<div style="font-size: small; color: #666;">請先點左方按鈕載入圖片，再點右方 Rainbow! 按鈕等候圖片彩虹化，所有處理將於本機進行，轉換時間視電腦硬體及圖片大小增減。</div>
+<div style="font-size: small; color: #666;">請先點左方按鈕載入圖片，再點右方「彩虹！」按鈕等候圖片彩虹化，所有處理將於本機進行，轉換時間視電腦硬體及圖片大小增減。</div>
 </div>
 <div>
 <input type="file" accept="image/jpg, image/jpeg, image/png" id="file"/>
-<input type="button" value="Rainbow!" id="btn_rainbow"/>
+<input type="button" value="彩虹！" id="btn_rainbow" disabled />
+<input type="button" value="原始圖片" id="btn_reset" disabled />
+<a id="btn_dl" href="#"><input type="button" value="存檔" disabled /></a>
 <div id="msg"></div>
 </div>
 <canvas id="can"></canvas>
 <script>
 var canvas, cc, data, put;
 function setup(){
-var bfil = document.getElementById("btn_rainbow"), file = document.getElementById("file"), img, raw, tmp;
+var bfil = document.getElementById("btn_rainbow"), bdl = document.getElementById("btn_dl"), bre = document.getElementById("btn_reset"), file = document.getElementById("file"), img, raw, res, rai;
 canvas = document.getElementById("can");
 cc = canvas.getContext("2d");
 cc.fillStyle = "#000";
@@ -47,13 +49,13 @@ function hToLeft(){
                 hsva[0] = 0;
             break;
             case 1:
-                hsva[0] = 40;
+                hsva[0] = 30;
             break;
             case 2:
                 hsva[0] = 60;
             break;
             case 3:
-                hsva[0] = 110;
+                hsva[0] = 120;
             break;
             case 4:
                 hsva[0] = 180;
@@ -62,10 +64,10 @@ function hToLeft(){
                 hsva[0] = 270;
             break;
             }
-            hsva[1] = Math.round(hsva[1] * 0.75) + 25;
-            hsva[2] = Math.round(hsva[2] * 0.85) + 15;
+            hsva[1] = Math.round(hsva[1] * 0.7) + 30;
+            hsva[2] = Math.round(hsva[2] * 0.8) + 20;
             color.setByArray(color.parseHSVArray(hsva, true));
-            cc.fillStyle = color.toHex()
+            cc.fillStyle = color.toString();
             cc.fillRect(j, i ,1 , 1);
         }
     }
@@ -87,8 +89,18 @@ function img_load(){
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
     cc.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
-    //getData();
+    no_reset();
+    no_dl();
+    allow_rainbow();
     URL.revokeObjectURL(img.src);
+    res = cc.getImageData(0, 0, canvas.width, canvas.height);
+    rai = null;
+}
+function img_reset(){
+    cc.putImageData(res, 0, 0);
+    no_reset();
+    no_dl();
+    allow_rainbow();
 }
 function upload(){
     img = new Image;
@@ -96,11 +108,45 @@ function upload(){
     img.src = URL.createObjectURL(file.files[0]);
 }
 function filter(){
-    getData();
-    hToLeft();
+    if(rai){
+        cc.putImageData(rai, 0, 0);
+    }else{
+        hToLeft();
+        rai = cc.getImageData(0, 0, canvas.width, canvas.height);
+    }
+    allow_reset();
+    allow_dl();
+    no_rainbow();
+}
+function dlimg(){
+    bdl.href = canvas.toDataURL();
+    bdl.download = "rainbow_" + file.files[0].name;
+}
+function allow_reset(){
+    bre.disabled = false;
+    bre.addEventListener("click", img_reset, false);
+}
+function no_reset(){
+    bre.removeEventListener("click", img_reset, false);
+    bre.disabled = true;
+}
+function allow_rainbow(){
+    bfil.disabled = false;
+    bfil.addEventListener("click", filter, false);
+}
+function no_rainbow(){
+    bfil.removeEventListener("click", filter, false);
+    bfil.disabled = true;
+}
+function allow_dl(){
+    bdl.childNodes[0].disabled = false;
+    bdl.addEventListener("click", dlimg, false);
+}
+function no_dl(){
+    bdl.removeEventListener("click", dlimg, false);
+    bdl.childNodes[0].disabled = true;
 }
 file.addEventListener("change", upload, false);
-bfil.addEventListener("click", filter, false);
 }
 window.addEventListener("load", setup, false);
 </script>
