@@ -8,13 +8,13 @@
 <body>
 <div>
 <h2>彩虹化</h2>
-<div style="font-size: small; color: #666;">請先點左方按鈕載入圖片，再點右方「彩虹！」按鈕等候圖片彩虹化，所有處理將於本機進行，轉換時間視電腦硬體及圖片大小增減。</div>
+<div style="font-size: small; color: #666;">請先點左方按鈕載入圖片，再點右方「彩虹！」按鈕等候圖片彩虹化，所有處理皆於用戶端進行，轉換時間視電腦硬體及圖片大小增減。</div>
 </div>
 <div>
 <input type="file" accept="image/jpg, image/jpeg, image/png" id="file"/>
 <input type="button" value="彩虹！" id="btn_rainbow" disabled />
 <input type="button" value="原始圖片" id="btn_reset" disabled />
-<a id="btn_dl" href="#"><input type="button" value="存檔" disabled /></a>
+<a id="btn_dl" href="#" style="text-decoration:none;"><input type="button" value="存檔" disabled /></a>
 <div id="msg"></div>
 </div>
 <canvas id="can"></canvas>
@@ -45,6 +45,7 @@ function getPostMsg(e){
     if(e.data.x == canvas.width - 1 && e.data.y == canvas.height - 1){
         console.log(e.data.x, e.data.y);
         rai = cc.getImageData(0, 0, canvas.width, canvas.height);
+        bfil.value = "彩虹！"
         allow_reset();
         allow_dl();
         no_rainbow();
@@ -52,6 +53,7 @@ function getPostMsg(e){
 }
 worker.addEventListener("message", getPostMsg, false);
 function hToLeft(){
+    bfil.value = "處理中"
     no_rainbow();
     worker.postMessage({data: cc.getImageData(0, 0, canvas.width, canvas.height), h: canvas.height, w: canvas.width});
 }
