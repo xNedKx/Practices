@@ -8,17 +8,17 @@
     document,body { margin: 0; }
     #title { height: 50px; line-height: 50px; font-size: 28px; font-weight: bold; text-align: center; color: #666; }
     #all { text-align: center; }
-    #btns { margin-top: 10px; text-align: center; }
+    #btns { margin: 10px; text-align: center; }
     </style>
 </head>
 <body>
     <div id="title">五子棋</div>
     <div id="all"></div>
     <div id="btns">
-        <input type="button" value="重新開始" onclick="if(confirm('要重新開始嗎？')){create_dom(document.getElementById('all'))}">
+        <input type="button" value="重新開始" onclick="if(confirm('要重新開始嗎？')){P5g.create_dom(document.getElementById('all'))}">
     </div>
     <script>
-    create_dom(document.getElementById("all"))
+    P5g.create_dom(document.getElementById("all"))
     </script>
 </body>
 </html>
