@@ -19,24 +19,93 @@
     <div id="all"></div>
     <div id="btns">
         <div class="grp">
-            <label for="auto"><input id="auto" type="checkbox" onchange="P5g.config({auto: this.checked})" checked>自動對戰</label>
+            <label for="auto"><input id="auto" type="checkbox" checked>自動對戰</label>
         </div>
         <div class="grp">
-        <input type="button" value="反悔" onclick="P5g.redo();P5g.refresh_dom();P5g.last_hint()">
-        <input type="button" value="清除提示" onclick="P5g.clear_hint();P5g.refresh_dom()">
-        <input type="button" value="提示" onclick="P5g.refresh_hint();P5g.clear_last()">
-        <input type="button" value="重新開始" onclick="if(confirm('要重新開始嗎？')){P5g.reset();P5g.refresh_dom()}">
+        <input id="redo" type="button" value="反悔">
+        <input id="clear" type="button" value="清除提示">
+        <input id="hint" type="button" value="提示">
+        <input id="reset" type="button" value="重新開始" data-info="要重新開始嗎？">
         </div>
     </div>
     <script>
     P5g.create_dom(document.getElementById("all"))
     P5g.config({autoFitScreen: true, auto: true})
-    /*for(var y = 0; y < 32; y++ ){
-        for(var x = 0; x < 32; x++ ){
-            P5g.place((y%5)?((y%2)?x:31-x):((y%2)?31-x:x),y)
+    var a = document.getElementById("auto"),
+        r = document.getElementById("redo"),
+        c = document.getElementById("clear"),
+        h = document.getElementById("hint"),
+        s = document.getElementById("reset")
+    function setup(){
+        a.checked = true
+        r.disabled = false
+        h.disabled = false
+        r.dataset.t = 3
+        h.dataset.t = 5
+        r.value = r.value.substr(0,2) + "(" + r.dataset.t + ")"
+        h.value = h.value.substr(0,2) + "(" + h.dataset.t + ")"
+    }
+    function toggle_auto(){
+        P5g.config({auto: a.checked})
+        if(!a.checked){
+            r.value = r.value.substr(0,2)
+            h.value = h.value.substr(0,2)
+        }else{
+            r.value = r.value.substr(0,2) + "(" + r.dataset.t + ")"
+            h.value = h.value.substr(0,2) + "(" + h.dataset.t + ")"
         }
     }
-    P5g.refresh_dom()*/
+    function redo(){
+        if( P5g.current() > 1 && r.dataset.t > 0 && a.checked ){
+            if(!P5g.end()){
+                P5g.redo()
+                P5g.refresh_dom()
+                P5g.last_hint()
+                r.value = r.value.substr(0,2) + "(" + (--r.dataset.t) + ")"
+                if( r.dataset.t == 0 ){
+                    r.disabled = true
+                }
+            }
+        }else{
+            P5g.redo()
+            P5g.refresh_dom()
+            P5g.last_hint()
+        }
+    }
+    function hint(){
+        if( P5g.current() > 1 && h.dataset.t > 0 && a.checked ){
+            if( !P5g.end() ){
+                P5g.refresh_hint()
+                P5g.clear_last()
+                h.value = h.value.substr(0,2) + "(" + (--h.dataset.t) + ")"
+                if( h.dataset.t == 0 ){
+                    h.disabled = true
+                }
+            }
+        }else{
+            P5g.refresh_hint()
+            P5g.clear_last()
+        }
+    }
+    function clear_hint(){
+        P5g.clear_hint()
+        if(!P5g.end()){
+            P5g.refresh_dom()
+        }
+    }
+    function reset(){
+        if(confirm(s.dataset.info)){
+            P5g.reset()
+            P5g.refresh_dom()
+            setup()
+        }
+    }
+    a.addEventListener( "change", toggle_auto )
+    r.addEventListener( "click", redo )
+    c.addEventListener( "click", clear_hint )
+    h.addEventListener( "click", hint )
+    s.addEventListener( "click", reset )
+    setup()
     </script>
 </body>
 </html>
