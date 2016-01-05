@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title></title>
+<style>
+html,body { padding: 0; margin: 0; background-color: #eee; overflow-x: hidden; overflow-y: visible; font-size: 16px; }
+#all { width: 320px; height: 480px; left: 0; top: 0; position: relative; margin: 0 auto; background-color: #fff; font-size: 12px; font-family: simhei; }
+#frame {  }
+/*#frame div { outline: 1px solid rgba( 0, 0, 0, 0.1 ); background-color: rgba( 255, 255, 255, 0.4 ); }*/
+#frame { position: relative; width: 100%; height: 100%; width: 100%; }
+#header { position: relative; height: 5%; width: 100%; }
+#header #nav-bar { background-color: #333; height: 100%; color: #EEE; }
+#main { position: relative; height: 90%; width: 100%; }
+#main #contents { position: relative; height: 80%; width: 100%; overflow-y: auto; overflow-x: hidden; position: relative; }
+#main.input-on #contents { height: 40%; overflow-y: hidden; }
+#contents .datetime-label { float: left; width: 5%; height: 7.8125%; box-sizing: border-box; border-top: 4px solid rgba( 0, 0, 0, 0.1 ); text-align: center; word-break: break-all; overflow: hidden; }
+#main.input-on #contents .datetime-label { height: 15.625%; }
+.item { height: 7.8125%; overflow: hidden; width: 95%; margin-left: 5%; box-sizing: border-box; border-left: 1px solid rgba( 0, 0, 0, 0.2 ); border-bottom: 1px solid rgba( 0, 0, 0, 0.2 ); }
+#main.input-on .item { height: 15.625%; }
+#main .item.detailed, #main .item.active { height: 50%; }
+/*#main.input-on .item.active { position: absolute; }*/
+#main.input-on .item.detailed, #main.input-on .item.active { height: 100%; }
+.item .item-header { height: 100%; font-size: 220%; line-height: 1; font-weight: bold; overflow: hidden; }
+.item.detailed .item-header, .item.active .item-header { height: 15.625%; }
+.item .item-header .item-header-info { width: 90%; height: 100%; float: left; word-spacing: -0.5em; }
+.item .item-header .item-header-tags { height: 100%; display: inline-block; vertical-align: text-top; }
+.item .item-header .item-header-amount { height: 100%; display: inline-block; vertical-align: text-top; }
+.item .item-header .item-header-datetime { height: 100%; display: inline-block; vertical-align: text-top; font-size: 40%; color: #ccc; }
+.item .item-header .item-header-buttons { width: 10%; height: 100%; float: right; font-size: 60%; }
+.item .item-detail { height: 540%; overflow: auto; font-size: 121.5%; line-height: 1.5; display: none; }
+#main .item.detailed .item-detail, #main .item.active .item-detail { height: 84.375%; display: block; }
+.item .item-detail .item-detail-tags { height: 15%; width: 100%; }
+.item .item-detail .item-detail-tags::before { content: "tags:" }
+.item .item-detail .item-detail-amount { height: 15%; width: 100%; }
+.item .item-detail .item-detail-amount::before { content: "amount:" }
+.item .item-detail .item-detail-datetime { height: 15%; width: 100%; }
+.item .item-detail .item-detail-datetime::before { content: "datetime:" }
+.item .item-detail .item-detail-description { height: 40%; width: 100%; }
+.item .item-detail .item-detail-description textarea { resize: none; width: 100%; height: 100%; box-sizing: border-box; }
+.item .item-detail .item-detail-buttons { height: 15%; }
+#main #inputs { height: 20%; }
+#main.input-on #inputs { height: 60%; }
+#main #inputs > .group-row:first-of-type { height: 0%; overflow: hidden; }
+#main.input-on #inputs > .group-row:first-of-type { height: 66.66%; }
+#main.input-on #inputs #n-pad { width: 66.66%; height: 100%; float: left; overflow: hidden; outline: 1px solid rgba( 0, 0, 0, 0.2); }
+#n-pad .num-input  { height: 16%; width: 100%; }
+#n-pad .num-input > input { height: 100%; width: 100%; box-sizing: border-box; }
+#n-pad .num-btn-row { height: 21%; }
+#n-pad .num-btn-row .num-btn { height: 100%; width: 25%; float: left; box-sizing: border-box; border: 0.2em solid rgba( 255, 255, 255, 0.8); background-color: rgba( 0, 0, 0, 0.1 ); }
+#main.input-on #inputs #tags { width: 33.33%; height: 100%; float: left; outline: 1px solid rgba( 0, 0, 0, 0.2); overflow: hidden; }
+#tags .title { height: 7.5%; }
+#tags .tags-input { height: 12.5%; }
+#tags .tags-input .tags-input-text { width: 80%; box-sizing: border-box; vertical-align: text-top; }
+#tags .tags-input .tags-input-search { width: 20%; box-sizing: border-box; padding: 0; height: 100%; vertical-align: text-top; }
+#tags .tags-options { height: 80%; overflow-y: auto; }
+#tags .tags-option { width: 100%; }
+#tags .tags-option.hide { display: none; }
+#tags .tags-option.checked { float: left; }
+#tags .tags-option input[type=checkbox] { vertical-align: text-top; }
+#tags .tags-option::after { content: attr(data-tag); }
+#main #inputs #timeline { height: 100%; outline: 1px solid rgba( 0, 0, 0, 0.2); }
+#main.input-on #inputs #timeline { height: 33.33%; }
+#timeline > .group-row:first-of-type { height: 50%; }
+#timeline > .group-row:first-of-type > div { float: left; height: 100%; width: 33.33%; }
+#timeline > .group-row:first-of-type > div > div { font-size: 180%; letter-spacing: -0.06em; line-height: 1em; }
+#timeline-left::before { content: "will be Save" }
+#timeline-datetime::before { content: "DateTime:" }
+#timeline-right::before { content: "Reset/Close" }
+#timeline-line { height: 50%; position: relative; overflow: hidden; }
+#timeline-bar { height: 100%; word-spacing: -0.5em; white-space: nowrap; position: absolute; }
+#timeline-bar .left-pad { width: 12em; display: inline-block; }
+#timeline-bar .right-pad { width: 12em; display: inline-block; }
+#timeline-bar .timeline-bar-date { height: 100%; display: inline-block; position: relative; word-spacing: 0.25em; white-space: nowrap; padding: 0 0.1em; overflow: hidden; text-align: center; }
+#timeline-bar .timeline-bar-date::after { content: attr(data-datetime); overflow: hidden; color: rgba( 0, 0, 0, 0.4 ); pointer-events: none; display: block; text-align: center; }
+#timeline-bar .timeline-bar-date .timeline-bar-item { height: 60%; text-align: center; display: inline-block; }
+#timeline-bar .timeline-bar-date .timeline-bar-item::before { content: attr(data-amount); color: rgba( 0, 0, 0, 0.6 ); padding: 0 0.1em; }
+#timeline-bar .timeline-bar-date .timeline-bar-item::after { content: ""; width: 0; height: 0; border-color: rgba( 0, 0, 0, 0.6 ) transparent;  border-style: solid; border-width: 0.5em 0.5em 0; display: block; margin: 0 auto; }
+#footer { position: relative; height: 5%; width: 100%; }
+#footer #tabs { background-color: #333; height: 100%; color: #EEE; }
+</style>
+</head>
+<body>
+<div id="all">
+    <div id="frame">
+        <div id="header">
+            <div id="nav-bar">navs</div>
+        </div>
+        <div id="main">
+            <div id="contents">
+                <div class="datetime-label">mm<br>dd</div>
+                <div class="item detailed active">
+                    <div class="item-header">
+                        <div class="item-header-info">
+                            <div class="item-header-amount">$nnn</div>
+                            <div class="item-header-tags">[tag]</div>
+                            <div class="item-header-datetime">time</div>
+                        </div>
+                        <div class="item-header-buttons">SX</div>
+                    </div>
+                    <div class="item-detail">
+                        <div class="item-detail-tags">TAGS</div>
+                        <div class="item-detail-amount">$NNN</div>
+                        <div class="item-detail-datetime">time</div>
+                        <div class="item-detail-description"><textarea>Note</textarea></div>
+                        <div class="item-detail-buttons">btns</div>
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="item-header">
+                        <div class="item-header-info">
+                            <div class="item-header-amount">$nnn</div>
+                            <div class="item-header-tags">[tag]</div>
+                            <div class="item-header-datetime">time</div>
+                        </div>
+                        <div class="item-header-buttons">SX</div>
+                    </div>
+                    <div class="item-detail">
+                        <div class="item-detail-tags">TAGS</div>
+                        <div class="item-detail-amount">$NNN</div>
+                        <div class="item-detail-datetime">time</div>
+                        <div class="item-detail-description"><textarea>Note</textarea></div>
+                        <div class="item-detail-buttons">btns</div>
+                    </div>
+                </div>
+                <div class="datetime-label">mm<br>dd</div>
+                <div class="item">
+                    <div class="item-header">
+                        <div class="item-header-info">
+                            <div class="item-header-amount">$nnn</div>
+                            <div class="item-header-tags">[tag]</div>
+                            <div class="item-header-datetime">time</div>
+                        </div>
+                        <div class="item-header-buttons">SX</div>
+                    </div>
+                    <div class="item-detail">
+                        <div class="item-detail-tags">TAGS</div>
+                        <div class="item-detail-amount">$NNN</div>
+                        <div class="item-detail-datetime">time</div>
+                        <div class="item-detail-description"><textarea>Note</textarea></div>
+                        <div class="item-detail-buttons">btns</div>
+                    </div>
+                </div>
+            </div>
+            <div id="inputs">
+                <div class="group-row">
+                    <div id="n-pad">
+                        <div class="num-input"><input type="text"></div>
+                        <div class="num-btn-row">
+                            <div class="num-btn">+</div>
+                            <div class="num-btn">7</div>
+                            <div class="num-btn">8</div>
+                            <div class="num-btn">9</div>
+                        </div>
+                        <div class="num-btn-row">
+                            <div class="num-btn">-</div>
+                            <div class="num-btn">4</div>
+                            <div class="num-btn">5</div>
+                            <div class="num-btn">6</div>
+                        </div>
+                        <div class="num-btn-row">
+                            <div class="num-btn">*</div>
+                            <div class="num-btn">1</div>
+                            <div class="num-btn">2</div>
+                            <div class="num-btn">3</div>
+                        </div>
+                        <div class="num-btn-row">
+                            <div class="num-btn">/</div>
+                            <div class="num-btn">=</div>
+                            <div class="num-btn">0</div>
+                            <div class="num-btn">C</div>
+                        </div>
+                    </div>
+                    <div id="tags">
+                        <div class="title">TAGS</div>
+                        <div class="tags-input"><input class="tags-input-text type="text"><input class="tags-input-search" type="button" value="&smashp;"></div>
+                        <div class="tags-options">
+                            <div class="tags-option" data-tag="name"><input type="checkbox"></div>
+                            <div class="tags-option" data-tag="abc"><input type="checkbox"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="timeline">
+                    <div class="group-row">
+                        <div id="timeline-left"><div></div></div>
+                        <div id="timeline-datetime"><div></div></div>
+                        <div id="timeline-right"><div></div></div>
+                    </div>
+                    <div id="timeline-line">
+                        <div id="timeline-bar">
+                            <div class="timeline-bar-date" data-datetime="mm/dd">
+                                <div class="timeline-bar-item" data-amount="111111"></div>
+                                <div class="timeline-bar-item" data-amount="4560"></div>
+                                <div class="timeline-bar-item" data-amount="9999"></div>
+                                <div class="timeline-bar-item" data-amount="3"></div>
+                            </div>
+                            <div class="timeline-bar-date" data-datetime="mm/dd">
+                                <div class="timeline-bar-item" data-amount="0"></div>
+                            </div>
+                            <div class="timeline-bar-date" data-datetime="mm/dd">
+                                <div class="timeline-bar-item" data-amount="1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="footer">
+            <div id="tabs">tabs</div>
+        </div>
+    </div>
+</div>
+<script>
+var fake_data = [], cur_index = max_index = min_index = min_index_tl = max_index_tl = cur_index_tl = 0
+for( var i = 0; i < 50; i++ ){
+    fake_data[i] = Math.random()*1e18
+}
+fake_data.sort(function(a,b){return b-a})
+function toggle_item_detailed(){
+    this.parentNode.classList.toggle("detailed")
+}
+function toggle_item_active(){
+    var item = this.parentNode
+    if(item.classList.toggle("active")){
+        document.getElementById("main").classList.add("input-on")
+        item.parentNode.scrollTop = item.offsetTop
+        document.getElementById("timeline-datetime").getElementsByTagName("div")[0].textContent = item.firstChild.getElementsByClassName("item-header-datetime")[0].textContent
+        num_load_amount()
+        tag_load_data()
+    }else{
+        document.getElementById("main").classList.remove("input-on")
+        document.getElementById("timeline-datetime").getElementsByTagName("div")[0].textContent = ""
+    }
+}
+function close_input(){
+    var item = document.querySelector(".item.active")
+    if(item){
+        toggle_item_active.call(item.firstChild)
+    }
+}
+function create_item(index){
+    var data = fake_data[index], item = document.createElement("div")
+    item.className = "item"
+    item.dataset.id = index
+    item.appendChild(document.createElement("div"))
+    item.appendChild(document.createElement("div"))
+    var header = item.firstChild, detail = item.lastChild
+    header.className = "item-header"
+    header.appendChild(document.createElement("div"))
+    var info = header.firstChild
+    info.className = "item-header-info"
+    info.appendChild(document.createElement("div"))
+    info.lastChild.className = "item-header-amount"
+    info.lastChild.textContent = "$" + data.toString(10).substr(0,4)
+    info.appendChild(document.createElement("div"))
+    info.lastChild.className = "item-header-tags"
+    info.lastChild.textContent = "#"+data.toString(16).substr(0,4)
+    info.appendChild(document.createElement("div"))
+    info.lastChild.className = "item-header-datetime"
+    info.lastChild.textContent = data.toString(2).substr(0,8)
+    header.appendChild(document.createElement("div"))
+    header.lastChild.className = "item-header-buttons"
+    header.lastChild.textContent = "\u21D9\u2717"
+    detail.className = "item-detail"
+    detail.appendChild(document.createElement("div"))
+    detail.lastChild.className = "item-detail-tags"
+    detail.lastChild.textContent = "#"+data.toString(16).substr(0,4)
+    detail.appendChild(document.createElement("div"))
+    detail.lastChild.className = "item-detail-amount"
+    detail.lastChild.textContent = "$" + data.toString(10).substr(0,4)
+    detail.appendChild(document.createElement("div"))
+    detail.lastChild.className = "item-detail-datetime"
+    detail.lastChild.textContent = data.toString(2).substr(0,8)
+    detail.appendChild(document.createElement("div"))
+    detail.lastChild.className = "item-detail-description"
+    detail.lastChild.appendChild(document.createElement("textarea"))
+    detail.lastChild.lastChild.value = data
+    detail.appendChild(document.createElement("div"))
+    detail.lastChild.className = "item-detail-buttons"
+    detail.lastChild.textContent = "buttons"
+    header.addEventListener( "click", toggle_item_active )
+    return item
+}
+function create_datetime_label(dt){
+    var dtl = document.createElement("div")
+    dtl.className = "datetime-label"
+    dtl.textContent = dt.toString().substr(0,4)
+    dtl.style.backgroundColor = "#" + Math.round(dt/100*0xffffff).toString(16).substr(0,6)
+    return dtl
+}
+function load_items(s,e){
+    var c = document.getElementById("contents"), tmp, dt, ndt
+    min_index = Math.max( s >> 0, 0 )
+    max_index = Math.min( e >> 0, fake_data.length )
+    while(tmp = c.lastChild){
+        c.removeChild(tmp)
+    }
+    for( var i = min_index; i < max_index; i++ ){
+        ndt = Math.floor(fake_data[i]/1e16)
+        if( ndt !== dt ){
+            dt = ndt
+            c.appendChild(create_datetime_label(dt))
+        }
+        c.appendChild(create_item(i))
+    }
+    return c.childNodes
+}
+function fetch_items_f(n){
+    n = Math.min( n, min_index )
+    var c = document.getElementById("contents"), out = []
+    for( var i = min_index-1; i >= min_index-n; i-- ){
+        c.insertBefore( create_item(i), c.firstChild )
+        out.unshift(c.firstChild)
+    }
+    min_index = min_index - n
+    return out
+}
+function fetch_items_b(n){
+    n = Math.min( n, fake_data.length - max_index )
+    var c = document.getElementById("contents"), out = []
+    for( var i = max_index; i < max_index+n; i++ ){
+        c.appendChild(create_item(i))
+        out.push(c.lastChild)
+    }
+    max_index = max_index + n
+    return out
+}
+function fetch_items(n){
+    if( n > 0 ){
+        return fetch_items_b(n)
+    }else{
+        return fetch_items_f(-n)
+    }
+}
+function items_scroll(p){
+    var c = document.getElementById("contents")
+    c.scrollTop = p * (c.scrollHeight-c.offsetHeight)
+}
+function item_tl(){
+    var c = document.getElementById("contents")
+    tl_scroll(c.scrollTop/(c.scrollHeight-c.offsetHeight))
+}
+function tl_open_item(){
+    close_input()
+    toggle_item_active.call( document.querySelector(".item[data-id='"+this.dataset.id+"']").firstChild )
+}
+function create_tl_item(index){
+    var data = fake_data[index], item = document.createElement("div")
+    item.className = "timeline-bar-item"
+    item.dataset.amount = data.toString(10).substr(0,4)
+    item.dataset.id = index
+    item.addEventListener("click", tl_open_item)
+    return item
+}
+function create_tl_datetime(dt){
+    var dtl = document.createElement("div")
+    dtl.className = "timeline-bar-date"
+    dtl.style.backgroundColor = "#" + Math.round(dt/100*0xffffff).toString(16).substr(0,6)
+    dtl.dataset.datetime = dt.toString().substr(0,4)
+    return dtl
+}
+function tl_load_items(s,e){
+    var tlb = document.getElementById("timeline-bar"), tmp, dt, ndt, dtl
+    min_index_tl = Math.max( s >> 0, 0 )
+    max_index_tl = Math.min( e >> 0, fake_data.length )
+    while(tmp = tlb.lastChild){
+        tlb.removeChild(tmp)
+    }
+    for( var i = min_index_tl; i < max_index_tl; i++ ){
+        ndt = Math.floor(fake_data[i]/1e16)
+        if( ndt !== dt ){
+            dt = ndt
+            dtl = create_tl_datetime(dt)
+            tlb.insertBefore(dtl, tlb.firstChild)
+        }
+        dtl.insertBefore(create_tl_item(i), dtl.firstChild)
+    }
+    return tlb.childNodes
+}
+function tl_padding(){
+    var tlb = document.getElementById("timeline-bar"), left = tlb.getElementsByClassName("left-pad"), right = tlb.getElementsByClassName("right-pad")
+    switch(left.length){
+    case 0:
+        left = document.createElement("div")
+        left.className = "left-pad"
+    default:
+        tlb.insertBefore(left, tlb.firstChild)
+    }
+    switch(right.length){
+    case 0:
+        right = document.createElement("div")
+        right.className = "right-pad"
+    default:
+        tlb.appendChild(right)
+    }
+}
+var scroll_x = document.getElementById("timeline-line").offsetWidth/2, scroll_v = -scroll_x, scroll_a = 0, scroll_dr = scroll_x/5, scroll_sr = scroll_x, scroll_th = scroll_x/20
+function start_scroll_tl(e){
+    e.preventDefault()
+    //console.log(e.type)
+    scroll_x = e.clientX
+    this.removeEventListener("mousedown", start_scroll_tl)
+    this.addEventListener("mouseup", stop_scroll_tl)
+    //this.addEventListener("mouseout", stop_scroll_tl)
+    this.addEventListener("mousemove", get_scroll_a)
+}
+function stop_scroll_tl(e){
+    scroll_a = 0
+    e.preventDefault()
+    //console.log(e.type)
+    this.addEventListener("mousedown", start_scroll_tl)
+    this.removeEventListener("mouseup", stop_scroll_tl)
+    //this.removeEventListener("mouseout", stop_scroll_tl)
+    this.removeEventListener("mousemove", get_scroll_a)
+}
+function get_scroll_a(e){
+    e.preventDefault()
+    return scroll_a = e.clientX - scroll_x
+}
+function scroll_tl(){
+    var tlb = document.getElementById("timeline-bar"), left = tlb.offsetLeft, scroll_f
+    if(Math.abs(scroll_a) >= scroll_th){
+        scroll_f = (scroll_a > 0 ? -scroll_dr : scroll_dr )
+    }else{
+        scroll_f = (scroll_a > 0 ? -scroll_sr : scroll_sr )
+    }
+    scroll_v += (scroll_a + scroll_f)/10
+    if(scroll_a > 0){
+        scroll_v = Math.max(0, scroll_v)
+    }else{
+        scroll_v = Math.min(0, scroll_v)
+    }
+    left = Math.max(Math.min(left + scroll_v, 0), tlb.parentNode.offsetWidth - tlb.offsetWidth)
+    tlb.style.left = left + "px"
+    cur_index_tl = 1 - left/(tlb.parentNode.offsetWidth - tlb.offsetWidth)
+    if(scroll_v !== 0 && !document.getElementById("main").classList.contains("input-on")){items_scroll(cur_index_tl)}
+    return cur_index_tl
+}
+function tl_scroll(p){
+    var tlb = document.getElementById("timeline-bar")
+    tlb.style.left = (1-p)*(tlb.parentNode.offsetWidth - tlb.offsetWidth) + "px"
+}
+document.getElementById("timeline-line").addEventListener("mousedown", start_scroll_tl)
+document.getElementById("contents").addEventListener("scroll", item_tl)
+
+var n_cache = "0", n2_cache = "", op_cache = ""
+function num_exe(){
+    switch(op_cache){
+    case "+":
+        n_cache = (+n_cache + +n2_cache).toString()
+    break
+    case "-":
+        n_cache = (+n_cache - +n2_cache).toString()
+    break
+    case "*":
+        n_cache = (+n_cache * +n2_cache).toString()
+    break
+    case "/":
+        n_cache = (+n_cache / +n2_cache).toString()
+    break
+    }
+    n2_cache = ""
+    op_cache = ""
+    return n_cache
+}
+function pad_btn_event(e){
+    switch(this.textContent){
+    case "0":
+    case "1":
+    case "2":
+    case "3":
+    case "4":
+    case "5":
+    case "6":
+    case "7":
+    case "8":
+    case "9":
+        if( op_cache !== "" ){
+            if(n2_cache === "0"){
+                n2_cache = ""
+            }
+            n2_cache = n2_cache.concat(this.textContent)
+        }else{
+            if(n_cache === "0"){
+                n_cache = ""
+            }
+            n_cache = n_cache.concat(this.textContent)
+        }
+    break
+    case "-":
+        if(n_cache === "0" && op_cache === ""){
+            n_cache = "-"
+            break
+        }
+    case "+":
+    case "*":
+    case "/":
+        if( op_cache !== "" ){
+            num_exe()
+        }
+        op_cache = this.textContent
+        n2_cache = "0"
+    break
+    case "=":
+        if( op_cache !== "" ){
+            num_exe()
+        }
+    break
+    case "C":
+        if( op_cache !== "" ){
+            if(n2_cache === "0" || n2_cache === ""){
+                if(op_cache === ""){
+                    n_cache = "0"
+                }else{
+                    op_cache = ""
+                }
+                n2_cache = ""
+            }else{
+                n2_cache = "0"
+            }
+        }else{
+            n_cache = "0"
+        }
+    break
+    }
+    return document.getElementsByClassName("num-input")[0].getElementsByTagName("input")[0].value = n_cache + op_cache + n2_cache
+    
+}
+function create_npad(){
+    var pad = document.getElementById("n-pad"), inp = document.createElement("div"), tmp,
+    keys = [ ["+", 7, 8, 9], ["-", 4, 5, 6], ["*", 1, 2, 3], ["/", "=", 0, "C"] ]
+    while(tmp = pad.lastChild){
+        pad.removeChild(tmp)
+    }
+    inp.appendChild(document.createElement("input"))
+    inp.className = "num-input"
+    inp.firstChild.value = 0
+    pad.appendChild(inp)
+    for( var i = 0; i < keys.length; i++ ){
+        tmp = document.createElement("div")
+        tmp.className = "num-btn-row"
+        pad.appendChild(tmp)
+        for( var j = 0; j < keys[i].length; j++ ){
+            tmp = document.createElement("div")
+            tmp.className = "num-btn"
+            tmp.textContent = keys[i][j]
+            tmp.addEventListener("click", pad_btn_event)
+            pad.lastChild.appendChild(tmp)
+        }
+    }
+}
+create_npad()
+
+function num_load_amount(){
+    document.getElementsByClassName("num-input")[0].getElementsByTagName("input")[0].value = n_cache = document.querySelector(".item.active").getElementsByClassName("item-header-amount")[0].textContent.replace(/^\$/,"")
+}
+
+var tags = {}, tag_min = tag_max = 0
+function load_tags(s,e){
+    var tag_ops = document.getElementsByClassName("tags-options")[0], tmp, t
+    while(tmp = tag_ops.firstChild){
+        tag_ops.removeChild(tmp)
+    }
+    tags = {}
+    tag_min = Math.max( s >> 0, 0 )
+    tag_max = Math.min( e >> 0, fake_data.length )
+    for( var i = tag_min; i < tag_max; i++ ){
+        t = fake_data[i].toString(16).substr(0,4)
+        if(tags.hasOwnProperty(t)){
+            tags[t].n += 1
+        }else{
+            tmp = document.createElement("div")
+            tmp.className = "tags-option"
+            tmp.dataset.tag = t
+            tmp.appendChild(document.createElement("input"))
+            tmp.firstChild.type = "checkbox"
+            tmp.firstChild.addEventListener("change", toggle_tag_check)
+            tags[t] = {n: 1, d: tmp}
+        }
+    }
+    Object.keys(tags).sort(function(a,b){return a.localeCompare(b) || tags[b].n - tags[a].n }).forEach(function(k){
+        tag_ops.appendChild(tags[k].d)
+    })
+}
+function toggle_tag_check(){
+    this.parentNode.classList.toggle("checked")
+}
+function tag_load_data(){
+    var tag_ops = document.getElementsByClassName("tags-options")[0], ops = document.getElementsByClassName("tags-option")
+    for( var i = 0; i < ops.length; i++ ){
+        ops[i].firstChild.checked = false
+        ops[i].classList.remove("hide")
+        ops[i].classList.remove("checked")
+    }
+    document.querySelector(".item.active").getElementsByClassName("item-header-tags")[0].textContent.replace(/^#/,"").split(" ").sort().reverse().forEach(function(k){
+        tags[k].d.firstChild.checked = true
+        tag_ops.insertBefore(tags[k].d,tag_ops.firstChild)
+        tags[k].d.classList.add("checked")
+    })
+}
+function filter_tags(){
+    var str = document.querySelector("#tags .tags-input-text").value, regex = str !== "" ? RegExp(str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),"g") : /^/
+    var ops = document.getElementsByClassName("tags-option")
+    for( var i = 0; i < ops.length; i++ ){
+        if( ops[i].dataset.tag.match(regex) ){
+            ops[i].classList.remove("hide")
+        }else if( !ops[i].classList.contains("checked") ){
+            ops[i].classList.add("hide")
+        }
+    }
+}
+document.querySelector("#tags .tags-input-text").addEventListener( "keyup", filter_tags )
+document.querySelector("#tags .tags-input-search").addEventListener( "click", function(){
+    document.querySelector("#tags .tags-input-text").value = ""
+    filter_tags()
+} )
+document.querySelector("#timeline-right").addEventListener( "click", close_input )
+
+
+
+load_items(10,30)
+tl_load_items(10,30)
+load_tags(10,30)
+setInterval(scroll_tl, 100)
+</script>
+</body>
+</html>
