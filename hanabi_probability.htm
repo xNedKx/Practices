@@ -56,19 +56,22 @@ document,body {
     color: #9090F0;
     cursor: pointer;
 }
-.cards_row {
+.cards_row_wrap {
     font-size: 2rem;
     width: 90%;
     position: relative;
+    padding-bottom: 14.56%;
+    margin: 0 auto;
+}
+.cards_row {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     display: flex;
     justify-content: space-between;
     align-items: stretch;
-    margin: 0 auto;
-}
-.cards_row:after {
-    padding-top: 14.56%;
-    display: block;
-    content: '';
 }
 .card {
     width: 10%;
