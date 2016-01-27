@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="hanabi_probability-min.js"></script>
+<title></title>
+<style>
+document,body {
+    margin: 0;
+    font-family: cambria;
+    overflow-x: hidden;
+}
+
+@media screen and (max-width: 320px){}
+@media screen and (max-width: 480px){}
+@media screen and (max-width: 640px){}
+@media screen and (max-width: 768px){}
+@media screen and (max-width: 1024px){}
+@media screen and (max-width: 1280px){}
+@media screen and (max-width: 1600px){}
+@media screen and (max-width: 1920px){}
+
+#header {
+    width: 100%;
+    max-width: 768px;
+    margin: 0 auto;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding-top: 1vw;
+    position: relative;
+}
+#main {
+    width: 100%;
+    max-width: 768px;
+    margin: 0 auto;
+    position: relative;
+    padding: 1vw 0;
+}
+#content {
+    width: 100%;
+    max-width: 768px;
+    margin: 0 auto;
+    text-align: center;
+    position: relative;
+    padding-bottom: 1vw;
+}
+#header .btns {
+    font-size: 0.8rem;
+    position: absolute;
+    top: 0.2rem;
+    right: 0;
+}
+#n,#r5,#r10 {
+    color: #9090F0;
+    cursor: pointer;
+}
+.cards_row {
+    font-size: 2rem;
+    width: 90%;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    margin: 0 auto;
+}
+.cards_row:after {
+    padding-top: 14.56%;
+    display: block;
+    content: '';
+}
+.card {
+    width: 10%;
+    margin: 1px;
+    text-align: center;
+    box-sizing: border-box;
+    border-radius: 2px;
+    border: 2px solid transparent;
+    background-color: #999;
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+}
+.card:before {
+    position: relative;
+    display: block;
+    content: attr(data-number);
+    z-index: 10;
+}
+.card:hover {
+    outline: 1px solid rgba(255, 255, 255, 0.8);
+}
+.card .card-mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+}
+.card.red {
+    color: #E0320B;
+}
+.card.blue {
+    color: #1A16FA;
+}
+.card.green {
+    color: #10910D;
+}
+.card.yellow {
+    color: #E5D600;
+}
+.card.white {
+    color: #F5F5F5;
+}
+.card.rainbow {
+    color: #000000;
+}
+.card.s0 {
+    background-color: #999;
+    text-shadow: 0 0 5px rgba(100, 100, 100, 0.8);
+}
+.card.s1 {
+    background-color: #ccc;
+    text-shadow: 0 0 5px rgba(50, 50, 50, 0.8);
+}
+.card.s2 {
+    background-color: #eee;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+}
+.card.s3 {
+    background-color: #333;
+    text-shadow: 0 0 5px rgba(200, 200, 200, 0.8);
+}
+.card:after {
+    color: #333;
+    font-size: 0.8rem;
+    width: 100%;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    z-index: 0;
+}
+.card.s0:after {
+    content: "未知";
+}
+.card.s1:after {
+    content: "手牌";
+}
+.card.s2:after {
+    content: "成功";
+}
+.card.s3:after {
+    content: "棄牌";
+}
+.card.last {
+    border-color: rgba(200, 50, 50, 0.9);
+}
+.probability {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+.probability .title {
+    width: 100%;
+    background-color: #f0f0f0;
+    margin-top: 1vw;
+    font-weight: bold;
+}
+.probability.all .title {
+    background-color: #EEEEEE;
+}
+.probability.red .title {
+    background-color: #F2C1B6;
+}
+.probability.blue .title {
+    background-color: #BFBEFA;
+}
+.probability.green .title {
+    background-color: #BBE0BA;
+}
+.probability.yellow .title {
+    background-color: #E5E19E;
+}
+.probability.white .title {
+    background-color: #CCCCCC;
+}
+.probability.rainbow .title {
+    background: linear-gradient( to right, 
+        rgba(255, 122, 122, 1) 0%,
+        rgba(255, 255, 122, 1) 15%,
+        rgba(122, 255, 122, 1) 30%,
+        rgba(122, 255, 255, 1) 50%,
+        rgba(122, 122, 255, 1) 65%,
+        rgba(255, 122, 255, 1) 80%,
+        rgba(255, 122, 122, 1) 100% );
+}
+.probability .left {
+    width: 18%;
+}
+.probability .playable {
+    width: 28%;
+}
+.probability .safe {
+    width: 24%;
+}
+.probability .last {
+    width: 24%;
+}
+.probability .last-playable {
+    width: 6%;
+}
+.probability .left:before {
+    font-size: 0.8em;
+    color: #777;
+    content: "剩餘: ";
+}
+.probability .playable:before {
+    font-size: 0.8em;
+    color: #777;
+    content: "可施放: ";
+}
+.probability .safe:before {
+    font-size: 0.8em;
+    color: #777;
+    content: "安全: ";
+}
+.probability .last:before {
+    font-size: 0.8em;
+    color: #777;
+    content: "絕張: ";
+}
+.probability .last-playable:before {
+    font-size: 0.8em;
+    color: #777;
+    content: "(";
+}
+.probability .last-playable:after {
+    font-size: 0.8em;
+    color: #777;
+    content: ")";
+}
+</style>
+</head>
+<body>
+<div id="header">HANABI PROBABILITY<div class="btns"><a id="n">N</a>/<a id="r10">r10</a>/<a id="r5">r5</a></div></div>
+<div id="main"></div>
+<div id="content"></div>
+</body>
+</html>
