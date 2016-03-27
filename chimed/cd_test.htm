@@ -1,7 +1,8 @@
 <!doctype html>
 <html>
 <head>
-<meta charset="UTF-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{
 font-size:15px;
@@ -9,7 +10,7 @@ margin:0;
 padding:0;
 }
 div.all{
-width:420px;
+max-width:420px;
 margin:0 auto;
 overflow:hidden;
 }
@@ -23,7 +24,8 @@ height:2em;
 font-weight:100;
 text-align:center;
 color:#F6F6C9;
-letter-spacing:1.2em;
+letter-spacing:1.1em;
+padding-left:1.1em;
 }
 h3{
 margin:0;
@@ -47,14 +49,18 @@ div.b{
 background-color:#66F090;
 float:left;
 height:240px;
-width:72px;
+width:17%;
 border-radius:2px;
 display:table;
 color:#705060;
+cursor:pointer;
+}
+div.b:hover{
+text-shadow: 0 0 6px rgba(0,0,0,0.2);
+color:#402030;
 }
 div.blank{
 height:240px;
-width:72px;
 position:absolute;
 background-color:rgba(0,0,0,0);
 }
@@ -62,13 +68,14 @@ div.bw{
 display:table-cell;
 vertical-align:middle;
 text-align:center;
-font-size:20px
+font-size:20px;
+cursor:pointer;
 }
 div.select{
 float:left;
 height:232px;
-width:268px;
-padding:4px;
+width:64%;
+padding:1%;
 line-height:29px;
 font-size:18px;
 margin:0;
@@ -100,6 +107,12 @@ div.stastics{
 border:1px solid #E4E4E4;
 border-top:0;
 clear:both;
+}
+label{
+cursor:pointer;
+}
+label:hover{
+text-shadow: 0 0 2px rgba(0,0,0,0.3);
 }
 </style>
 <script>
@@ -588,7 +601,7 @@ function getn(){
 <div><label><input type="checkbox" id="show" onchange="sh=document.getElementById('show').checked==1?1:0;sh==1?check(an):null;">顯示答案</label></div>
 </div>
 <div class="stastics">
-回答率(正確/已答/全部)： 名稱題<span id="q0"></span> 類別題<span id="q1"></span><br>
+回答率(正確/已答/全部)：<br>名稱題<span id="q0"></span><br>類別題<span id="q1"></span><br>
 </div>
 </div>
 <script>

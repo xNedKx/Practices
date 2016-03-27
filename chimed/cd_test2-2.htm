@@ -1,7 +1,8 @@
 <!doctype html>
 <html>
 <head>
-<meta charset="UTF-8">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>
 /*
 0->大類 1->小類 2->名稱
@@ -253,7 +254,6 @@ d=[
 qn=0; //Math.floor(Math.random()*d2[qt].length);
 qo=[[],[]]; //0->正確:1;錯誤:0 1->選項名稱
 don=50; //選項數目
-lin=5;
 ans=[]; //與qo對應
 d2=[[],[]]; //移除答過的問題
 d3=[[],[]]; //答題記錄
@@ -306,7 +306,6 @@ function show(){
     tmp.setAttribute("id",d[qo[1][i]][2]);
     tmp.innerHTML="<input type='checkbox' onclick='ans["+i+"]=this.checked;'>"+d[qo[1][i]][2];
     os.appendChild(tmp);
-    if(i%lin==lin-1){os.innerHTML+="<br>";}
   }
   document.getElementById("r").innerHTML="";
 }
@@ -406,7 +405,7 @@ background-color:#F0F0F0;
 font-family:"微軟正黑體";
 }
 div#all{
-width:720px;
+max-width:720px;
 margin:0 auto;
 border:1px solid #E9E9E9;
 background-color:#FFFFFF;
@@ -441,6 +440,7 @@ transition:background-color 0.16s ease 0s;
 #b{
 border-top:1px solid #E9E9E9;
 border-bottom:1px solid #E9E9E9;
+clear:both
 }
 #r{
 margin:0;
@@ -451,31 +451,38 @@ min-height:20px;
 border-top:1px solid #E9E9E9;
 color:#8D8D8D;
 }
-#m div{
+#m label{
+display:inline-block;
+}
+#sl{
 float:right;
+}
+#m #sl div{
+display:inline-block;
 padding:0 0 0 10px;
 cursor:pointer;
 color:#5A5A5A;
 transition:color 0.1s ease 0s;
 font-size:0.9em;
 }
-#m div:hover{
+#m #sl div:hover{
 color:#F08989;
 }
 #qs{
-position:absolute;
+position:fixed;
 top:0;
 right:0;
 display:none;
 background-color:#FFFFFF;
 border:1px solid #E9E9E9;
+z-index:100;
 }
 #qh{
 text-align:center;
 border-bottom:1px solid #E9E9E9;
 }
 #ql{
-height:600px;
+height:100vh;
 width:150px;
 overflow:auto;
 cursor:default;
@@ -492,6 +499,10 @@ cursor:pointer;
 </head>
 <body>
 <div id="all">
+<div id="qs">
+<div id="qh"><b>題目清單</b><span style="float:right;cursor:pointer;color:#DDD;padding-right:2px;" onclick="document.getElementById('qs').style.display='none';document.getElementById('list').checked=false">X</span></div>
+<div id="ql"></div>
+</div>
 <p id="q"></p>
 <div id="o"></div>
 <div id="b">
@@ -502,14 +513,12 @@ cursor:pointer;
 <div id="m">
 <label><input type="checkbox" onclick="sa=this.checked">顯示答案</label>
 <label><input type="checkbox" onclick="h[0]=this.checked;sh(0);">顯示數量</label>
-<label><input type="checkbox" onclick="this.checked?document.getElementById('qs').style.display='block':document.getElementById('qs').style.display='none';">題目清單</label>
+<label><input id="list" type="checkbox" onclick="this.checked?document.getElementById('qs').style.display='block':document.getElementById('qs').style.display='none';">題目清單</label>
+<div id="sl">
 <div onclick="confirm('是否要清除記錄？')?resetSave():null;" title="清除COOKIE">清除記錄</div>
 <div onclick="confirm('是否要讀取記錄？')?load():null;" title="讀取COOKIE">讀取記錄</div>
 <div onclick="confirm('是否要保存記錄？')?save():null;" title="存入COOKIE">保存記錄</div>
 </div>
-<div id="qs">
-<div id="qh"><b>題目清單</b></div>
-<div id="ql"></div>
 </div>
 </div>
 <script>
