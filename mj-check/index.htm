@@ -296,6 +296,13 @@ var options = document.getElementById("options"),
     extras = document.getElementById("extras"),
     output = document.getElementById("output"),
     chance = document.getElementById("chance")
+function lockCM(e)
+{
+    e.preventDefault();
+    e.stopPropagation()
+    e.cancelBubble = true;
+    return false;
+}
 function removeCard(e)
 {
     e.preventDefault();
@@ -313,50 +320,56 @@ function createCard( type )
 function addCard(e)
 {
     e.preventDefault();
-    var hands = yours.childNodes,
-        exs = extras.childNodes,
-        n = 0, c = 0
-    for( var i = 0; i < hands.length; i++ )
+    if( e.button == 0 )
     {
-        if( hands[i].dataset.type == this.dataset.type )
+        var hands = yours.childNodes,
+            exs = extras.childNodes,
+            n = 0, c = 0
+        for( var i = 0; i < hands.length; i++ )
         {
-            n++
+            if( hands[i].dataset.type == this.dataset.type )
+            {
+                n++
+            }
+            if( hands[i].dataset.type < 50 )
+            {
+                c++
+            }
         }
-        if( hands[i].dataset.type < 50 )
+        for( var i = 0; i < exs.length; i++ )
         {
-            c++
+            if( exs[i].dataset.type == this.dataset.type )
+            {
+                n++
+            }
+            if( exs[i].dataset.type < 50 )
+            {
+                c++
+            }
         }
-    }
-    for( var i = 0; i < exs.length; i++ )
-    {
-        if( exs[i].dataset.type == this.dataset.type )
+        if( this.dataset.type < 50 && n < 4 && c < 17 )
         {
-            n++
+            var card = createCard( this.dataset.type )
+            yours.appendChild( card )
+            card.addEventListener( "mouseup", removeCard )
+            card.addEventListener( "contextmenu", lockCM )
         }
-        if( exs[i].dataset.type < 50 )
+        else if( this.dataset.type > 50 && n < 1 )
         {
-            c++
+            var card = createCard( this.dataset.type )
+            extras.appendChild( card )
+            card.addEventListener( "mouseup", removeCard )
+            card.addEventListener( "contextmenu", lockCM )
         }
+        sortHand()
+        getChance()
     }
-    if( this.dataset.type < 50 && n < 4 && c < 17 )
-    {
-        var card = createCard( this.dataset.type )
-        yours.appendChild( card )
-        card.addEventListener( "mouseup", removeCard )
-    }
-    else if( this.dataset.type > 50 && n < 1 )
-    {
-        var card = createCard( this.dataset.type )
-        extras.appendChild( card )
-        card.addEventListener( "mouseup", removeCard )
-    }
-    sortHand()
-    getChance()
 }
 for( var i = 0; i < cards.length; i++ )
 {
     var card = createCard( cards[i].type )
     card.addEventListener( "mousedown", addCard )
+    card.addEventListener( "contextmenu", lockCM )
     if( i && (((cards[i].type/10)<<0) - ((cards[i-1].type/10)<<0)) )
     {
         options.appendChild( document.createElement( "br" ) )
