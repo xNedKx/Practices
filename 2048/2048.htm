@@ -106,7 +106,7 @@ for(var y=0; y<n; y++){
 function refresh(){
     for(var y=0; y<n; y++){
         for(var x=0; x<n; x++){
-            item[y][x].textContent = s.item[y][x].value;
+            item[y][x].textContent = s.item[y][x].value ? s.item[y][x].value : "";
             item[y][x].className = "unit v" + s.item[y][x].value;
         }
     }
