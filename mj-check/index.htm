@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="mj-min.js"></script>
+<title>16張麻將牌型判定</title>
+<style>
+doxument, body
+{
+    padding: 0;
+    margin: 0;
+    font-family: verdana, simhei, arial, sans-serif;
+}
+#all
+{
+    position: relative;
+}
+#main
+{
+    position: relative;
+    overflow: hidden;
+}
+.card
+{
+    min-width: 30px;
+    min-height: 40px;
+    max-width: 60px;
+    max-height: 80px;
+    width: 9vw;
+    height: 12vw;
+    border: 2px solid #f0f0f0;
+    border-radius: 2px;
+    background-repeat: no-repeat;
+    background-color: #f0f0f0;
+    background-size: 100% 100%;
+    display:inline-block;
+    cursor: pointer;
+    position: relative;
+}
+.card:hover
+{
+    box-shadow: 0 0 4px rgba( 0, 0, 0, 0.4 );
+    z-index: 10;
+}
+.card.halt
+{
+    cursor: initial;
+}
+.card.halt:hover
+{
+    box-shadow: initial;
+    z-index: initial;
+}
+.c11
+{
+    background-image: url(w1.png);
+}
+.c12
+{
+    background-image: url(w2.png);
+}
+.c13
+{
+    background-image: url(w3.png);
+}
+.c14
+{
+    background-image: url(w4.png);
+}
+.c15
+{
+    background-image: url(w5.png);
+}
+.c16
+{
+    background-image: url(w6.png);
+}
+.c17
+{
+    background-image: url(w7.png);
+}
+.c18
+{
+    background-image: url(w8.png);
+}
+.c19
+{
+    background-image: url(w9.png);
+}
+.c21
+{
+    background-image: url(t1.png);
+}
+.c22
+{
+    background-image: url(t2.png);
+}
+.c23
+{
+    background-image: url(t3.png);
+}
+.c24
+{
+    background-image: url(t4.png);
+}
+.c25
+{
+    background-image: url(t5.png);
+}
+.c26
+{
+    background-image: url(t6.png);
+}
+.c27
+{
+    background-image: url(t7.png);
+}
+.c28
+{
+    background-image: url(t8.png);
+}
+.c29
+{
+    background-image: url(t9.png);
+}
+.c31
+{
+    background-image: url(s1.png);
+}
+.c32
+{
+    background-image: url(s2.png);
+}
+.c33
+{
+    background-image: url(s3.png);
+}
+.c34
+{
+    background-image: url(s4.png);
+}
+.c35
+{
+    background-image: url(s5.png);
+}
+.c36
+{
+    background-image: url(s6.png);
+}
+.c37
+{
+    background-image: url(s7.png);
+}
+.c38
+{
+    background-image: url(s8.png);
+}
+.c39
+{
+    background-image: url(s9.png);
+}
+.c41
+{
+    background-image: url(z1.png);
+}
+.c42
+{
+    background-image: url(z2.png);
+}
+.c43
+{
+    background-image: url(z3.png);
+}
+.c44
+{
+    background-image: url(z4.png);
+}
+.c45
+{
+    background-image: url(z5.png);
+}
+.c46
+{
+    background-image: url(z6.png);
+}
+.c47
+{
+    background-image: url(z7.png);
+}
+.c51
+{
+    background-image: url(h1.png);
+}
+.c52
+{
+    background-image: url(h2.png);
+}
+.c53
+{
+    background-image: url(h3.png);
+}
+.c54
+{
+    background-image: url(h4.png);
+}
+.c55
+{
+    background-image: url(h5.png);
+}
+.c56
+{
+    background-image: url(h6.png);
+}
+.c57
+{
+    background-image: url(h7.png);
+}
+.c58
+{
+    background-image: url(h8.png);
+}
+#header
+{
+    text-align: center;
+    font-size: 1.6em;
+    color: #999;
+    margin-bottom: 1px;
+}
+#options, #yours, #output
+{
+    text-align: center;
+    min-height: 64px;
+    margin: 0 auto;
+    border: 1px solid #f0f0f0;
+    border-radius: 1px;
+}
+.center
+{
+    position: relative;
+    text-align: center;
+}
+.toleft
+{
+    position: relative;
+    float: left;
+    left: 50%;
+}
+.toright
+{
+    position: relative;
+    left: -50%;
+    float: right;
+}
+.ti
+{
+    background-color: #f0f0f0;
+    margin: 2px 0;
+    height: 1.2em;
+    font-weight: bold;
+}
+.hu
+{
+    background-color: #FFCCCC;
+}
+.listen
+{
+    background-color: #CCCCFF;
+}
+</style>
+</head>
+<body>
+<div id="all">
+<div id="header">16張麻將牌型判定</div>
+<div id="main">
+<div class="toleft">
+<div class="toright">
+<div class="center"><div class="ti">牌庫</div>
+<div id="options"></div>
+</div>
+<div class="center"><div class="ti">擁有的牌型</div>
+<div id="yours"></div>
+<div id="extras"></div>
+</div>
+<div class="center"><div id="chance" class="ti"></div>
+<div id="output"></div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer"></div>
+</div>
+<script>
+var options = document.getElementById("options"),
+    yours = document.getElementById("yours"),
+    extras = document.getElementById("extras"),
+    output = document.getElementById("output"),
+    chance = document.getElementById("chance")
+function removeCard(e)
+{
+    e.preventDefault();
+    this.remove()
+    getChance()
+}
+
+function createCard( type )
+{
+    var card = document.createElement("div")
+    card.className = "card c"+type
+    card.dataset.type = type
+    return card
+}
+function addCard(e)
+{
+    e.preventDefault();
+    var hands = yours.childNodes,
+        exs = extras.childNodes,
+        n = 0, c = 0
+    for( var i = 0; i < hands.length; i++ )
+    {
+        if( hands[i].dataset.type == this.dataset.type )
+        {
+            n++
+        }
+        if( hands[i].dataset.type < 50 )
+        {
+            c++
+        }
+    }
+    for( var i = 0; i < exs.length; i++ )
+    {
+        if( exs[i].dataset.type == this.dataset.type )
+        {
+            n++
+        }
+        if( exs[i].dataset.type < 50 )
+        {
+            c++
+        }
+    }
+    if( this.dataset.type < 50 && n < 4 && c < 17 )
+    {
+        var card = createCard( this.dataset.type )
+        yours.appendChild( card )
+        card.addEventListener( "mouseup", removeCard )
+    }
+    else if( this.dataset.type > 50 && n < 1 )
+    {
+        var card = createCard( this.dataset.type )
+        extras.appendChild( card )
+        card.addEventListener( "mouseup", removeCard )
+    }
+    sortHand()
+    getChance()
+}
+for( var i = 0; i < cards.length; i++ )
+{
+    var card = createCard( cards[i].type )
+    card.addEventListener( "mousedown", addCard )
+    if( i && (((cards[i].type/10)<<0) - ((cards[i-1].type/10)<<0)) )
+    {
+        options.appendChild( document.createElement( "br" ) )
+    }
+    options.appendChild( card )
+}
+function sortHand()
+{
+    var doms = yours.childNodes,
+        exs = extras.childNodes,
+        hands = [],
+        extra = []
+    for( var i = 0; i < doms.length; i++ )
+    {
+        hands.push( {d: doms[i], t: +doms[i].dataset.type} )
+    }
+    hands.sort(function(a,b){return a.t-b.t})
+    for( var i = hands.length-2; i >= 0; i--)
+    {
+        yours.insertBefore( hands[i].d, hands[i+1].d )
+    }
+    for( var i = 0; i < exs.length; i++ )
+    {
+        extra.push( {d: exs[i], t: +exs[i].dataset.type} )
+    }
+    extra.sort(function(a,b){return a.t-b.t})
+    for( var i = extra.length-2; i >= 0; i--)
+    {
+        extras.insertBefore( extra[i].d, extra[i+1].d )
+    }
+}
+function getChance()
+{
+    var card_types = [],
+        doms = yours.childNodes,
+        exs = extras.childNodes,
+        l = doms.length,
+        fl = exs.length
+    for( var i = 0; i < doms.length; i++ )
+    {
+        card_types.push( +doms[i].dataset.type )
+    }
+    for( var i = 0; i < exs.length; i++ )
+    {
+        card_types.push( +exs[i].dataset.type )
+    }
+    var check = checkAll( card_types ),
+        listen = listenChance( check )
+    //console.log(check,listen)
+    while( output.childNodes.length )
+    {
+        output.childNodes[0].remove()
+    }
+    for( var i = 0; i < listen.chances.length; i++ )
+    {
+        var card = createCard( listen.chances[i] )
+        card.classList.add( "halt" )
+        output.appendChild( card )
+    }
+    if( ( fl.length != 7 && check.length && l % 3 == 2 ) || ( check.length && fl.length == 8 ) )
+    {
+        chance.innerHTML = "胡"
+        chance.classList.remove("listen")
+        chance.classList.add("hu")
+    }
+    else if( check.length )
+    {
+        chance.innerHTML = "聽牌"
+        chance.classList.remove("hu")
+        chance.classList.add("listen")
+    }
+    else
+    {
+        chance.innerHTML = "無"
+        chance.classList.remove("listen")
+        chance.classList.remove("hu")
+    }
+}
+</script>
+</body>
+</html>
