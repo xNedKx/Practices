@@ -433,7 +433,7 @@ function getChance()
         card.classList.add( "halt" )
         output.appendChild( card )
     }
-    if( ( fl.length != 7 && check.length && l % 3 == 2 ) || ( check.length && fl.length == 8 ) )
+    if( ( fl != 7 && check.length && l % 3 == 2 ) || ( check.length && fl == 8 ) )
     {
         chance.innerHTML = "胡"
         chance.classList.remove("listen")
