@@ -3,8 +3,8 @@
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
-    <script src="//gabelerner.github.io/canvg/canvg.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
+    <script src="https://gabelerner.github.io/canvg/canvg.js"></script> 
     <title>CODE39 ENCODER</title>
 <script>
 (function(){
@@ -99,13 +99,27 @@ function decode(str){
     return [r.slice(0,-1), r.slice(-1)];
 }
 function update(){
-    var str = d3.select("#input").node().value, inp = input(str), output = "", cd = d3.select("#cd").node().checked, re, p = 2;
+    var str = d3.select("#input").node().value, inp = input(str), output = "", cd = d3.select("#cd").node().checked, re, p = 2, r = 0;
     if(inp != str.toUpperCase()){
         d3.select("#input").node().value = inp;
     }
     d3.select("#checkdigit").node().value = cd&&inp? get_check_char(inp) : "";
     inp = inp? get_encode_str(inp, cd? get_check_char(inp) : ""): "";
     output = encode(inp);
+    r = (output.length + p*2 + 20 > screen.availWidth) ? output.length + p*2 + 20 : 0
+    if( r ){
+        d3.select("#center").node().classList.add("rotate");
+        d3.select("#center").node().style.height = r+"px";
+    }else{
+        d3.select("#center").node().classList.remove("rotate");
+        d3.select("#center").node().style.height = "54px";
+    }
+    if( inp != "" ){
+        d3.select("#center").node().classList.add("data");
+    }else{
+        d3.select("#center").node().classList.remove("data");
+        d3.select("#center").node().style.height = "";
+    }
     re = d3.select("svg").attr("width", output.length + p*2)
         .selectAll("rect")
         .data(output.split(""));
@@ -124,7 +138,7 @@ function setup(){
     d3.select("#barcode").append("svg")
         .attr("xmlns", d3.ns.prefix.svg)
         .attr("height", 50)
-        .attr("width", 490)
+        .attr("width", 4)
         .append("text")
             .attr("y", 46)
             .attr("x", 0)
@@ -154,10 +168,11 @@ window.onload = function(){
 body{
     margin: 0px;
     padding: 0px;
-    font-family: Tahoma;
+    font-family: Tahoma, sans-serif;
+    overflow-x: hidden;
+    position: relative;
 }
 #header{
-    position: fixed;
     top: 0px;
     width: 100%;
     height: 46px;
@@ -170,6 +185,7 @@ body{
 #content{
     text-align: center;
     padding-top: 50px;
+    overflow: hidden;
 }
 #content > p{
     margin: 0;
@@ -183,22 +199,48 @@ body{
     font-size: 24px;
 }
 #input{
-    width: 320px;
+    width: 316px;
+    text-align: center;
 }
 #checkdigit{
     width: 24px;
 }
-#barcode{
-    margin: 1em auto 1.8em;
-    height: 50px;
-    max-width: 638px;
-    min-width: 486;
-    border: 1px solid #1F1F1F;
+#center{
     text-align: center;
+    padding: 0;
+    overflow-x: hidden;
+    margin: 0 auto;
+    transition: all 0.1s;
+}
+#center.data{
+    padding: 1em 0;
+}
+#center.rotate{
+    width: 54px;
+    height: auto;
+}
+#barcode{
+    padding: 0;
+    height: 0;
+    border: 1px solid transparent;
+    text-align: center;
+    display: inline-block;
+    transition: transform 0.1s;
+    overflow: hidden;
+}
+#center.data #barcode{
+    height: 50px;
+    padding: 1px 8px;
+    border: 1px solid #1F1F1F;
+}
+.rotate #barcode{
+    transform: rotate(270deg) translate(-100%, 0);
+    transform-origin: 0 0;
 }
 #link{
     text-align: center;
     font-size: small;
+    padding-bottom: 3em;
 }
 #link > a{
     color: #AAA;
@@ -214,11 +256,12 @@ body{
     text-align: center;
     width: 100%;
     height: 20px;
-    bottom: 0px;
+    bottom: 0;
     background-color: #E5E4ED;
     padding-top: 2px;
     font-size: small;
     color: #666;
+    margin-top: 20px;
 }
 </style>
 </head>
@@ -230,7 +273,9 @@ body{
         <input id="checkdigit" disabled />
         <input type="checkbox" id="cd" checked><label for="cd">檢查碼</label>
     </div>
-    <div id="barcode"></div>
+    <div id="center">
+        <div id="barcode"></div>
+    </div>
     <div id="link"><a id="dl" href="#">download barcode image</a></div>
     <div id="footer">Created by xNedKx</div>
 </body>
