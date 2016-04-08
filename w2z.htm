@@ -29,6 +29,8 @@ max-width: 634px;
 min-height: 14px;
 max-height: 114px;
 margin: 10px auto;
+resize: vertical;
+overflow: auto;
 }
 #re{
 min-width: 178px;
@@ -40,6 +42,20 @@ border: 2px groove #333;
 padding: 4px 10px;
 text-align: left;
 }
+#hidden{
+min-width: 194px;
+width: 98%;
+max-width: 634px;
+min-height: 14px;
+max-height: 114px;
+margin: 10px auto;
+border: 1px solid transparent;
+resize: vertical;
+overflow: auto;
+opacity: 0;
+position: absolute;
+bottom: 0;
+}
 </style>
 </head>
 <body>
@@ -47,6 +63,7 @@ text-align: left;
     <div id="header">注音顯示器</div>
     <textarea id="in" placeholder="輸入未轉換的文字串，如 su3cl3 (ㄋㄧˇㄏㄠˇ)" autofocus ></textarea>
     <div id="re"></div>
+    <pre id="hidden"></pre>
 </div>
 <script>
 var view = new (Backbone.View.extend({
@@ -58,10 +75,12 @@ code: {"1": "ㄅ", "q": "ㄆ", "a": "ㄇ", "z": "ㄈ", "2": "ㄉ", "w": "ㄊ", "
 w2z: function(ev){
     var str = ev.target.value;
     if(typeof(str) == 'string'){
-        var res = '';
+        var res = '', d = document.getElementById("in"), c = document.getElementById("hidden");
         for(var i in str){
             res += str[i]=="\n"?"<br>":this.code[str[i]] || '';
         }
+        c.textContent = d.value+"\n";
+        d.style.height = c.clientHeight+"px";
         document.getElementById("re").innerHTML = res;
         return res;
     }else{
