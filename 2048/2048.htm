@@ -112,9 +112,9 @@ function refresh(){
     }
     document.getElementById("score").textContent = s.score();
     if(s.status == "end"){
-        if(confirm("You fail. Restart game?")){s.init();refresh();}
+        if(confirm("Game End. Play again?")){s.init();refresh();}
     }else if(s.status == "win"){
-        if(confirm("You win. Restart game?")){s.init();refresh();}
+        if(confirm("Congratulations, You achieved the goal. Play again?")){s.init();refresh();}
     }
 }
 refresh();
