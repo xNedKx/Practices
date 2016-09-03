@@ -1,0 +1,227 @@
+html, body, document {
+
+    margin: 0;
+
+}
+
+.todo-app {
+
+    color: #555555;
+    background-color: #f6f6f6;
+    font-family: sans-serif;
+    text-align: center;
+    width: 600px;
+    max-width: 100%;
+    margin: 0 auto;
+    font-size: 16px;
+    position: relative;
+    font-family: monospace;
+
+}
+
+.todo-app .header {
+
+    font-size: 1.6em;
+    padding: 0.3em 0 0;
+    cursor: default;
+    font-family: Bitter, sans-serif;
+
+}
+
+.todo-app .sub-header {
+
+    font-size: 0.8em;
+    color: #cccccc;
+    padding-bottom: 0.3em;
+
+}
+
+.todo-app .search {
+
+    background-color: #ffffff;
+    position: relative;
+
+}
+
+.todo-app .search .search-input {
+
+    color: #555555;
+    border-style: none;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0.1em 0.2em;
+    display: block;
+
+}
+
+.todo-app .search .search-hint {
+
+    color: #888888;
+    position: absolute;
+    right: 0.2em;
+    top: 0.1em;
+    font-size: 0.8em;
+    background-color: rgba(255,255,255,0.7);
+
+}
+
+.todo-app .search .search-input:focus {
+
+    outline-color: #888888;
+
+}
+
+.todo-app .todos {
+
+    position: relative;
+
+}
+
+.todo-app .todos .item {
+
+    display: flex;
+    position: relative;
+    border-bottom: 1px solid #e0e0e0;
+    overflow-x: hidden;
+    font-size: 0.8em;
+    cursor: default;
+
+}
+
+.todo-app .todos .item:nth-child(1) {
+
+    border-top: 1px solid #e0e0e0;
+
+}
+
+.todo-app .todos .item:hover {
+
+    background-color: #fcfcfc;
+
+}
+
+.todo-app .todos .item .item-id {
+
+    color: #888888;
+    background-color: #e9e9e9;
+    width: 8%;
+    padding: 0.1em 0;
+
+}
+
+.todo-app .todos .item:hover .item-id {
+
+    background-color: #f0f0f0;
+
+}
+
+.todo-app .todos .item .item-content {
+
+    color: #303030;
+    width: 84%;
+    text-align: left;
+    padding: 0.1em 0.4em;
+    overflow-x: hidden;
+    margin: 0;
+    text-overflow: ellipsis;
+
+}
+
+.todo-app .todos .item:hover  .item-content{
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    height: auto;
+    overflow-x: hidden;
+    text-overflow: clip;
+}
+
+.todo-app .todos .item .item-remove {
+
+    color: #888888;
+    width: 8%;
+    overflow-x: hidden;
+    text-align: right;
+
+}
+
+.todo-app .todos .item-no-record {
+
+    font-size: 0.8em;
+    padding: 0.1em 0;
+    border-top: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
+
+}
+
+.todo-app .add-todo {
+
+    background-color: #ffffff;
+    position: relative;
+
+}
+
+.todo-app .add-todo .add-input {
+
+    color: #555555;
+    font-size: 0.8em;
+    border-style: none;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 3em;
+    padding: 0.1em 0.2em;
+    display: block;
+    resize: none;
+
+}
+
+.todo-app .add-todo .add-input:focus {
+
+    outline-color: #888888;
+
+}
+
+.todo-app .add-todo .item-add {
+
+    color: #555555;
+    font-size: 0.9em;
+    padding: 0.2em 0;
+    background-color: #fcfcfc;
+    border-top: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
+
+}
+
+.todo-app .add-todo .item-add:hover {
+
+    background-color: #f0f0f0;
+
+}
+
+.todo-app .footer {
+
+    font-size: 0.6em;
+    color: #cccccc;
+    padding: 0.2em 0;
+    cursor: default;
+    font-family: monospace;
+
+}
+
+input, textarea, pre {
+
+    font-family: monospace;
+
+}
+
+.button {
+
+    padding: 0.1em 0;
+    cursor: pointer;
+
+}
+
+.button:hover {
+
+    text-decoration: underline;
+
+}

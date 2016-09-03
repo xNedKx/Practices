@@ -1,242 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="description" content="Todo Recorder - Keeping your todo records on your browser." />
-<meta name="author" content="xNedKx" />
-<meta name="copyright" content="xNedKx" />
-<title>Todo Recorder</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.3.1/react.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.3.1/react-dom.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
-<link href="https://fonts.googleapis.com/css?family=Bitter" rel="stylesheet">
-<style>
-html, body, document {
-
-    margin: 0;
-
-}
-
-.todo-app {
-
-    color: #555555;
-    background-color: #f6f6f6;
-    font-family: sans-serif;
-    text-align: center;
-    width: 600px;
-    max-width: 100%;
-    margin: 0 auto;
-    font-size: 16px;
-    position: relative;
-    font-family: monospace;
-
-}
-
-.todo-app .header {
-
-    font-size: 1.6em;
-    padding: 0.3em 0 0;
-    cursor: default;
-    font-family: Bitter, sans-serif;
-
-}
-
-.todo-app .sub-header {
-
-    font-size: 0.8em;
-    color: #cccccc;
-    padding-bottom: 0.3em;
-
-}
-
-.todo-app .search {
-
-    background-color: #ffffff;
-    position: relative;
-
-}
-
-.todo-app .search .search-input {
-
-    color: #555555;
-    border-style: none;
-    box-sizing: border-box;
-    width: 100%;
-    padding: 0.1em 0.2em;
-    display: block;
-
-}
-
-.todo-app .search .search-hint {
-
-    color: #888888;
-    position: absolute;
-    right: 0.2em;
-    top: 0.1em;
-    font-size: 0.8em;
-    background-color: rgba(255,255,255,0.7);
-
-}
-
-.todo-app .search .search-input:focus {
-
-    outline-color: #888888;
-
-}
-
-.todo-app .todos {
-
-    position: relative;
-
-}
-
-.todo-app .todos .item {
-
-    display: flex;
-    position: relative;
-    border-bottom: 1px solid #e0e0e0;
-    overflow-x: hidden;
-    font-size: 0.8em;
-    cursor: default;
-
-}
-
-.todo-app .todos .item:nth-child(1) {
-
-    border-top: 1px solid #e0e0e0;
-
-}
-
-.todo-app .todos .item:hover {
-
-    background-color: #fcfcfc;
-
-}
-
-.todo-app .todos .item .item-id {
-
-    color: #888888;
-    background-color: #e9e9e9;
-    width: 8%;
-    padding: 0.1em 0;
-
-}
-
-.todo-app .todos .item:hover .item-id {
-
-    background-color: #f0f0f0;
-
-}
-
-.todo-app .todos .item .item-content {
-
-    color: #303030;
-    width: 84%;
-    text-align: left;
-    padding: 0.1em 0.4em;
-    overflow-x: hidden;
-    margin: 0;
-
-}
-
-.todo-app .todos .item .item-remove {
-
-    color: #888888;
-    width: 8%;
-    min-width: 6em;
-    overflow-x: hidden;
-    text-align: right;
-
-}
-
-.todo-app .todos .item-no-record {
-
-    font-size: 0.8em;
-    padding: 0.1em 0;
-    border-top: 1px solid #e0e0e0;
-    border-bottom: 1px solid #e0e0e0;
-
-}
-
-.todo-app .add-todo {
-
-    background-color: #ffffff;
-    position: relative;
-
-}
-
-.todo-app .add-todo .add-input {
-
-    color: #555555;
-    font-size: 0.8em;
-    border-style: none;
-    box-sizing: border-box;
-    width: 100%;
-    min-height: 3em;
-    padding: 0.1em 0.2em;
-    display: block;
-    resize: none;
-
-}
-
-.todo-app .add-todo .add-input:focus {
-
-    outline-color: #888888;
-
-}
-
-.todo-app .add-todo .item-add {
-
-    color: #555555;
-    font-size: 0.9em;
-    padding: 0.2em 0;
-    background-color: #fcfcfc;
-    border-top: 1px solid #e0e0e0;
-    border-bottom: 1px solid #e0e0e0;
-
-}
-
-.todo-app .add-todo .item-add:hover {
-
-    background-color: #f0f0f0;
-
-}
-
-.todo-app .footer {
-
-    font-size: 0.6em;
-    color: #cccccc;
-    padding: 0.2em 0;
-    cursor: default;
-    font-family: monospace;
-
-}
-
-input, textarea, pre {
-
-    font-family: monospace;
-
-}
-
-.button {
-
-    padding: 0.1em 0;
-    cursor: pointer;
-
-}
-
-.button:hover {
-
-    text-decoration: underline;
-
-}
-
-</style>
-</head>
-<body>
-<div id="todoapp"></div>
-<script type="text/babel">
+define(function(require){
+var React = require("react"),
+    ReactDOM = require("reactDOM"),
+    inputHeightAutoExpand = require("ihae");
 var TodoApp = React.createClass({
     getInitialState: function(){
         return {
@@ -368,9 +133,9 @@ var TodoItem = React.createClass({
     render: function(){
         return (
             <div className="item">
-                <div className="item-id" title={"ID #"+this.props.itemId}>{this.props.itemId}</div>
+                <div className="item-id">{"#"+this.props.itemId}</div>
                 <pre className="item-content">{this.props.content}</pre>
-                <div className="item-remove button" onClick={this.removeItem} title={"Delete #"+this.props.itemId+" todo"}>Delete</div>
+                <div className="item-remove button" onClick={this.removeItem} title={"Delete #"+this.props.itemId}>Delete</div>
             </div>
         );
     },
@@ -383,6 +148,7 @@ var TodoItem = React.createClass({
 var TodoAdd = React.createClass({
     componentDidMount: function() {
         this.refs.content.focus();
+        this.autoExpand();
     },
     render: function(){
         return (
@@ -398,20 +164,12 @@ var TodoAdd = React.createClass({
         if(content.value){
             this.props.addTodo(content.value);
             content.value = "";
+            this.autoExpand();
         }
         content.focus();
     },
-    autoExpand: function (e){
-        var hidden = document.createElement("pre");
-        hidden.style.cssText = getComputedStyle(e.target).cssText;
-        hidden.style.opacity = 0;
-        hidden.style.pointerEvent = "none";
-        hidden.style.position = "absolute";
-        hidden.style.height = "auto";
-        e.target.parentNode.insertBefore(hidden, e.target);
-        hidden.innerHTML = e.target.value + "<br>";
-        e.target.style.height = hidden.offsetHeight + "px";
-        e.target.parentNode.removeChild(hidden);
+    autoExpand: function(){
+        inputHeightAutoExpand(this.refs.content);
     }
 });
 
@@ -421,7 +179,7 @@ var todoData = [
     {   id: 2,
         content: "And there are more things to do." }
 ];
-if(localStorage && localStorage.TodoData){
+if(Storage && localStorage && localStorage.TodoData){
     try{
         todoData = JSON.parse(localStorage.getItem("TodoData"));
     }catch(e){
@@ -429,18 +187,7 @@ if(localStorage && localStorage.TodoData){
     }
 }
 
-ReactDOM.render(
+return ReactDOM.render(
     <TodoApp todos={todoData} />
 , document.getElementById("todoapp") );
-</script>
-<script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-  ga('create', 'UA-78696465-1', 'auto');
-  ga('send', 'pageview');
-</script>
-</body>
-</html>
+})
