@@ -6,7 +6,7 @@
     var hidden = document.createElement("div");
 
     hidden.style.opacity = 0;
-    hidden.style.pointerEvent = "none";
+    hidden.style.pointerEvents = "none";
     hidden.style.position = "absolute";
     hidden.style.overflow = "auto";
     hidden.style.height = "auto";
