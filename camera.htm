@@ -83,7 +83,6 @@ document, body {
       }
     }
     
-    open = true;
     openCamera();
   });
   
@@ -125,6 +124,7 @@ document, body {
   
   function openCamera(){
     //console.log("opening camera...");
+    open = true;
     error.classList.remove("show");
     start.disabled = true;
     stop.disabled = false;
