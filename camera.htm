@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta lang="en">
+<meta name="description" content="A simple camera app to capture photos from the browser. The images taken are saved to PNG format." />
+<meta name="author" content="xNedKx" />
+<meta name="copyright" content="xNedKx" />
+<title>Using Camera by Browser</title>
+<style>
+document, body {
+  margin: 0;
+  overflow: hidden;
+  background-color: #000;
+}
+#video {
+  display: block;
+  will-change: transform;
+  transform: translateZ(0);
+  max-width: 100vw;
+  max-height: 100vh;
+  width: auto;
+  margin: 0 auto;
+}
+#error, #controls, #dl, main {
+  width: 100%;
+}
+#error, #copy, #link, #start, #stop {
+  display: none;
+}
+#dl {
+  min-height: 40px;
+}
+#controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+#error.show {
+  display: block;
+  margin: 0 auto;
+  color: #fff;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.8em;
+  font-family: monospace, sans-serif;
+}
+</style>
+</head>
+<body>
+<main>
+<div id="error">No available camera!</div>
+<video id="video" control autoplay></video>
+</main>
+<canvas id="copy"></canvas>
+<div id="controls">
+<button id="start" disabled>start</button>
+<button id="stop" disabled>stop</button>
+<button id="dl" disabled>capture</button>
+</div>
+<a id="link" href="#">save the shot</a>
+<script>
+  if(!/^https:/.test(location.protocol)){
+    location = "https://" + location.hostname + "/" + location.pathname + location.hash;
+  }
+  
+  //var audioConstraints = true;
+  var videoConstraints = true;
+  var camera;
+  var open = false;
+  navigator.mediaDevices.enumerateDevices().then(function(devices){  
+    devices.forEach(function(device){
+      if(device.kind == "videoinput" && /back/.test(device.label)){
+        videoConstraints = {deviceId: device.deviceId};
+        camera = true;
+      }
+    });  
+    if(!camera){
+      var supportConstraints = navigator.mediaDevices.getSupportedConstraints();
+      if(supportConstraints.hasOwnProperty("facingMode")){
+        videoConstraints = {advanced: [{ facingMode: "environment" }]};
+      }
+    }
+    
+    open = true;
+    openCamera();
+  });
+  
+  var error = document.getElementById('error');
+  var video = document.getElementById('video');
+  var copy = document.getElementById('copy');
+  var dl = document.getElementById('dl');
+  var link = document.getElementById('link');
+  var start = document.getElementById('start');
+  var stop = document.getElementById('stop');
+  var mute = document.getElementById('mute');
+  
+  video.onloadedmetadata = function(){
+    var w = video.videoWidth, h = video.videoHeight;
+    copy.width = w;
+    copy.height = h;
+    copyContext = copy.getContext("2d");
+    dl.disabled = false;
+  }
+  
+  var tracks;
+  function stopCamera(){
+    //console.log("stopping camera...");
+    tracks.forEach(function(track) {track.stop()});
+    tracks = undefined;
+    start.disabled = false;
+    stop.disabled = true;
+    dl.disabled = true;
+    open = false;
+    //console.log("stopping released...");
+  };
+  
+  var videoStream = function(stream) {
+    //console.log("camera connected");
+    video.srcObject = stream;
+    tracks = stream.getVideoTracks();
+    //video.muted = true;
+  };
+  
+  function openCamera(){
+    //console.log("opening camera...");
+    error.classList.remove("show");
+    start.disabled = true;
+    stop.disabled = false;
+    var constraints = {/*audio: audioConstraints, */video: videoConstraints};
+    navigator.mediaDevices.getUserMedia(constraints).then(videoStream).catch(function(){
+      error.classList.add("show");
+      start.disabled = false;
+      stop.disabled = true;
+      dl.disabled = true;
+      open = false;
+    });
+  }
+  
+  var copyContext, copyUrl;
+  function captureImage(e){
+    if(copyContext){
+      console.log("Capturing photo...");
+      copyContext.drawImage(video, 0, 0, copy.width, copy.height);
+      link.href = copy.toDataURL();
+      link.download = "shot_" + Date.now() + ".png";
+      link.dispatchEvent(new MouseEvent("click"));
+      console.log("Photo captured: [" + link.download + "]");
+    }
+  }
+  
+  dl.addEventListener("click", captureImage);
+  start.addEventListener("click", openCamera);
+  stop.addEventListener("click", stopCamera);
+  document.documentElement.addEventListener("beforeunload", stopCamera);
+  
+  function handleState(e){
+    switch(document.visibilityState){
+    case "visible":
+      if(!open){
+        openCamera();
+      }
+    break;
+    case "hidden":
+      if(open){
+        stopCamera();
+      }
+    break;
+    default:
+    }
+  }
+  document.documentElement.addEventListener("visibilitychange", handleState);
+  
+</script>
+</body>
+</html>
