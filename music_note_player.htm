@@ -62,6 +62,7 @@ _A_B-|C--_B_A-|_#G--_#F_#G-|_A-----|_A-
 <label>Speed: <input id="speed" value="120"></label>
 <label>Volume: <input id="volume" value="50"></label>
 <button id="play">play</button>
+<button id="mute">mute</button>
 </div>
 <script>
 window.addEventListener( "DOMContentLoaded", function(){
@@ -265,6 +266,16 @@ window.addEventListener( "DOMContentLoaded", function(){
     if(muted){
       volumeGain.gain.value = optputVolume;
       muted = false;
+    }
+  }
+  
+  function toggleMute(e){
+    if(muted){
+      unmute();
+      this.innerText = "mute";
+    }else{
+      mute();
+      this.innerText = "unmute";
     }
   }
   
@@ -498,6 +509,7 @@ window.addEventListener( "DOMContentLoaded", function(){
   }
   
   document.getElementById("play").addEventListener("click", buttonPlay);
+  document.getElementById("mute").addEventListener("click", toggleMute);
   
 })
 </script>
