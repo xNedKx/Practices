@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta lang="en">
+<meta name="description" content="A MIDI editor-like web app." />
+<meta name="author" content="xNedKx" />
+<meta name="copyright" content="xNedKx" />
+<title>Simple Note Player</title>
+<style>
+#title {
+  text-align: center;
+  font-size: 24px;
+  margin: 0.5em auto;
+}
+#help {
+  font-size: 0.6em;
+  color: #999;
+  text-align: center;
+}
+#input, #controls {
+  margin: 1em auto;
+  width: 80%;
+  min-width: 320px;
+}
+#input {
+  display: block;
+  min-height: 100px;
+  resize: vertical;
+}
+#controls {
+  text-align: center;
+}
+#speed, #volume {
+  width: 3em;
+  margin-right: 1em; 
+}
+</style>
+</head>
+<body>
+<h1 id="title">Simple Note Player</h1>
+<pre id="help">Usage:
+[ 1 2 3 4 5 6 7 ] as musical pitch - [ C D E F G A B ]
+You can use CDEFGAB as well.
+use [0] and [R] as rest.
+Before the pitch note, use [^] to elevate to higher octave and [_] to lower octave.
+After octave notes, using [#] for shrap and [!] for flat.
+To prolong a note, append [-] after them.
+the rests are [|], new line and whitespace for layout.
+Other characters will be removed.
+
+EX:
+Green Sleeves [Speed: 300]
+_6-|1---2-|3--#43-|2---_7-|_5--
+_6_7-|1---_6-|_6--_#5_6-|_7---_5-|_3---
+_A-|C---D-|E--#FE-|D---_B-|_G--
+_A_B-|C--_B_A-|_#G--_#F_#G-|_A-----|_A-
+</pre>
+<textarea id="input"></textarea>
+<div id="controls">
+<label>Speed: <input id="speed" value="120"></label>
+<label>Volume: <input id="volume" value="50"></label>
+<button id="play">play</button>
+</div>
+<script>
+window.addEventListener( "DOMContentLoaded", function(){
+  function getFrequency(pitch){
+    pitch = isFinite(pitch)? pitch : defaultPitch;
+    return Math.pow(2, (+pitch - 57) / 12) * 440; // you can use 69 instead of 57 for classic condition
+  }
+  
+  function getNote(pitch){
+    var pitches = ["C", "#C", "D", "#D", "E", "F", "#F", "G", "#G", "A", "#A", "B"];
+    return [pitches[+pitch % 12], Math.floor((+pitch - 48) / 12)];
+  }
+  
+  function getPitch(note, level){
+    return (+note) + (+level) * 12;
+  }
+  
+  var defaultVolume = 1;
+  var optputVolume = 0.5;
+  var defualtNoteLength = 1;
+  var defaultPitch = 48;
+  
+  var defaultOscillatorType = "sine";
+  
+  var ac = new AudioContext();
+  var oscillatorNumbers = 5;
+  var oscillators = [];
+  var bqFilter = ac.createBiquadFilter();
+  var volumeGain = ac.createGain();
+  volumeGain.gain.value = optputVolume;
+  bqFilter.connect(volumeGain);
+  volumeGain.connect(ac.destination);
+  function createOscillator(){
+    var oi = oscillators.length;
+    oscillators.push({
+      id: oi,
+      oscillator: ac.createOscillator(),
+      gainNode: ac.createGain(),
+      playingNote: null
+    });
+    oscillators[oi].oscillator.type = defaultOscillatorType;
+    oscillators[oi].oscillator.frequency.value = getFrequency(defaultPitch);
+    oscillators[oi].oscillator.connect(oscillators[oi].gainNode);
+    oscillators[oi].gainNode.connect(bqFilter);
+    oscillators[oi].gainNode.gain.value = 0;
+    oscillators[oi].oscillator.start();
+    return oscillators[oi];
+  }
+  createOscillator();
+  
+  function getAvailableOscillatorIndex(){
+    for( var i in oscillators ){
+      if(!oscillators[i].playingNote){
+        return i;
+      }
+    }
+    return -1;
+  }
+  
+  var playManager = {
+  
+    playingQue: [], // {oscillator, timing, note}
+    
+    addToPlay: function(note, timing, current){ // note: {pitch, period, volume}
+      
+      if(isFinite(note)){
+        note = {pitch: +note};
+      }else if( typeof note != "object" || !(note.hasOwnProperty("pitch") || note.hasOwnProperty("period") || note.hasOwnProperty("volume")) ){
+        console.log("[error]", "No notes could be added.");
+        return;
+      }
+      
+      var time = isFinite(timing)? timing * division * tick : 0;
+      current = isFinite(current)? current : ac.currentTime * 1000;
+      var start = Math.ceil( current / tick ) * tick + time;
+      
+      playManager.playingQue.push({
+        addTime: current,
+        note: note,
+        startTime: start,
+        endTime: start + (note.period || defualtNoteLength) * division * tick - Math.min(note.period * division * tick / 20, Math.max(2 * tick, 50)),
+        status: "prepare",
+        audioNode: null
+      });
+      
+      console.log("[add]", playManager.playingQue[playManager.playingQue.length - 1]);
+      
+    }
+    
+  };
+  
+  var division = 64;
+  var maxCount = 1024;
+  var speed = 120;
+  var minSpeed = 1;
+  var maxSpeed = 1000 * division;
+  var tick = 1000 * 60 / speed / division;
+  
+  function config(conf){
+    division = isFinite(conf.maxDivide) ? Math.min(Math.max(Math.round(conf.maxDivide), 1), maxCount) : division;
+    speed = isFinite(conf.speed) ? Math.min(Math.max(Math.round(conf.speed), minSpeed), maxSpeed) : speed;
+    tick = 1000 * 60 / speed / division;
+    optputVolume = conf.volume;
+    volumeGain.gain.value = optputVolume;
+  }
+  
+  var ts = 0;
+  function runPlay(ms){
+  
+    if(ms - ts >= tick){
+    
+      var intervalCount = Math.floor((ms - ts) / tick);
+      ts += intervalCount * tick;
+      var time = ac.currentTime * 1000;
+      
+      for( var i in playManager.playingQue){
+      
+        var playing = playManager.playingQue[i];
+        
+        if(playing.status == "playing" && time >= playing.endTime){
+        
+          playing.status = "end";
+          playing.audioNode.oscillator.frequency.value = getFrequency();
+          playing.audioNode.gainNode.gain.value = 0;
+          playing.audioNode.playingNote = null;
+          console.log("[end]", ts);
+          
+        }else if(playing.status == "prepare" && time >= playing.startTime - tick * 2 && time <= playing.startTime){
+        
+          var osci = getAvailableOscillatorIndex();
+          if(osci == -1){
+            createOscillator();
+            osci = oscillators.length - 1;
+          }
+          oscillators[osci].oscillator.frequency.value = getFrequency(playing.note.pitch);
+          console.log("Frequency:", oscillators[osci].oscillator.frequency.value, "Pitch:", getNote(playing.note.pitch).join(""));
+          playing.audioNode = oscillators[osci];
+          playing.audioNode.playingNote = playing.note;
+          playing.status = "ready";
+          
+        }else if(time >= playing.startTime && time < playing.endTime){
+        
+          if(playing.status == "prepare"){
+          
+            var osci = getAvailableOscillatorIndex();
+            if(osci == -1){
+              createOscillator();
+              osci = oscillators.length - 1;
+            }
+            oscillators[osci].oscillator.frequency.value = getFrequency(playing.note.pitch);
+            console.log("Frequency:", oscillators[osci].oscillator.frequency.value, "Pitch:", getNote(playing.note.pitch).join(""));
+            playing.audioNode = oscillators[osci];
+            playing.audioNode.playingNote = playing.note;
+            playing.status = "ready";
+            
+          }
+          
+          if(playing.status == "ready"){
+          
+            playing.audioNode.gainNode.gain.value = playing.note.volume || defaultVolume;
+            playing.status = "playing";
+            console.log("[playing]", playing.audioNode.id, ts, playing.note.pitch);
+            
+          }
+          
+        } // end if: status check
+        
+      } // end for
+      
+      playManager.playingQue = playManager.playingQue.filter(function(playing){
+        switch(playing.status){
+        case "end":
+          return false;
+        default:
+          return true;
+        }
+      });
+      
+    }
+    
+    requestAnimationFrame(runPlay);
+    
+  }
+  
+  var playHandler;
+  function startPlay(){
+    if(!playHandler){
+      playHandler = requestAnimationFrame(runPlay);
+    }
+  }
+  
+  var muted = false;
+  function mute(){
+    if(!muted){
+      optputVolume = volumeGain.gain.value;
+      volumeGain.gain.value = 0;
+      muted = true;
+    }
+  }
+  function unmute(){
+    if(muted){
+      volumeGain.gain.value = optputVolume;
+      muted = false;
+    }
+  }
+  
+  function detune(cent){
+    bqFilter.detune.value = isFinite(cent)? cent : 0;
+  }
+  
+  window.me = {
+    add: function(pitch, period, time, volume){
+      playManager.addToPlay({
+        pitch: pitch,
+        period: period,
+        volume: volume
+      }, time);
+    },
+    manager: playManager,
+    nodes: oscillators,
+    mute: mute,
+    unmute: unmute,
+    detuneByCent: function(cent){
+      detune(cent);
+    },
+    detune: function(pd){
+      detune(pd * 100);
+    }
+  };
+  
+  startPlay();
+  
+  function batchAdd(data){
+    var time = ac.currentTime * 1000 + 200;
+    var note, period = 0;
+    for( var i in data ){
+      note = data[i];
+      if(note.pitch != -1){
+        playManager.addToPlay({
+          pitch: note.pitch + (note.level + 4) * 12 + note.detune,
+          period: note.period
+        }, note.delay, time);
+      }
+      period += note.period;
+    }
+    return period;
+  }
+  
+  function textTidy(text){
+    return text.toUpperCase().replace(/[^01234567RCDEFGAB^_\-#!|\n\r]/, "");
+  }
+  
+  function parseText(text){
+    var p = {
+      0: -1, "R": -1,
+      1:  0, "C":  0,
+      2:  2, "D":  2,
+      3:  4, "E":  4,
+      4:  5, "F":  5,
+      5:  7, "G":  7,
+      6:  9, "A":  9,
+      7: 11, "B": 11
+    }
+    function createNote(pitch, level, detune, period, delay){
+      return {
+        pitch: pitch || -1,
+        level: level || 0,
+        detune: detune || 0,
+        period: period || 1,
+        delay: delay || 0
+      }
+    }
+    var output = [], state = "", time = 0, tmp = createNote();
+    // state: "", "level", "detune", "pitch", "period"
+    for(var i = 0; i < text.length; i++){
+      //console.log(text[i], tmp);
+      switch(text[i]){
+      case "^":
+      case "_":
+        //console.log("level");
+        switch(state){
+        case "":
+        case "level":
+          tmp.level += text[i] == "^" ? 1 : -1;
+          //console.log(tmp.level);
+        break;
+        case "pitch":
+        case "period":
+          tmp.delay = time;
+          output.push(tmp);
+          time += tmp.period;
+          //console.log("push last", tmp);
+          tmp = createNote();
+          tmp.level = text[i] == "^" ? 1 : -1;
+          //console.log(tmp.level);
+        break;
+        case "detune":
+        default:
+          tmp = createNote();
+        break;
+        }
+        state = "level";
+      break;
+      case "#":
+      case "!":
+        //console.log("detune");
+        switch(state){
+        case "":
+        case "level":
+        case "detune":
+          tmp.detune += text[i] == "#" ? 1 : -1;
+          //console.log(tmp.detune);
+        break;
+        case "pitch":
+        case "period":
+          tmp.delay = time;
+          output.push(tmp);
+          time += tmp.period;
+          //console.log("push last", tmp);
+          tmp = createNote();
+          tmp.detune = text[i] == "#" ? 1 : -1;
+          //console.log(tmp.detune);
+        break;
+        default:
+          tmp = createNote();
+        break;
+        }
+        state = "detune";
+      break;
+      case "0":
+      case "R":
+      case "1":
+      case "C":
+      case "2":
+      case "D":
+      case "3":
+      case "E":
+      case "4":
+      case "F":
+      case "5":
+      case "G":
+      case "6":
+      case "A":
+      case "7":
+      case "B":
+        //console.log("pitch");
+        switch(state){
+        case "":
+        case "level":
+        case "detune":
+          tmp.pitch = p[text[i]];
+          //console.log(tmp.pitch);
+        break;
+        case "pitch":
+        case "period":
+          tmp.delay = time;
+          output.push(tmp);
+          time += tmp.period;
+          //console.log("push last", tmp);
+          tmp = createNote();
+          tmp.pitch = p[text[i]];
+          //console.log(tmp.pitch);
+        break;
+        default:
+          tmp = createNote();
+        break;
+        }
+        state = "pitch";
+      break;
+      case "-":
+        //console.log("period");
+        switch(state){
+        case "pitch":
+        case "period":
+          tmp.period += 1;
+          //console.log(tmp.period);
+        break;
+        case "":
+        case "level":
+        case "detune":
+        default:
+          tmp = createNote();
+        }
+        state = "period";
+      break;
+      case "|":
+      case "\n":
+      case "\r":
+      /*
+        switch(state){
+        case "pitch":
+        case "period":
+          //console.log("division");
+          tmp.delay = time;
+          output.push(tmp);
+          time += tmp.period;
+          //console.log("push last", tmp);
+          tmp = createNote();
+          state = "";
+        break;
+        case "":
+        case "level":
+        case "detune":
+        default:
+          tmp = createNote();
+        }
+      */
+      break;
+      default:
+        //console.log("?");
+      }
+    }
+    if(state == "pitch" || state == "period"){
+      tmp.delay = time;
+      output.push(tmp);
+      time += tmp.period;
+      console.log("push last", tmp);
+    }
+    return output;
+  }
+  
+  function buttonPlay(e){
+    var speed = +document.getElementById("speed").value;
+    var volume = +document.getElementById("volume").value;
+    config({speed: speed, volume: volume / 100});
+    var ta = document.getElementById("input");
+    var raw = ta.value, tidy = textTidy(raw);
+    var parsed = parseText(tidy);
+    var period = batchAdd(parsed) * division * tick;
+    ta.value = tidy;
+    this.disabled = true;
+    console.log(period)
+    setTimeout(function(){document.getElementById("play").disabled = false;}, period + 300);
+  }
+  
+  document.getElementById("play").addEventListener("click", buttonPlay);
+  
+})
+</script>
+</body>
+</html>
