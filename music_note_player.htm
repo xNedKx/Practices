@@ -43,23 +43,25 @@
 <pre id="help">Usage:
 [ 1 2 3 4 5 6 7 ] as musical pitch - [ C D E F G A B ]
 You can use CDEFGAB as well.
-use [0] and [R] as rest.
+Use [0] and [R] as rest.
 Before the pitch note, use [^] to elevate to higher octave and [_] to lower octave.
 After octave notes, using [#] for shrap and [!] for flat.
 To prolong a note, append [-] after them.
-the rests are [|], new line and whitespace for layout.
-Other characters will be removed.
+For chords, using [(] and [)] to encapsulate the chord name.
+The chord lives until next chord, or until [(R)] or [(0)].
+Not all chords could be used, default pitches are below 1 octave of center C.
+The rests are [|], new line and whitespace for layout.
 
 EX:
 Green Sleeves [Speed: 300]
-_6-|1---2-|3--#43-|2---_7-|_5--
-_6_7-|1---_6-|_6--_#5_6-|_7---_5-|_3---
-_A-|C---D-|E--#FE-|D---_B-|_G--
-_A_B-|C--_B_A-|_#G--_#F_#G-|_A-----|_A-
+_6-|(Am)1---2-|(C)3--#43-|(G)2---_7-|(Em)_5--
+_6_7-|(Am)1---_6-|(Dm/F)_6--_#5_6-|(E)_7---_#5-|_3---
+_A-|(Am)C---D-|(C)E--#FE-|(G)D---_B-|(Em)_G--
+_A_B-|(Am)C--_B_A-|(E)_#G--_#F_#G-|(Am)_A-----|_A---
 </pre>
 <textarea id="input"></textarea>
 <div id="controls">
-<label>Speed: <input id="speed" value="120"></label>
+<label>Speed: <input id="speed" value="300"></label>
 <label>Volume: <input id="volume" value="50"></label>
 <button id="play">play</button>
 <button id="mute">mute</button>
@@ -156,7 +158,7 @@ window.addEventListener( "DOMContentLoaded", function(){
   
   var division = 64;
   var maxCount = 1024;
-  var speed = 120;
+  var speed = 300;
   var minSpeed = 1;
   var maxSpeed = 1000 * division;
   var tick = 1000 * 60 / speed / division;
@@ -313,65 +315,167 @@ window.addEventListener( "DOMContentLoaded", function(){
       if(note.pitch != -1){
         playManager.addToPlay({
           pitch: note.pitch + (note.level + 4) * 12 + note.detune,
-          period: note.period
+          period: note.period,
+          volume: note.volume
         }, note.delay, time);
       }
-      period += note.period;
+      period = Math.max(period, note.delay + note.period);
     }
     return period;
   }
   
   function textTidy(text){
-    return text.toUpperCase().replace(/[^01234567RCDEFGAB^_\-#!|\n\r]/, "");
+    return text.replace(/[^01234567RCDEFGABrabcdefg^_\-#!|\n\r()suimjnM9\/]/, "");
   }
-  
-  function parseText(text){
-    var p = {
-      0: -1, "R": -1,
-      1:  0, "C":  0,
-      2:  2, "D":  2,
-      3:  4, "E":  4,
-      4:  5, "F":  5,
-      5:  7, "G":  7,
-      6:  9, "A":  9,
-      7: 11, "B": 11
-    }
-    function createNote(pitch, level, detune, period, delay){
-      return {
-        pitch: pitch || -1,
-        level: level || 0,
-        detune: detune || 0,
-        period: period || 1,
-        delay: delay || 0
+
+  function createNote(pitch, level, detune, period, delay, volume){
+    return {
+      pitch: isFinite(pitch)? +pitch : -1,
+      level: isFinite(level)? +level : 0,
+      detune: isFinite(detune)? +detune : 0,
+      period: isFinite(period)? +period : 1,
+      delay: isFinite(delay)? +delay : 0,
+      volume: isFinite(volume)? +volume : 1
+    };
+  }
+  function parseChord(str){
+    var output = {
+      key: -1,
+      param: null,
+      root: -1,
+      length: 0
+    };
+    var match = str.match(/^([0R]|[ABCDEFGabcdefg][#!]?)(|M[79]?|m7?|\+|\-|aug|dim|min|maj7?|[0679]|11|13|69|sus[24]|add[29])(|\/[ABCDEFGabcdefg][#!])$/);
+    if(match){
+      //console.log(match);
+      output.key = parseChord.chordKeys[match[1].toUpperCase()];
+      output.param = parseChord.chordParams[match[2]];
+      if(output.key != -1 && output.param != null){
+        if(match[3] != ""){
+          output.root = parseChord.chordKeys[match[3].slice(1).toUpperCase()];
+        }else{
+          output.root = output.key;
+        }
+        return output;
       }
     }
-    var output = [], state = "", time = 0, tmp = createNote();
+  }
+  parseChord.chordKeys = {
+    "B#": 0, "C":  0,
+    "C#": 1, "D!": 1,
+    "D":  2,
+    "D#": 3, "E!": 3,
+    "E":  4, "F!": 4,
+    "F":  5,
+    "F#": 6, "G!": 6,
+    "G":  7,
+    "G#": 8, "A!": 8,
+    "A":  9,
+    "A#": 10, "B!": 10,
+    "B":  11,
+    "0": -1, "R": -1
+  };
+  parseChord.chordParams = {
+    "": [0, 4, 7],
+    "M": [0, 4, 7],
+    "m": [0, 3, 7],
+    "-": [0, 3, 7],
+    "min": [0, 3, 7],
+    "aug": [0, 4, 8],
+    "+": [0, 4, 8],
+    "dim": [0, 3, 6],
+    "0": [0, 3, 6],
+    "6": [0, 4, 7, 9],
+    "7": [0, 4, 7, 10],
+    "m7": [0, 3, 7, 11],
+    "M7": [0, 4, 7, 11],
+    "maj7": [0, 4, 7, 11],
+    "9": [0, 4, 7, 10, 14],
+    "M9": [0, 4, 7, 11, 14],
+    "69": [0, 4, 7, 9, 14],
+    "11": [0, 4, 7, 10, 14, 17],
+    "13": [0, 4, 7, 9, 14, 17, 21],
+    "sus2": [0, 2, 7],
+    "sus4": [0, 5, 7],
+    "add2": [0, 2, 4, 7],
+    "add9": [0, 4, 7, 14]
+  };
+  var chordVolume = 0.2;
+  var chordLevel = -1;
+  function chordToNotes(chord, level, delay){
+    var output = [];
+    for(var i in chord.param){
+      if(chord.key != -1){
+        output.push(createNote(chord.key, level, chord.param[i], chord.length, delay, chordVolume));
+      }
+    }
+    return output;
+  }
+  function parseText(text){
+    var output = [], state = "", time = 0, note = createNote(), chordText = "", chord, chordStart;
     // state: "", "level", "detune", "pitch", "period"
     for(var i = 0; i < text.length; i++){
-      //console.log(text[i], tmp);
+      //console.log(text[i], note);
+      if(state == "chord"){
+        if(text[i] != ")"){
+          chordText += text[i];
+          continue;
+        }else{
+          //console.log("chord block end");
+          //console.log(chordText)
+          chord = parseChord(chordText? chordText : "R");
+          chordStart = time;
+          chordText = "";
+          state = "";
+          //console.log(chord, chordStart);
+        }
+      }
       switch(text[i]){
+      case "(":
+        switch(state){
+        case "pitch":
+        case "period":
+          note.delay = time;
+          output.push(note);
+          time += note.period;
+          //console.log("push last", note);
+          //console.log(note.level);
+        case "":
+        case "level":
+        case "detune":
+          note = createNote();
+        default:
+          //console.log("chord block start");
+          if(chord){
+            chord.length = time - chordStart;
+            output = output.concat(chordToNotes(chord, chordLevel, chordStart));
+            //console.log("add chord", chord, chordToNotes(chord, -1, chordStart));
+          }
+        }
+        state = "chord";
+      break;
       case "^":
       case "_":
         //console.log("level");
         switch(state){
         case "":
         case "level":
-          tmp.level += text[i] == "^" ? 1 : -1;
-          //console.log(tmp.level);
+          note.level += text[i] == "^" ? 1 : -1;
+          //console.log(note.level);
         break;
         case "pitch":
         case "period":
-          tmp.delay = time;
-          output.push(tmp);
-          time += tmp.period;
-          //console.log("push last", tmp);
-          tmp = createNote();
-          tmp.level = text[i] == "^" ? 1 : -1;
-          //console.log(tmp.level);
+          note.delay = time;
+          output.push(note);
+          time += note.period;
+          //console.log("push last", note);
+          note = createNote();
+          note.level = text[i] == "^" ? 1 : -1;
+          //console.log(note.level);
         break;
         case "detune":
         default:
-          tmp = createNote();
+          note = createNote();
         break;
         }
         state = "level";
@@ -383,21 +487,21 @@ window.addEventListener( "DOMContentLoaded", function(){
         case "":
         case "level":
         case "detune":
-          tmp.detune += text[i] == "#" ? 1 : -1;
-          //console.log(tmp.detune);
+          note.detune += text[i] == "#" ? 1 : -1;
+          //console.log(note.detune);
         break;
         case "pitch":
         case "period":
-          tmp.delay = time;
-          output.push(tmp);
-          time += tmp.period;
-          //console.log("push last", tmp);
-          tmp = createNote();
-          tmp.detune = text[i] == "#" ? 1 : -1;
-          //console.log(tmp.detune);
+          note.delay = time;
+          output.push(note);
+          time += note.period;
+          //console.log("push last", note);
+          note = createNote();
+          note.detune = text[i] == "#" ? 1 : -1;
+          //console.log(note.detune);
         break;
         default:
-          tmp = createNote();
+          note = createNote();
         break;
         }
         state = "detune";
@@ -423,21 +527,21 @@ window.addEventListener( "DOMContentLoaded", function(){
         case "":
         case "level":
         case "detune":
-          tmp.pitch = p[text[i]];
-          //console.log(tmp.pitch);
+          note.pitch = parseText.p[text[i]];
+          //console.log(note.pitch);
         break;
         case "pitch":
         case "period":
-          tmp.delay = time;
-          output.push(tmp);
-          time += tmp.period;
-          //console.log("push last", tmp);
-          tmp = createNote();
-          tmp.pitch = p[text[i]];
-          //console.log(tmp.pitch);
+          note.delay = time;
+          output.push(note);
+          time += note.period;
+          //console.log("push last", note);
+          note = createNote();
+          note.pitch = parseText.p[text[i]];
+          //console.log(note.pitch);
         break;
         default:
-          tmp = createNote();
+          note = createNote();
         break;
         }
         state = "pitch";
@@ -447,52 +551,44 @@ window.addEventListener( "DOMContentLoaded", function(){
         switch(state){
         case "pitch":
         case "period":
-          tmp.period += 1;
-          //console.log(tmp.period);
+          note.period += 1;
+          //console.log(note.period);
         break;
         case "":
         case "level":
         case "detune":
         default:
-          tmp = createNote();
+          note = createNote();
         }
         state = "period";
       break;
-      case "|":
-      case "\n":
-      case "\r":
-      /*
-        switch(state){
-        case "pitch":
-        case "period":
-          //console.log("division");
-          tmp.delay = time;
-          output.push(tmp);
-          time += tmp.period;
-          //console.log("push last", tmp);
-          tmp = createNote();
-          state = "";
-        break;
-        case "":
-        case "level":
-        case "detune":
-        default:
-          tmp = createNote();
-        }
-      */
-      break;
       default:
-        //console.log("?");
       }
     }
     if(state == "pitch" || state == "period"){
-      tmp.delay = time;
-      output.push(tmp);
-      time += tmp.period;
-      console.log("push last", tmp);
+      note.delay = time;
+      output.push(note);
+      time += note.period;
+      if(chord){
+        chord.length = time - chordStart;
+        output = output.concat(chordToNotes(chord, -1, chordStart));
+        //console.log("add chord", chord, chordToNotes(chord, -1, chordStart));
+      }
+      console.log("push last", note);
     }
+    console.log(output)
     return output;
   }
+  parseText.p = {
+    0: -1, "R": -1,
+    1:  0, "C":  0,
+    2:  2, "D":  2,
+    3:  4, "E":  4,
+    4:  5, "F":  5,
+    5:  7, "G":  7,
+    6:  9, "A":  9,
+    7: 11, "B": 11
+  };
   
   function buttonPlay(e){
     var speed = +document.getElementById("speed").value;
