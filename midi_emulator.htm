@@ -192,8 +192,13 @@ window.addEventListener( "DOMContentLoaded", function(){
     division = isFinite(conf.maxDivide) ? Math.min(Math.max(Math.round(conf.maxDivide), 1), maxCount) : division;
     speed = isFinite(conf.speed) ? Math.min(Math.max(Math.round(conf.speed), minSpeed), maxSpeed) : speed;
     tick = 1000 * 60 / speed / division;
-    optputVolume = conf.volume;
+    optputVolume = isFinite(conf.volume)? conf.volume : optputVolume;
     volumeGain.gain.value = optputVolume;
+    if(/(?:sine|square|triangle|sawtooth)/.test(conf.oscillatorType)){
+      for(var i in oscillators){
+        oscillators[i].oscillator.type = conf.oscillatorType;
+      }
+    }
   }
   
   var ts = 0;
@@ -327,7 +332,8 @@ window.addEventListener( "DOMContentLoaded", function(){
     },
     detune: function(pd){
       detune(pd * 100);
-    }
+    },
+    config: config
   };
   
   startPlay();
@@ -533,20 +539,28 @@ window.addEventListener( "DOMContentLoaded", function(){
       break;
       case "0":
       case "R":
+      case "r":
       case "1":
       case "C":
+      case "c":
       case "2":
       case "D":
+      case "d":
       case "3":
       case "E":
+      case "e":
       case "4":
       case "F":
+      case "f":
       case "5":
       case "G":
+      case "g":
       case "6":
       case "A":
+      case "a":
       case "7":
       case "B":
+      case "b":
         //console.log("pitch");
         switch(state){
         case "":
@@ -605,14 +619,14 @@ window.addEventListener( "DOMContentLoaded", function(){
     return output;
   }
   parseText.p = {
-    0: -1, "R": -1,
-    1:  0, "C":  0,
-    2:  2, "D":  2,
-    3:  4, "E":  4,
-    4:  5, "F":  5,
-    5:  7, "G":  7,
-    6:  9, "A":  9,
-    7: 11, "B": 11
+    0: -1, "R": -1, "r": -1,
+    1:  0, "C":  0, "c":  0,
+    2:  2, "D":  2, "d":  2,
+    3:  4, "E":  4, "e":  4,
+    4:  5, "F":  5, "f":  5,
+    5:  7, "G":  7, "g":  7,
+    6:  9, "A":  9, "a":  9,
+    7: 11, "B": 11, "b": 11
   };
   
   function buttonPlay(e){
