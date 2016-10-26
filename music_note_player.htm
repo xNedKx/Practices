@@ -59,15 +59,25 @@ _6_7-|(Am)1---_6-|(Dm/F)_6--_#5_6-|(E)_7---_#5-|_3---
 _A-|(Am)C---D-|(C)E--#FE-|(G)D---_B-|(Em)_G--
 _A_B-|(Am)C--_B_A-|(E)_#G--_#F_#G-|(Am)_A-----|_A---
 </pre>
-<textarea id="input"></textarea>
+<textarea id="input" disabled>This browser is not supported.</textarea>
 <div id="controls">
-<label>Speed: <input id="speed" value="300"></label>
-<label>Volume: <input id="volume" value="50"></label>
-<button id="play">play</button>
-<button id="mute">mute</button>
+<label>Speed: <input id="speed" value="300" disabled></label>
+<label>Volume: <input id="volume" value="50" disabled></label>
+<button id="play" disabled>play</button>
+<button id="mute" disabled>mute</button>
 </div>
 <script>
 window.addEventListener( "DOMContentLoaded", function(){
+  
+  if(window.hasOwnProperty("AudioContext")){
+    document.getElementById("input").value = "";
+    document.getElementById("input").disabled = false;
+    document.getElementById("play").disabled = false;
+    document.getElementById("mute").disabled = false;
+    document.getElementById("speed").disabled = false;
+    document.getElementById("volume").disabled = false;
+  }
+  
   function getFrequency(pitch){
     pitch = isFinite(pitch)? pitch : defaultPitch;
     return Math.pow(2, (+pitch - 57) / 12) * 440; // you can use 69 instead of 57 for classic condition
