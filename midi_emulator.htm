@@ -4,11 +4,18 @@
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta lang="en">
-<meta name="description" content="A MIDI editor-like web app." />
+<meta name="description" content="輸入音符標記與和弦，按下撥放立即試聽。" />
 <meta name="author" content="xNedKx" />
 <meta name="copyright" content="xNedKx" />
-<title>Simple MIDI Emulator</title>
+<title>簡譜播放機 Beta</title>
 <style>
+document, body {
+  margin: 0;
+}
+body {
+  font-family: "PT Sans Narrow", "Meiryo", "MS PGothic", "Apple LiGothic", "文泉驛正黑體", "SimHei", "Microsoft YaHei", "Microsoft JhengHei";
+  overflow-x: hidden;
+}
 #title {
   text-align: center;
   font-size: 24px;
@@ -18,11 +25,16 @@
   font-size: 0.6em;
   color: #999;
   text-align: center;
+  overflow-x: auto;
+  max-width: 100%;
+  margin: 0 0.5em;
+  box-sizing: border-box;
 }
 #input, #controls {
   margin: 1em auto;
   width: 80%;
   min-width: 320px;
+  box-sizing: border-box;
 }
 #input {
   display: block;
@@ -36,37 +48,38 @@
   width: 3em;
   margin-right: 1em; 
 }
+@media screen and (max-width: 640px){
+  #help {
+    white-space: normal;
+    text-align: left;
+  }
+}
 </style>
 </head>
 <body>
-<h1 id="title">Simple MIDI Emulator</h1>
-<pre id="help">Usage:
-[ 1 2 3 4 5 6 7 ] as musical pitch - [ C D E F G A B ]
-You can use CDEFGAB as well.
-Use [0] and [R] as rest.
-Before the pitch note, use [^] to elevate to higher octave and [_] to lower octave.
-After octave notes, using [#] for shrap and [!] for flat.
-To prolong a note, append [-] after them.
-For chords, using [(] and [)] to encapsulate the chord name.
-The chord lives until next chord, or until [(R)] or [(0)].
-Not all chords could be used, default pitches are below 1 octave of center C.
-The rests are [|], new line and whitespace for layout.
-
-Example:
-Green Sleeves [Speed: 300]
-
-_6-|(Am)1---2-|(C)3--#43-|(G)2---_7-|(Em)_5--_6_7-|(Am)1---_6-|(Dm/F)_6--_#5_6-|(E)_7---_#5-|_3---
+<h1 id="title">簡譜播放機 Beta</h1>
+<pre id="help">使用說明：
+輸入 [ 1 2 3 4 5 6 7 ] 以及 [ C D E F G A B ] 作為音符， [0] 跟 [R] 為休止符。
+在音符前使用 [ # ] 跟 [ ! ] 可以升或降半音，
+在升降記號或音符前使用 [ ^ ] 與 [ _ ] 可以上下移動一個八度，
+可以連續使用多個記號以移動更多度。
+在音符前用 [ ( ] 和 [ ) ] 可以附加和絃，
+請在括號中使用和弦記號，如 [ (Cm) ] 、 [ (Gsus4) ] 、 [ (D7) ] 之類的。
+和弦會持續到下個和弦記號，如果要終止，可以使用 [ (0) ] 或是 [ (R) ] 。
+和弦音高起始於低一個八度。
+<br>範例: 綠袖子 [速度: 300]<br>
+_6-|(Am)1---2-|(C)3--#43-|(G)2---_7-|(Em)_5--_6_7-|(Am)1---_6-|(Dm)_6--_#5_6-|(E)_7---_#5-|_3---
 _A-|(Am)C---D-|(C)E--#FE-|(G)D---_B-|(Em)_G--_A_B-|(Am)C--_B_A-|(E)_#G--_#F_#G-|(Am)_A-----|_A---
---|(C)5-----|5--#43-|(G)2---_7-|(Em)_5--_6_7-|(Am)1---_6-|(Dm/F)_6--_#5_6-|(E)_7---_#5-|_3---
---|(C)G-----|G--#FE-|(G)D---_B-|(Em)_G--_A_B-|(Am)C--_B_A-|(E)_#G--_#F_#G-|(Am)_A-----|_A---
+--|(C)5-----|5--#43-|(G)2---_7-|(Em)_5--_6_7-|(Am)1---_6-|(Dm)_6--_#5_6-|(E)_7---_#5-|_3---
+--|(C)G-----|G--#FE-|(G)D---_B-|(Em)_G--_A_B-|(Am)C--_B_A-|(E)_#G--_#F_#G-|(Am)_A-----|_A-----
 
 </pre>
-<textarea id="input" disabled>This browser is not supported.</textarea>
+<textarea id="input" disabled>瀏覽器不支援，無法正常啟動。</textarea>
 <div id="controls">
-<label>Speed: <input id="speed" value="300" disabled></label>
-<label>Volume: <input id="volume" value="50" disabled></label>
-<button id="play" disabled>play</button>
-<button id="mute" disabled>mute</button>
+<label>速度: <input id="speed" value="300" disabled></label>
+<label>音量: <input id="volume" value="50" disabled></label>
+<button id="play" disabled>播放</button>
+<button id="mute" disabled>靜音</button>
 </div>
 <script>
 window.addEventListener( "DOMContentLoaded", function(){
@@ -286,10 +299,10 @@ window.addEventListener( "DOMContentLoaded", function(){
   function toggleMute(e){
     if(muted){
       unmute();
-      this.innerText = "mute";
+      this.innerText = "靜音";
     }else{
       mute();
-      this.innerText = "unmute";
+      this.innerText = "取消靜音";
     }
   }
   
