@@ -14,7 +14,7 @@
 
 		<script>
 			var container;
-			var camera, scene, renderer, cube, c2;
+			var camera, scene, renderer, cube, c2, audio = document.createElement("audio");
       var r = 20, ang = 45 / 180 * Math.PI;
 			var mouseX = 0, mouseY = 0;
 			var windowHalfX = window.innerWidth / 2;
@@ -56,6 +56,9 @@
 				renderer.setSize( window.innerWidth, window.innerHeight );
         renderer.antialias = true;
 				container.appendChild( renderer.domElement );
+        audio.src = "./coin.mp3";
+        audio.volume = 0.3;
+        container.appendChild( audio );
 				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 				//
 				window.addEventListener( 'resize', onWindowResize, false );
@@ -92,7 +95,7 @@
           ani = true;
           var t = 0, tt = 10, start = cube.scale.x;
           var f = setInterval(function(){
-            var s = start - 0.2 * transt(t / tt);
+            var s = start - 0.34 * transt(t / tt);
             cube.scale.x = s
             cube.scale.y = s;
             cube.scale.z = s;
@@ -102,9 +105,17 @@
             t++;
             if(t >= tt){
               clearInterval(f);
-                  ani = false;
+              ani = false;
             }
           }, 1);
+        }else{
+          cube.scale.x = 0.66;
+          cube.scale.y = 0.66;
+          cube.scale.z = 0.66;
+          c2.scale.x = 0.66;
+          c2.scale.y = 0.66;
+          c2.scale.z = 0.66;
+          ani = false;
         }
       }
       function transt(t){
@@ -113,15 +124,12 @@
       function blink(){
         if(!ani){
           ani = true;
-          cube.scale.x = 0.8;
-          cube.scale.y = 0.8;
-          cube.scale.z = 0.8;
-          c2.scale.x = 0.8;
-          c2.scale.y = 0.8;
-          c2.scale.z = 0.8;
-          var t = 0, tt = 10, start = cube.scale.x;
+          audio.load();
+          audio.loop = false;
+          audio.play();
+          var t = 0, tt = 10, start = cube.scale.x, add = 1.2 - start;
           var f = setInterval(function(){
-            var s = start + 0.4 * transt(t / tt);
+            var s = start + add * transt(t / tt);
             cube.scale.x = s
             cube.scale.y = s;
             cube.scale.z = s;
@@ -155,10 +163,18 @@
               }, 1);
             }
           }, 1);
+        }else{
+          cube.scale.x = 1;
+          cube.scale.y = 1;
+          cube.scale.z = 1;
+          c2.scale.x = 1;
+          c2.scale.y = 1;
+          c2.scale.z = 1;
         }
       }
       document.documentElement.addEventListener("mousedown", shrink);
       document.documentElement.addEventListener("mouseup", blink);
+      document.documentElement.addEventListener("contextmenu", function(e){e.preventDefault(); return false;});
 		</script>
 
 	</body>
