@@ -57,7 +57,9 @@
         renderer.antialias = true;
 				container.appendChild( renderer.domElement );
         audio.src = "./coin.mp3";
-        audio.volume = 0.3;
+        audio.volume = 0.5;
+        audio.loop = false;
+        audio.load();
         container.appendChild( audio );
 				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 				//
@@ -124,8 +126,7 @@
       function blink(){
         if(!ani){
           ani = true;
-          audio.load();
-          audio.loop = false;
+          audio.currentTime = 0;
           audio.play();
           var t = 0, tt = 10, start = cube.scale.x, add = 1.2 - start;
           var f = setInterval(function(){
