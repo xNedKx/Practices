@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>A 3D Box</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+    document, body { margin: 0; overflow: hidden;}
+		</style>
+	</head>
+
+	<body>
+		<script src="https://cdn.rawgit.com/mrdoob/three.js/master/build/three.min.js"></script>
+
+		<script>
+			var container;
+			var camera, scene, renderer, cube, c2;
+      var r = 20, ang = 45 / 180 * Math.PI;
+			var mouseX = 0, mouseY = 0;
+			var windowHalfX = window.innerWidth / 2;
+			var windowHalfY = window.innerHeight / 2;
+			init();
+			animate();
+			function init() {
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+				camera.position.y = r * Math.cos(ang);
+				camera.position.x = r * Math.sin(ang) / Math.pow(2, 1/2);
+				camera.position.z = camera.position.x;
+				// scene
+				scene = new THREE.Scene();
+				var ambient = new THREE.AmbientLight( 0x909090 );
+				scene.add( ambient );
+				var directionalLight = new THREE.DirectionalLight( 0xFFFEF0 );
+				directionalLight.position.set( 0, 1, 0 );
+				scene.add( directionalLight );
+				var directionalLight2 = new THREE.DirectionalLight( 0x93928A );
+				directionalLight2.position.set( 0, 0, 1 );
+				scene.add( directionalLight2 );
+				var directionalLight3 = new THREE.DirectionalLight( 0x292927 );
+				directionalLight3.position.set( 1, 0, 0 );
+				scene.add( directionalLight3 );
+        // box
+        var geometry = new THREE.BoxGeometry( 2, 2, 2 );
+        var g2 = new THREE.BoxGeometry( 2.05, 2.05, 2.05 );
+        var material = new THREE.MeshStandardMaterial( {color: 0xffff99} );
+        var m2 = new THREE.MeshPhongMaterial( {color: 0xffff99, emissive: 0xffffff, opacity: 0.4, transparent: true } );
+        cube = new THREE.Mesh( geometry, material );
+        c2 = new THREE.Mesh( g2, m2 );
+        scene.add( cube );
+        scene.add( c2 );
+				//
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.antialias = true;
+				container.appendChild( renderer.domElement );
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				//
+				window.addEventListener( 'resize', onWindowResize, false );
+			}
+			function onWindowResize() {
+				windowHalfX = window.innerWidth / 2;
+				windowHalfY = window.innerHeight / 2;
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+			}
+			function onDocumentMouseMove( event ) {
+				mouseX = ( event.clientX - windowHalfX ) / 2;
+				mouseY = ( event.clientY - windowHalfY ) / 2;
+			}
+			//
+			function animate() {
+				requestAnimationFrame( animate );
+				render();
+			}
+			function render() {
+				cube.rotation.y = mouseX / windowHalfX * Math.PI;
+				c2.rotation.y = mouseX / windowHalfX * Math.PI;
+        ang = (0.3 + mouseY / windowHalfY) * Math.PI / 2;
+				camera.position.y = r * Math.sin(ang);
+				camera.position.x = r * Math.cos(ang) / Math.pow(2, 1/2);
+				camera.position.z = camera.position.x;
+				camera.lookAt( cube.position );
+				renderer.render( scene, camera );
+			}
+      var ani = false;
+      function shrink(){
+        if(!ani){
+          ani = true;
+          var t = 0, tt = 10, start = cube.scale.x;
+          var f = setInterval(function(){
+            var s = start - 0.2 * transt(t / tt);
+            cube.scale.x = s
+            cube.scale.y = s;
+            cube.scale.z = s;
+            c2.scale.x = s;
+            c2.scale.y = s;
+            c2.scale.z = s;
+            t++;
+            if(t >= tt){
+              clearInterval(f);
+                  ani = false;
+            }
+          }, 1);
+        }
+      }
+      function transt(t){
+        return Math.pow(t, 1/2);
+      }
+      function blink(){
+        if(!ani){
+          ani = true;
+          cube.scale.x = 0.8;
+          cube.scale.y = 0.8;
+          cube.scale.z = 0.8;
+          c2.scale.x = 0.8;
+          c2.scale.y = 0.8;
+          c2.scale.z = 0.8;
+          var t = 0, tt = 10, start = cube.scale.x;
+          var f = setInterval(function(){
+            var s = start + 0.4 * transt(t / tt);
+            cube.scale.x = s
+            cube.scale.y = s;
+            cube.scale.z = s;
+            c2.scale.x = s;
+            c2.scale.y = s;
+            c2.scale.z = s;
+            t++;
+            if(t >= tt){
+              clearInterval(f);
+              start = cube.scale.x;
+              tt = 100;
+              f = setInterval(function(){
+                s = start - 0.2 * transt(t / tt);
+                cube.scale.x = s
+                cube.scale.y = s;
+                cube.scale.z = s;
+                c2.scale.x = s;
+                c2.scale.y = s;
+                c2.scale.z = s;
+                t++;
+                if(t >= tt){
+                  clearInterval(f);
+                  cube.scale.x = 1;
+                  cube.scale.y = 1;
+                  cube.scale.z = 1;
+                  c2.scale.x = 1;
+                  c2.scale.y = 1;
+                  c2.scale.z = 1;
+                  ani = false;
+                }
+              }, 1);
+            }
+          }, 1);
+        }
+      }
+      document.documentElement.addEventListener("mousedown", shrink);
+      document.documentElement.addEventListener("mouseup", blink);
+		</script>
+
+	</body>
+</html>
