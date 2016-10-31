@@ -8,7 +8,22 @@
     <meta name="copyright" content="xNedKx" />
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <style>
-    document, body { margin: 0; overflow: hidden;}
+    document, body {
+      margin: 0;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+    body {
+      position: relative;
+      background-color: #000;
+    }
+    body > div {
+      overflow-y: scroll;
+    }
+    body > div::-webkit-scrollbar {
+      display: none;
+    }
     </style>
   </head>
 
@@ -64,7 +79,6 @@
         audio.loop = false;
         audio.load();
         container.appendChild( audio );
-        document.addEventListener( 'mousemove', onDocumentMouseMove, false );
         //
         window.addEventListener( 'resize', onWindowResize, false );
       }
@@ -76,6 +90,7 @@
         renderer.setSize( window.innerWidth, window.innerHeight );
       }
       function onDocumentMouseMove( event ) {
+        //console.log("MM")
         mouseX = ( event.clientX - windowHalfX ) / 2;
         mouseY = ( event.clientY - windowHalfY ) / 2;
       }
@@ -94,13 +109,19 @@
         camera.lookAt( cube.position );
         renderer.render( scene, camera );
       }
-      var ani = false;
-      function shrink(){
-        if(!ani){
-          ani = true;
-          var t = 0, tt = 10, start = cube.scale.x;
-          var f = setInterval(function(){
-            var s = start - 0.34 * transt(t / tt);
+      var a1;
+      function shrink(e){
+        if(e.which != 1){return}
+        cube.scale.x = 1;
+        cube.scale.y = 1;
+        cube.scale.z = 1;
+        c2.scale.x = 1;
+        c2.scale.y = 1;
+        c2.scale.z = 1;
+        if(!a1){
+          var t = 0, tt = 5, start = cube.scale.x;
+          a1 = setInterval(function(){
+            var s = start - 0.25 * transt(t / tt);
             cube.scale.x = s
             cube.scale.y = s;
             cube.scale.z = s;
@@ -109,31 +130,29 @@
             c2.scale.z = s;
             t++;
             if(t >= tt){
-              clearInterval(f);
-              ani = false;
+              clearInterval(a1);
+              a1 = undefined;
             }
           }, 1);
         }else{
-          cube.scale.x = 0.66;
-          cube.scale.y = 0.66;
-          cube.scale.z = 0.66;
-          c2.scale.x = 0.66;
-          c2.scale.y = 0.66;
-          c2.scale.z = 0.66;
-          ani = false;
+          clearInterval(a1);
+          a1 = undefined;
         }
       }
       function transt(t){
         return Math.pow(t, 1/2);
       }
-      function blink(){
-        if(!ani){
-          ani = true;
+      var a2;
+      function blink(e){
+        if(e.which != 1){return}
+        clearInterval(a1);
+        a1 = undefined;
+        if(!a2){
           audio.currentTime = 0;
           audio.play();
-          var t = 0, tt = 10, start = cube.scale.x, add = 1.2 - start;
-          var f = setInterval(function(){
-            var s = start + add * transt(t / tt);
+          var t = 0, tt = 5, start = cube.scale.x, add = 1.2 - start, s;
+          a2 = setInterval(function(){
+            s = start + add * transt(t / tt);
             cube.scale.x = s
             cube.scale.y = s;
             cube.scale.z = s;
@@ -142,11 +161,12 @@
             c2.scale.z = s;
             t++;
             if(t >= tt){
-              clearInterval(f);
+              clearInterval(a2);
               start = cube.scale.x;
-              tt = 100;
-              f = setInterval(function(){
-                s = start - 0.2 * transt(t / tt);
+              add = 1 - start
+              tt = 50;
+              a2 = setInterval(function(){
+                s = start + add * transt(t / tt);
                 cube.scale.x = s
                 cube.scale.y = s;
                 cube.scale.z = s;
@@ -155,19 +175,85 @@
                 c2.scale.z = s;
                 t++;
                 if(t >= tt){
-                  clearInterval(f);
+                  clearInterval(a2);
+                  a2 = undefined;
                   cube.scale.x = 1;
                   cube.scale.y = 1;
                   cube.scale.z = 1;
                   c2.scale.x = 1;
                   c2.scale.y = 1;
                   c2.scale.z = 1;
-                  ani = false;
                 }
               }, 1);
             }
           }, 1);
         }else{
+          clearInterval(a2);
+          a2 = undefined;
+        }
+      }
+      function useMouse(e){
+        //console.log("UM")
+        document.documentElement.removeEventListener('mousemove', useMouse);
+        setTimeout(function(){
+          document.documentElement.addEventListener('mousemove', onDocumentMouseMove);
+          document.documentElement.addEventListener("mousedown", shrink);
+          document.documentElement.addEventListener("mouseup", blink);
+          document.documentElement.addEventListener("contextmenu", function(e){e.preventDefault(); return false;});
+        }, 100);
+        document.documentElement.removeEventListener('touchstart', touchStart);
+      }
+      document.documentElement.addEventListener('mousemove', useMouse);
+      document.documentElement.addEventListener('touchstart', touchStart);
+      var touch, x, y;
+      var st;
+      function touchStart(e){
+        document.documentElement.removeEventListener('mousemove', useMouse);
+        //console.log("TS")
+        if(e.touches.length == 1){
+          document.documentElement.removeEventListener('touchstart', touchStart);
+          document.documentElement.addEventListener('touchmove', touchMove);
+          document.documentElement.addEventListener('touchend', touchEnd);
+          document.documentElement.addEventListener('touchcancel', touchEnd);
+          touch = e.touches[0];
+          x = mouseX;
+          y = mouseY;
+          st = setTimeout(function(){
+            if(a2){
+              clearInterval(a2);
+              a2 = undefined;
+              cube.scale.x = 1;
+              cube.scale.y = 1;
+              cube.scale.z = 1;
+              c2.scale.x = 1;
+              c2.scale.y = 1;
+              c2.scale.z = 1;
+            }
+            shrink({which: 1});
+            st = 0;
+          }, 10);
+        }
+      }
+      function touchMove(e){
+        //console.log("TM")
+        if(Math.abs(e.touches[0].clientX - touch.clientX) > 3 || Math.abs(e.touches[0].clientY - touch.clientY) > 3){
+          if(st > 0){
+            clearTimeout(st);
+          }
+        }
+        mouseX = Math.min(Math.max(x + (e.touches[0].clientX - touch.clientX), -windowHalfX), windowHalfX);
+        mouseY = Math.min(Math.max(y + (e.touches[0].clientY - touch.clientY), -windowHalfY), windowHalfY);
+      }
+      function touchEnd(e){
+        //console.log("TE")
+        if(st == 0){
+          setTimeout(function(){
+            blink({which: 1});
+          }, 0);
+        }else{
+          clearInterval(st);
+          clearInterval(a1);
+          a1 = undefined;
           cube.scale.x = 1;
           cube.scale.y = 1;
           cube.scale.z = 1;
@@ -175,10 +261,11 @@
           c2.scale.y = 1;
           c2.scale.z = 1;
         }
+        document.documentElement.removeEventListener('touchmove', touchMove);
+        document.documentElement.removeEventListener('touchend', touchEnd);
+        document.documentElement.removeEventListener('touchcancel', touchEnd);
+        document.documentElement.addEventListener('touchstart', touchStart);
       }
-      document.documentElement.addEventListener("mousedown", shrink);
-      document.documentElement.addEventListener("mouseup", blink);
-      document.documentElement.addEventListener("contextmenu", function(e){e.preventDefault(); return false;});
     </script>
 
   </body>
