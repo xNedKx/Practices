@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="不知道星期天要吃什麼嗎？輸入你的選擇，交給命運來決定！" />
+<meta name="author" content="xNedKx" />
+<meta name="copyright" content="xNedKx" />
+<title>星期天吃什麼</title>
+<style>
+document, body {
+  margin: 0;
+  background-color: #f0f0f0;
+  text-align: center;
+  font-family: "PT Sans Narrow", "Meiryo", "MS PGothic", "Apple LiGothic", "文泉驛正黑體", "SimHei", "Microsoft YaHei", "Microsoft JhengHei";
+  font-size: 16px;
+  color: #111;
+}
+main {
+  width: 100vw;
+  max-width: 600px;
+  margin: 0 auto;
+  height: 100vh;
+  overflow: hidden;
+}
+h1 {
+  background-color: #f9f9f9;
+  margin: 0 auto;
+  padding: 0.3em 0 0.2em;
+  font-size: 2.5em;
+}
+button, input[type=button], input[type=submit] {
+  border: 0;
+  border-radius: 0.2em;
+  padding: 0.2em 0.6em;
+  font-size: 0.8em;
+  color: #333;
+  vertical-align: middle;
+  cursor: pointer;
+}
+input {
+  border: 0;
+  padding: 0.1em;
+  font-size: 1.2em;
+  vertical-align: middle;
+}
+ol, ul {
+  margin: 0;
+  padding: 0 0 0.5em;
+}
+li {
+  list-style: none;
+  padding: 0.1em 0;
+}
+ul > li:nth-child(odd){
+  background-color: rgba(0,0,0,0.02);
+}
+ul > li:nth-child(even){
+  background-color: rgba(0,0,0,0.01);
+}
+ul > li {
+  display: flex;
+  flex-wrap: no-wrap;
+}
+ul > li > div {
+  width: 100%;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+ul > li > button {
+  width: 20%;
+  max-width: 42px;
+  display: block;
+}
+#text {
+  width: 200px;
+}
+#numbers {
+  width: 3em;
+  text-align: center;
+}
+#add {
+  background-color: #bdcaff;
+}
+#random {
+  background-color: #ffcabd;
+  transform: scale(1.2) translateX(0.4em);
+  transform-origin: center;
+}
+#f {
+  margin: 0.5em 0;
+}
+#output {
+  padding-top: 0.5em;
+}
+#log {
+  height: 300px;
+  width: 100%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  text-align: center;
+  background-color: #f9f9f9;
+  margin: 0;
+}
+#total {
+  color: #999;
+}
+#total > li:nth-child(odd){
+  background-color: rgba(0,0,0,0.01);
+}
+#total > li:nth-child(even){
+  background-color: rgba(0,0,0,0.02);
+}
+#total > li:nth-child(1){
+  background-color: #ffcabd;
+}
+.opt {
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #111;
+}
+</style>
+</head>
+<body>
+<main>
+<h1>星期天吃什麼</h1>
+<div>
+  <ul id="options">
+  </ul>
+  <form id="f" href="#"><label><input id="text"> <input type="submit" id="add" value="增加選項"></label></form>
+  <label>隨機次數: <input id="numbers" placeholder="50" value=50> <button id="random">幫我決定</button></label>
+</div>
+<div id="output">
+  <div><ol id="total"></ol></div>
+  <pre id="log"></pre>
+</div>
+</main>
+<script>
+var list = document.getElementById("options");
+var add = document.getElementById("add");
+var form = document.getElementById("f");
+var ran = document.getElementById("random");
+var text = document.getElementById("text");
+var numb = document.getElementById("numbers");
+var log = document.getElementById("log");
+var sum = document.getElementById("total");
+var analyse = {};
+var saveOptions;
+if(localStorage){
+  saveOptions = localStorage.getItem("options").split("|") || [];
+  for( var i = 0; i < saveOptions.length; i++ ){
+    if(saveOptions[i]){
+      analyse[saveOptions[i]] = 0;
+      addItem(saveOptions[i]);
+    }
+  }
+}
+function addItem(text){
+  var op = document.createElement("li");
+  op.appendChild(document.createElement("div"));
+  op.lastElementChild.innerText = text;
+  op.appendChild(document.createElement("button"));
+  op.lastElementChild.innerText = "X";
+  op.lastElementChild.addEventListener("click", removeOption, false);
+  list.appendChild(op);
+  return op;
+}
+function addOption(e){
+  if(text.value == "" || analyse.hasOwnProperty(text.value)){
+    text.select();
+    text.focus();
+    return;
+  }
+  e.preventDefault();
+  if(localStorage){
+    saveOptions.push(text.value);
+    localStorage.setItem("options", saveOptions.join("|"));
+  }
+  analyse[text.value] = 0;
+  addItem(text.value);
+  text.value = "";
+  text.focus();
+  return;
+}
+f.addEventListener("submit", addOption);
+function removeOption(e){
+  var option = e.target.parentNode;
+  delete analyse[option.firstElementChild.innerText];
+  option.remove();
+  if(localStorage){
+    var i = saveOptions.indexOf(option.firstElementChild.innerText);
+    if( i != -1 ){
+      saveOptions.splice(i, 1);
+    }
+    localStorage.setItem("options", saveOptions.join("|"));
+  }
+  if(timer){
+    clearInterval(timer);
+    timer = 0;
+    running = 0;
+  }
+}
+function vote(){
+  if(running > 0){
+    var options = Object.keys(analyse);
+    var index = Math.floor(Math.random() * options.length);
+    log.innerText += options[index] + " 一票\n";
+    log.scrollTop = log.scrollHeight;
+    analyse[options[index]]++;
+    running--;
+    var output = [];
+    for( i in analyse ){
+      output.push({o: i, n: analyse[i]});
+    }
+    output.sort(function(a,b){return b.n - a.n});
+    while(sum.children.length){
+      sum.removeChild(sum.children[0]);
+    }
+    output.forEach(function(op){
+      sum.appendChild(document.createElement("li"));
+      sum.lastElementChild.innerHTML = (Math.round(10000 * op.n / (times - running)) / 100) + "% <span class='opt'>" + op.o + "</span> [" + op.n + "票]";
+    });
+  }else{
+    clearInterval(timer);
+    timer = 0;
+  }
+}
+var running = 0;
+var timer;
+var times;
+function run(e){
+  if(Object.keys(analyse).length && running == 0){
+    var n = +numb.value;
+    if(!(isFinite(n) && n > 0)){
+      n = 50;
+      numb.value = n;
+    }
+    times = running = n;
+    var options = Object.keys(analyse);
+    for( i in analyse ){
+      analyse[i] = 0;
+    }
+    log.innerText = "";
+    timer = setInterval(vote, 160);
+  }
+}
+ran.addEventListener("click", run);
+text.focus();
+</script>
+</body>
+</html>
