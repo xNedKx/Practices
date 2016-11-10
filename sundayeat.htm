@@ -241,7 +241,7 @@ function run(e){
       analyse[i] = 0;
     }
     log.innerText = "";
-    timer = setInterval(vote, 160);
+    timer = setInterval(vote, 400 * Math.pow(Math.log(n), 2) * Math.pow(n, 1 / n) / n);
   }
 }
 ran.addEventListener("click", run);
