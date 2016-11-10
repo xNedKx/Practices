@@ -219,6 +219,11 @@ window.addEventListener("DOMContentLoaded", function(){
       text.focus();
       return;
     }
+    if(timer){
+      clearInterval(timer);
+      timer = 0;
+      running = 0;
+    }
     if(localStorage){
       saveOptions.push(text.value);
       localStorage.setItem("options", saveOptions.join("|"));
