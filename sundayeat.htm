@@ -75,6 +75,38 @@ ul > li > button {
   max-width: 42px;
   display: block;
 }
+ol > li {
+  position: relative;
+}
+.bar {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  transform-origin: left;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  transition: transform 50ms;
+}
+li:nth-child(odd) > .bar {
+  background-color: rgba(0,0,0,0.1);
+}
+li:nth-child(even) > .bar {
+  background-color: rgba(0,0,0,0.15);
+}
+li:nth-child(1) > .bar {
+  background-color: rgba(255,104,66,0.5);
+}
+li:nth-child(1) > .label {
+  color: #333;
+}
+.label {
+  position: relative;
+  z-index: 10;
+}
+.label > span:nth-child(1) {
+  white-space: pre;
+}
 #text {
   width: 200px;
 }
@@ -106,7 +138,7 @@ ul > li > button {
   margin: 0;
 }
 #total {
-  color: #999;
+  color: #666;
 }
 #total > li:nth-child(odd){
   background-color: rgba(0,0,0,0.01);
@@ -154,6 +186,7 @@ window.addEventListener("DOMContentLoaded", function(){
   var saveOptions;
   var running = 0;
   var timer, times;
+  var labels = {};
 
   if(localStorage){
     saveOptions = (localStorage.getItem("options") || "").split("|");
@@ -228,12 +261,12 @@ window.addEventListener("DOMContentLoaded", function(){
         output.push({o: i, n: analyse[i]});
       }
       output.sort(function(a,b){return b.n - a.n});
-      while(sum.children.length){
-        sum.removeChild(sum.children[0]);
-      }
-      output.forEach(function(op){
-        sum.appendChild(document.createElement("li"));
-        sum.lastElementChild.innerHTML = (Math.round(10000 * op.n / (times - running)) / 100) + "% <span class='opt'>" + op.o + "</span> [" + op.n + "票]";
+      output.forEach(function(op, i){
+        var percent = Math.round(10000 * op.n / (times - running)) / 100;
+        sum.appendChild(labels[op.o]);
+        labels[op.o].children[0].style.transform = "scaleX(" + (percent / 100 * Math.pow(output.length, 1/2)) + ")";
+        labels[op.o].children[1].children[0].innerText = percent;
+        labels[op.o].children[1].children[2].innerText = op.n;
       });
     }else{
       clearInterval(timer);
@@ -249,12 +282,26 @@ window.addEventListener("DOMContentLoaded", function(){
         numb.value = n;
       }
       times = running = n;
-      var options = Object.keys(analyse);
+      while(sum.children.length){
+        sum.removeChild(sum.children[0]);
+      }
+      var li, d;
+      labels = {};
       for( i in analyse ){
         analyse[i] = 0;
+        li = document.createElement("li");
+        d = document.createElement("div");
+        d.className = "bar";
+        li.appendChild(d);
+        d = document.createElement("div");
+        d.className = "label";
+        d.innerHTML = "<span>" + 0 + "</span>% <span class='opt'>" + i + "</span> [<span>" + 0 + "</span>票]";
+        li.appendChild(d);
+        sum.appendChild(li);
+        labels[i] = li;
       }
       log.innerText = "";
-      timer = setInterval(vote, 400 * Math.pow(Math.log(n), 2) * Math.pow(n, 1 / n) / n);
+      timer = setInterval(function(){requestAnimationFrame(vote)}, 400 * Math.pow(Math.log(n), 2) * Math.pow(n, 1 / n) / n);
     }
   }
 
