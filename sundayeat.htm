@@ -15,14 +15,16 @@ document, body {
   font-family: "PT Sans Narrow", "Meiryo", "MS PGothic", "Apple LiGothic", "文泉驛正黑體", "SimHei", "Microsoft YaHei", "Microsoft JhengHei";
   font-size: 16px;
   color: #111;
-}
-main {
   width: 100vw;
-  max-width: 600px;
-  margin: 0 auto;
   height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
+}
+main {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  overflow-x: hidden;
 }
 h1 {
   background-color: #f9f9f9;
@@ -158,11 +160,14 @@ if(localStorage){
 }
 function addItem(text){
   var op = document.createElement("li");
-  op.appendChild(document.createElement("div"));
-  op.lastElementChild.innerText = text;
-  op.appendChild(document.createElement("button"));
-  op.lastElementChild.innerText = "X";
-  op.lastElementChild.addEventListener("click", removeOption, false);
+  var d = document.createElement("div");
+  d.innerText = text;
+  op.appendChild(d);
+  d = document.createElement("button");
+  d.innerText = "X";
+  d.addEventListener("click", removeOption, false);
+  op.appendChild(d);
+  op.dataset.option = text;
   list.appendChild(op);
   return op;
 }
@@ -186,10 +191,10 @@ function addOption(e){
 f.addEventListener("submit", addOption);
 function removeOption(e){
   var option = e.target.parentNode;
-  delete analyse[option.firstElementChild.innerText];
-  option.remove();
+  delete analyse[option.dataset.option];
+  option.parentNode.removeChild(option);
   if(localStorage){
-    var i = saveOptions.indexOf(option.firstElementChild.innerText);
+    var i = saveOptions.indexOf(option.dataset.option);
     if( i != -1 ){
       saveOptions.splice(i, 1);
     }
