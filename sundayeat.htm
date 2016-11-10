@@ -172,12 +172,12 @@ function addItem(text){
   return op;
 }
 function addOption(e){
+  e.preventDefault();
   if(text.value == "" || analyse.hasOwnProperty(text.value)){
     text.select();
     text.focus();
     return;
   }
-  e.preventDefault();
   if(localStorage){
     saveOptions.push(text.value);
     localStorage.setItem("options", saveOptions.join("|"));
@@ -186,7 +186,7 @@ function addOption(e){
   addItem(text.value);
   text.value = "";
   text.focus();
-  return false;
+  return;
 }
 f.addEventListener("submit", addOption);
 function removeOption(e){
