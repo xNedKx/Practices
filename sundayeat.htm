@@ -147,7 +147,7 @@ var sum = document.getElementById("total");
 var analyse = {};
 var saveOptions;
 if(localStorage){
-  saveOptions = (localStorage.getItem("options") || []).split("|");
+  saveOptions = (localStorage.getItem("options") || "").split("|");
   for( var i = 0; i < saveOptions.length; i++ ){
     if(saveOptions[i]){
       analyse[saveOptions[i]] = 0;
