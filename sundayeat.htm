@@ -26,11 +26,34 @@ main {
   margin: 0 auto;
   overflow-x: hidden;
 }
+a[href], a[href]:link, a[href]:active, a[href]:hover, a[href]:visited {
+  text-decoration: none;
+  color: #666;
+}
+a[href]:hover {
+  color: #999;
+}
 h1 {
   background-color: #f9f9f9;
+  background-image: linear-gradient(30deg, #f9f9f9 0%, #fdfdfd 100%);
   margin: 0 auto;
-  padding: 0.3em 0 0.2em;
+  padding: 0.3em 0 0.1em;
   font-size: 2.5em;
+  text-shadow: 0 0 4px rgba(0,0,0,0.3);
+}
+h1.no-save {
+  background-color: #ffcabd;
+  background-image: linear-gradient(30deg, rgba(255,104,66,1) 0%, rgba(255,222,103,1) 100%);
+}
+#hints {
+  display: none;
+}
+#hints.no-save {
+  display: block;
+  background-color: #eee;
+  color: #555;
+  font-size: 0.7em;
+  padding: 0.2em 0;
 }
 button, input[type=button], input[type=submit] {
   border: 0;
@@ -47,38 +70,30 @@ input {
   font-size: 1.2em;
   vertical-align: middle;
 }
-ol, ul {
+#options {
   margin: 0;
-  padding: 0 0 0.5em;
+  padding: 0;
+  color: #666;
 }
-li {
+#options > li {
   list-style: none;
   padding: 0.1em 0;
-}
-ul > li:nth-child(odd){
-  background-color: rgba(0,0,0,0.02);
-}
-ul > li:nth-child(even){
-  background-color: rgba(0,0,0,0.01);
-}
-ul > li {
   display: flex;
   flex-wrap: no-wrap;
+  position: relative;
 }
-ul > li > div {
+#options > li > div {
   width: 100%;
   font-weight: bold;
   font-size: 1.2em;
 }
-ul > li > button {
+#options > li > button.x {
   width: 20%;
   max-width: 42px;
   display: block;
+  background-color: rgba(50,50,50,0.05);
 }
-ol > li {
-  position: relative;
-}
-.bar {
+#options > li > .bar {
   position: absolute;
   height: 100%;
   width: 100%;
@@ -87,25 +102,43 @@ ol > li {
   left: 0;
   will-change: transform;
   transition: transform 50ms;
+  transform: scaleX(0);
 }
-li:nth-child(odd) > .bar {
+#options > li:nth-child(odd) > .bar {
   background-color: rgba(0,0,0,0.1);
 }
-li:nth-child(even) > .bar {
+#options > li:nth-child(odd){
+  background-color: rgba(0,0,0,0.02);
+}
+#options > li:nth-child(even) > .bar {
   background-color: rgba(0,0,0,0.15);
 }
-li:nth-child(1) > .bar {
-  background-color: rgba(255,104,66,0.5);
+#options > li:nth-child(even){
+  background-color: rgba(0,0,0,0.01);
 }
-li:nth-child(1) > .label {
-  color: #333;
-}
-.label {
+#options > li > .label {
   position: relative;
   z-index: 10;
 }
-.label > span:nth-child(1) {
-  white-space: pre;
+.percent, .vote {
+  font-size: 0.8em;
+  font-weight: normal;
+  color: #666;
+}
+.opt {
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #111;
+  margin: 0 0.2em;
+}
+#options > li.win {
+  background-color: #ffcabd;
+}
+#options > li.win > .bar {
+  background-color: rgba(255,104,66,0.5);
+}
+#options > li.win > .label > span {
+  color: #333;
 }
 #text {
   width: 200px;
@@ -129,7 +162,7 @@ li:nth-child(1) > .label {
   padding-top: 0.5em;
 }
 #log {
-  height: 300px;
+  height: 33vh;
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
@@ -137,42 +170,32 @@ li:nth-child(1) > .label {
   background-color: #f9f9f9;
   margin: 0;
 }
-#total {
-  color: #666;
-}
-#total > li:nth-child(odd){
-  background-color: rgba(0,0,0,0.01);
-}
-#total > li:nth-child(even){
-  background-color: rgba(0,0,0,0.02);
-}
-#total > li:nth-child(1){
-  background-color: #ffcabd;
-}
-.opt {
-  font-weight: bold;
-  font-size: 1.2em;
-  color: #111;
+.title {
+  background-color: rgba(255,255,255,0.3);
+  color: #555;
 }
 </style>
 </head>
 <body>
 <main>
-<h1>星期天吃什麼</h1>
+<h1 id="logo">星期天吃什麼</h1>
 <div>
+  <div id="hints">此為預先設定的清單: (<a href="#">點此恢復自己的清單</a>)</div>
   <ul id="options">
   </ul>
   <form id="f" href="#"><label><input id="text" placeholder="想吃什麼？"> <input type="submit" id="add" value="增加選項"></label></form>
   <label>抉擇次數: <input id="numbers" placeholder="50" value=50> <button id="random">幫我決定</button></label>
 </div>
 <div id="output">
-  <div><ol id="total"></ol></div>
+  <div class="title">抉擇紀錄:</div>
   <pre id="log"></pre>
 </div>
 </main>
 <script>
 window.addEventListener("DOMContentLoaded", function(){
 
+  var logo = document.getElementById("logo");
+  var hints = document.getElementById("hints");
   var list = document.getElementById("options");
   var add = document.getElementById("add");
   var form = document.getElementById("f");
@@ -180,18 +203,34 @@ window.addEventListener("DOMContentLoaded", function(){
   var text = document.getElementById("text");
   var numb = document.getElementById("numbers");
   var log = document.getElementById("log");
-  var sum = document.getElementById("total");
   
   var analyse = {};
   var saveOptions;
   var running = 0;
   var timer, times;
   var labels = {};
+  var enableSave = localStorage ? true : false;
 
-  if(localStorage){
+  if(location.hash){
+    enableSave = false;
+    logo.classList.add("no-save");
+    hints.classList.add("no-save");
+    location.hash.slice(1).split(",").forEach(function(op){
+      if(op && !analyse.hasOwnProperty(op)){
+        analyse[op] = 0;
+        addItem(op);
+      }
+    });
+  }
+  function hashChange(){
+    location.reload(true);
+  }
+  window.addEventListener("hashchange", hashChange);
+  
+  if(enableSave){
     saveOptions = (localStorage.getItem("options") || "").split("|");
     for( var i = 0; i < saveOptions.length; i++ ){
-      if(saveOptions[i]){
+      if(saveOptions[i] && !analyse.hasOwnProperty(saveOptions[i])){
         analyse[saveOptions[i]] = 0;
         addItem(saveOptions[i]);
       }
@@ -201,14 +240,29 @@ window.addEventListener("DOMContentLoaded", function(){
   function addItem(text){
     var op = document.createElement("li");
     var d = document.createElement("div");
-    d.innerText = text;
+    d.className = "bar";
     op.appendChild(d);
+    d = document.createElement("div");
+    d.className = "label";
+    op.appendChild(d);
+    var s = document.createElement("span");
+    s.className = "percent";
+    d.appendChild(s);
+    s = document.createElement("span");
+    s.className = "opt"
+    s.innerText = text;
+    d.appendChild(s);
+    s = document.createElement("span");
+    s.className = "vote";
+    d.appendChild(s);
     d = document.createElement("button");
     d.innerText = "X";
+    d.className = "x";
     d.addEventListener("click", removeOption, false);
     op.appendChild(d);
     op.dataset.option = text;
     list.appendChild(op);
+    labels[text] = op;
     return op;
   }
 
@@ -224,9 +278,11 @@ window.addEventListener("DOMContentLoaded", function(){
       timer = 0;
       running = 0;
     }
-    if(localStorage){
+    if(enableSave){
       saveOptions.push(text.value);
       localStorage.setItem("options", saveOptions.join("|"));
+    }else{
+      location.hash += "," + text.value;
     }
     analyse[text.value] = 0;
     addItem(text.value);
@@ -237,20 +293,28 @@ window.addEventListener("DOMContentLoaded", function(){
 
   function removeOption(e){
     var option = e.target.parentNode;
+    delete labels[option.dataset.option];
     delete analyse[option.dataset.option];
     option.parentNode.removeChild(option);
-    if(localStorage){
+    if(enableSave){
       var i = saveOptions.indexOf(option.dataset.option);
       if( i != -1 ){
         saveOptions.splice(i, 1);
       }
       localStorage.setItem("options", saveOptions.join("|"));
+    }else{
+      var ops = [];
+      for( var i = 0; i < list.children.length; i++ ){
+        ops.push(list.children[i].dataset.option);
+      }
+      location.hash = "#" + ops.join(",");
     }
     if(timer){
       clearInterval(timer);
       timer = 0;
       running = 0;
     }
+    text.focus();
   }
 
   function vote(){
@@ -268,14 +332,23 @@ window.addEventListener("DOMContentLoaded", function(){
       output.sort(function(a,b){return b.n - a.n});
       output.forEach(function(op, i){
         var percent = Math.round(10000 * op.n / (times - running)) / 100;
-        sum.appendChild(labels[op.o]);
+        list.appendChild(labels[op.o]);
         labels[op.o].children[0].style.transform = "scaleX(" + (percent / 100 * Math.pow(output.length, 1/2)) + ")";
-        labels[op.o].children[1].children[0].innerText = percent;
-        labels[op.o].children[1].children[2].innerText = op.n;
+        labels[op.o].children[1].children[0].innerText = percent + "%";
+        labels[op.o].children[1].children[2].innerText = "[" + op.n + "票]";
       });
     }else{
       clearInterval(timer);
       timer = 0;
+      var t = 0;
+      for( var i = 0; i < list.children.length; i++ ){
+        if(analyse[list.children[i].dataset.option] >= t){
+          t = analyse[list.children[i].dataset.option];
+          list.children[i].classList.add("win");
+        }else{
+          break;
+        }
+      }
     }
   }
 
@@ -286,30 +359,25 @@ window.addEventListener("DOMContentLoaded", function(){
         n = 50;
         numb.value = n;
       }
-      times = running = n;
-      while(sum.children.length){
-        sum.removeChild(sum.children[0]);
+      var last = document.getElementsByClassName("win");
+      while(last.length){
+        last[0].classList.remove("win");
       }
-      var li, d;
-      labels = {};
-      for( i in analyse ){
+      for( var i in analyse ){
         analyse[i] = 0;
-        li = document.createElement("li");
-        d = document.createElement("div");
-        d.className = "bar";
-        li.appendChild(d);
-        d = document.createElement("div");
-        d.className = "label";
-        d.innerHTML = "<span>" + 0 + "</span>% <span class='opt'>" + i + "</span> [<span>" + 0 + "</span>票]";
-        li.appendChild(d);
-        sum.appendChild(li);
-        labels[i] = li;
       }
+      times = running = n;
       log.innerText = "";
       timer = setInterval(function(){requestAnimationFrame(vote)}, 400 * Math.pow(Math.log(n), 2) * Math.pow(n, 1 / n) / n);
     }
   }
+  
+  function fs(e){
+    e.target.select();
+    e.target.focus();
+  }
 
+  numb.addEventListener("focus", fs);
   f.addEventListener("submit", addOption);
   ran.addEventListener("click", run);
 
