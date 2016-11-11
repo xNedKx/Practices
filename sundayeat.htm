@@ -79,8 +79,9 @@ input {
   list-style: none;
   padding: 0.1em 0;
   display: flex;
-  flex-wrap: no-wrap;
+  flex-wrap: nowrap;
   position: relative;
+  transition: background-color 0.5s ease-in;
 }
 #options > li > div {
   width: 100%;
@@ -101,7 +102,7 @@ input {
   top: 0;
   left: 0;
   will-change: transform;
-  transition: transform 50ms;
+  transition: transform 50ms, background-color 0.5s ease-in;
   transform: scaleX(0);
 }
 #options > li:nth-child(odd) > .bar {
@@ -120,6 +121,9 @@ input {
   position: relative;
   z-index: 10;
 }
+#options > li > .label > span {
+  transition: color 0.5s ease-in;
+}
 .percent, .vote {
   font-size: 0.8em;
   font-weight: normal;
@@ -131,11 +135,17 @@ input {
   color: #111;
   margin: 0 0.2em;
 }
-#options > li.win {
-  background-color: #ffcabd;
+#options > li.win:nth-child(odd) {
+  background-color: rgba(255,194,179,1);
 }
-#options > li.win > .bar {
-  background-color: rgba(255,104,66,0.5);
+#options > li.win:nth-child(even) {
+  background-color: rgba(255,202,189,1);
+}
+#options > li.win:nth-child(odd) > .bar {
+  background-color: rgba(255,157,133,0.5);
+}
+#options > li.win:nth-child(even) > .bar {
+  background-color: rgba(255,165,143,0.5);
 }
 #options > li.win > .label > span {
   color: #333;
