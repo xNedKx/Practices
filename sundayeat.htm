@@ -216,6 +216,7 @@ window.addEventListener("DOMContentLoaded", function(){
     logo.classList.add("no-save");
     hints.classList.add("no-save");
     location.hash.slice(1).split(",").forEach(function(op){
+      op = decodeURIComponent(op);
       if(op && !analyse.hasOwnProperty(op)){
         analyse[op] = 0;
         addItem(op);
@@ -282,7 +283,7 @@ window.addEventListener("DOMContentLoaded", function(){
       saveOptions.push(text.value);
       localStorage.setItem("options", saveOptions.join("|"));
     }else{
-      location.hash += "," + text.value;
+      location.hash += "," + encodeURIComponent(text.value);
     }
     analyse[text.value] = 0;
     addItem(text.value);
@@ -305,7 +306,7 @@ window.addEventListener("DOMContentLoaded", function(){
     }else{
       var ops = [];
       for( var i = 0; i < list.children.length; i++ ){
-        ops.push(list.children[i].dataset.option);
+        ops.push(encodeURIComponent(list.children[i].dataset.option));
       }
       location.hash = "#" + ops.join(",");
     }
