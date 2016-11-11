@@ -74,12 +74,11 @@ input {
   margin: 0;
   padding: 0;
   color: #666;
+  width: 100%;
 }
 #options > li {
   list-style: none;
   padding: 0.1em 0;
-  display: flex;
-  flex-wrap: nowrap;
   position: relative;
   transition: background-color 0.5s ease-in;
 }
@@ -89,10 +88,18 @@ input {
   font-size: 1.2em;
 }
 #options > li > button.x {
+  position: absolute;
+  right: 2px;
+  top: 2%;
   width: 20%;
+  height: 96%;
   max-width: 42px;
   display: block;
+  z-index: 20;
   background-color: rgba(50,50,50,0.05);
+}
+#options.run > li > button.x {
+  display: none;
 }
 #options > li > .bar {
   position: absolute;
@@ -265,7 +272,6 @@ window.addEventListener("DOMContentLoaded", function(){
     location.hash.slice(1).split(",").forEach(function(op){
       op = decodeURIComponent(op);
       if(op && !analyse.hasOwnProperty(op)){
-        analyse[op] = 0;
         addItem(op);
       }
     });
@@ -279,7 +285,6 @@ window.addEventListener("DOMContentLoaded", function(){
     saveOptions = (localStorage.getItem("options") || "").split("|");
     for( var i = 0; i < saveOptions.length; i++ ){
       if(saveOptions[i] && !analyse.hasOwnProperty(saveOptions[i])){
-        analyse[saveOptions[i]] = 0;
         addItem(saveOptions[i]);
       }
     }
@@ -311,6 +316,7 @@ window.addEventListener("DOMContentLoaded", function(){
     op.dataset.option = text;
     list.appendChild(op);
     labels[text] = op;
+    analyse[text] = 0;
     return op;
   }
 
@@ -321,18 +327,13 @@ window.addEventListener("DOMContentLoaded", function(){
       text.focus();
       return;
     }
-    if(timer){
-      clearInterval(timer);
-      timer = 0;
-      running = 0;
-    }
+    stop();
     if(enableSave){
       saveOptions.push(text.value);
       localStorage.setItem("options", saveOptions.join("|"));
     }else{
       location.hash += "," + encodeURIComponent(text.value);
     }
-    analyse[text.value] = 0;
     addItem(text.value);
     text.value = "";
     text.focus();
@@ -358,11 +359,7 @@ window.addEventListener("DOMContentLoaded", function(){
       }
       location.hash = "#" + ops.join(",");
     }
-    if(timer){
-      clearInterval(timer);
-      timer = 0;
-      running = 0;
-    }
+    stop();
     text.focus();
     createShareLink();
   }
@@ -388,8 +385,7 @@ window.addEventListener("DOMContentLoaded", function(){
         labels[op.o].children[1].children[2].innerText = "[" + op.n + "票]";
       });
     }else{
-      clearInterval(timer);
-      timer = 0;
+      stop();
       var t = 0;
       for( var i = 0; i < list.children.length; i++ ){
         if(analyse[list.children[i].dataset.option] >= t){
@@ -399,6 +395,15 @@ window.addEventListener("DOMContentLoaded", function(){
           break;
         }
       }
+    }
+  }
+
+  function stop(){
+    if(timer){
+      clearInterval(timer);
+      timer = 0;
+      running = 0;
+      list.classList.remove("run");
     }
   }
 
@@ -419,6 +424,7 @@ window.addEventListener("DOMContentLoaded", function(){
       times = running = n;
       log.innerText = "";
       timer = setInterval(function(){requestAnimationFrame(vote)}, 400 * Math.pow(Math.log(n), 2) * Math.pow(n, 1 / n) / n);
+      list.classList.add("run");
     }
   }
   
