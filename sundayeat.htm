@@ -75,6 +75,9 @@ input {
   padding: 0;
   color: #666;
   width: 100%;
+  max-height: 70vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 #options > li {
   list-style: none;
@@ -357,6 +360,7 @@ window.addEventListener("DOMContentLoaded", function(){
     op.appendChild(d);
     op.dataset.option = text;
     list.appendChild(op);
+    list.scrollTop = list.scrollHeight;
     labels[text] = op;
     analyse[text] = 0;
     return op;
@@ -465,6 +469,7 @@ window.addEventListener("DOMContentLoaded", function(){
       }
       times = running = n;
       log.innerText = "";
+      list.scrollTop = 0;
       timer = setInterval(function(){requestAnimationFrame(vote)}, 400 * Math.pow(Math.log(n), 2) * Math.pow(n, 1 / n) / n);
       list.classList.add("run");
     }
