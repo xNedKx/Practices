@@ -377,9 +377,9 @@ window.addEventListener("DOMContentLoaded", function(){
     if(enableSave){
       saveOptions.push(text.value);
       localStorage.setItem("options", saveOptions.join("|"));
-    }else{
+    }/*else{
       location.hash += "," + encodeURIComponent(text.value);
-    }
+    }*/
     addItem(text.value);
     text.value = "";
     text.focus();
@@ -398,13 +398,13 @@ window.addEventListener("DOMContentLoaded", function(){
         saveOptions.splice(i, 1);
       }
       localStorage.setItem("options", saveOptions.join("|"));
-    }else{
+    }/*else{
       var ops = [];
       for( var i = 0; i < list.children.length; i++ ){
         ops.push(encodeURIComponent(list.children[i].dataset.option));
       }
       location.hash = "#" + ops.join(",");
-    }
+    }*/
     stop();
     text.focus();
     createShareLink();
@@ -499,7 +499,7 @@ window.addEventListener("DOMContentLoaded", function(){
   link.addEventListener("click", fs);
   link.addEventListener("scroll", fs);
   numb.addEventListener("focus", fs);
-  f.addEventListener("submit", addOption);
+  form.addEventListener("submit", addOption);
   ran.addEventListener("click", run);
 
   text.focus();
