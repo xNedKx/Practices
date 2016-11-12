@@ -319,7 +319,7 @@ window.addEventListener("DOMContentLoaded", function(){
   }
 
   function setNumber(number){
-    if(isFinite(query.number) && query.number > 0 && query.number < 100000){
+    if(isFinite(number) && number > 0 && number < 100000){
       defaultNumber = +number;
       numb.placeholder = defaultNumber;
       numb.value = defaultNumber;
