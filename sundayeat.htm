@@ -232,7 +232,7 @@ input {
   <ul id="options">
   </ul>
   <form id="f" href="#"><label><input id="text" placeholder="想吃什麼？"> <input type="submit" id="add" value="增加選項"></label></form>
-  <label>抉擇次數: <input id="numbers" placeholder="50" value=50> <button id="random">給我建議</button></label>
+  <label>抉擇次數: <input id="numbers"> <button id="random">給我建議</button></label>
 </div>
 <div id="output">
   <div class="title">抉擇紀錄:</div>
@@ -264,6 +264,9 @@ window.addEventListener("DOMContentLoaded", function(){
   var timer, times;
   var labels = {};
   var enableSave = localStorage ? true : false;
+  var defaultNumber;
+  var query = {};
+  setNumber(50);
 
   if(location.hash){
     enableSave = false;
@@ -281,6 +284,45 @@ window.addEventListener("DOMContentLoaded", function(){
   }
   window.addEventListener("hashchange", hashChange);
   
+  if(location.search){
+    location.search.slice(1).split("&").forEach(function(p){
+      var pair = p.split("=");
+      if(pair.length == 2){
+        switch(decodeURIComponent(pair[0])){
+        case "t":
+        case "title":
+          query.title = decodeURIComponent(pair[1]);
+        break;
+        case "n":
+        case "number":
+          query.number = decodeURIComponent(pair[1]);
+        break;
+        default:
+          query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+        }
+      }
+    });
+    if(query.title){
+      changeTitle(query.title);
+    }
+    if(query.number){
+      setNumber(query.number);
+    }
+  }
+
+  function changeTitle(text){
+    logo.innerText = text;
+    document.title = text;
+  }
+
+  function setNumber(number){
+    if(isFinite(query.number) && query.number > 0 && query.number < 100000){
+      defaultNumber = +number;
+      numb.placeholder = defaultNumber;
+      numb.value = defaultNumber;
+    }
+  }
+
   if(enableSave){
     saveOptions = (localStorage.getItem("options") || "").split("|");
     for( var i = 0; i < saveOptions.length; i++ ){
@@ -411,7 +453,7 @@ window.addEventListener("DOMContentLoaded", function(){
     if(Object.keys(analyse).length && running == 0){
       var n = +numb.value;
       if(!(isFinite(n) && n > 0)){
-        n = 50;
+        n = defaultNumber;
         numb.value = n;
       }
       var last = document.getElementsByClassName("win");
@@ -436,7 +478,7 @@ window.addEventListener("DOMContentLoaded", function(){
       }
     }
     if(ops.length){
-      link.value = location.protocol + "//" + location.hostname + location.pathname + "#" + ops.join(",");
+      link.value = location.protocol + "//" + location.hostname + (location.port? location.port : "") + location.pathname + (location.search ? location.search : "") + "#" + ops.join(",");
       share.classList.add("show");
     }else{
       link.value = "";
