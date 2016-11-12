@@ -195,9 +195,6 @@ input {
   color: #555;
 }
 #share {
-  display: none;
-}
-#share.show {
   display: flex;
   padding-top: 0.5em;
   color: #666;
@@ -269,6 +266,7 @@ window.addEventListener("DOMContentLoaded", function(){
   var enableSave = localStorage ? true : false;
   var defaultNumber;
   var query = {};
+  var hashHistory = false;
   setNumber(50);
 
   if(location.hash){
@@ -377,9 +375,9 @@ window.addEventListener("DOMContentLoaded", function(){
     if(enableSave){
       saveOptions.push(text.value);
       localStorage.setItem("options", saveOptions.join("|"));
-    }/*else{
+    }else if(hashHistory){
       location.hash += "," + encodeURIComponent(text.value);
-    }*/
+    }
     addItem(text.value);
     text.value = "";
     text.focus();
@@ -398,13 +396,13 @@ window.addEventListener("DOMContentLoaded", function(){
         saveOptions.splice(i, 1);
       }
       localStorage.setItem("options", saveOptions.join("|"));
-    }/*else{
+    }else if(hashHistory){
       var ops = [];
       for( var i = 0; i < list.children.length; i++ ){
         ops.push(encodeURIComponent(list.children[i].dataset.option));
       }
       location.hash = "#" + ops.join(",");
-    }*/
+    }
     stop();
     text.focus();
     createShareLink();
@@ -482,13 +480,7 @@ window.addEventListener("DOMContentLoaded", function(){
         ops.push(encodeURIComponent(list.children[i].dataset.option));
       }
     }
-    if(ops.length){
-      link.value = location.protocol + "//" + location.hostname + (location.port? location.port : "") + location.pathname + (location.search ? location.search : "") + "#" + ops.join(",");
-      share.classList.add("show");
-    }else{
-      link.value = "";
-      share.classList.remove("show");
-    }
+    link.value = location.protocol + "//" + location.hostname + (location.port? location.port : "") + location.pathname + (location.search ? location.search : "") + (ops.length? "#" + ops.join(",") : "");
   }
   
   function fs(e){
