@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="" />
+<meta name="author" content="xNedKx" />
+<meta name="copyright" content="xNedKx" />
+<title>Geolocation</title>
+<style>
+body {
+  font-family: monospace;
+  color: #666;
+  text-align: center;
+}
+.title {
+  font-weight: bold;
+  font-size: 3em;
+}
+.black {
+  color: #222;
+}
+#lat, #lon, .deg {
+  font-size: 2em;
+  padding-left: 0.1em;
+}
+a[href], a[href]:visited {
+  color: #666;
+  text-decoration: none;
+}
+a[href]:hover, a[href]:active {
+  color: #333;
+  text-decoration: underline;
+}
+#map {
+  display: block;
+  margin: 0.5em 0;
+}
+</style>
+</head>
+<body>
+<div>
+  <div class="title">Your location</div>
+  <div class="black">latitude:<span id="lat">?</span><span class="deg">&deg;</span></div>
+  <div class="black">longitude:<span id="lon">?</span><span class="deg">&deg;</span></div>
+</div>
+<div>
+  <a id="map" target="_blank">open google map</a>
+</div>
+<script>
+if("geolocation" in navigator){
+  console.log("geolocation available");
+  var lat = document.getElementById("lat");
+  var lon = document.getElementById("lon");
+  var map = document.getElementById("map");
+  var geo_option = {
+    enableHighAccuracy: true,
+    timeout: 30000,
+    maximumAge: 100
+  };
+  navigator.geolocation.getCurrentPosition(
+    function(position){
+      console.log("fast estimation:");
+      console.log(position);
+      lat.innerText = position.coords.latitude;
+      lon.innerText = position.coords.longitude;
+      map.href = "https://www.google.com/maps/@" + position.coords.latitude + "," + position.coords.longitude + ",12z";
+    },
+    function(error){
+      console.log("fast estimation failed.");
+      console.log(error);
+    },
+    geo_option
+  );
+  var watchId = navigator.geolocation.watchPosition(
+    function(position){
+      console.log("current position:");
+      console.log(position);
+      lat.innerText = position.coords.latitude;
+      lon.innerText = position.coords.longitude;
+      map.href = "https://www.google.com/maps/@" + position.coords.latitude + "," + position.coords.longitude + ",12z";;
+    },
+    function(error){
+      console.log("position watch failed.");
+      console.log(error);
+    },
+    geo_option
+  );
+}
+</script>
+</body>
+</html>
