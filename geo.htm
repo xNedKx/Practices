@@ -8,10 +8,21 @@
 <meta name="copyright" content="xNedKx" />
 <title>Geolocation</title>
 <style>
+document, body {
+  margin: 0;
+}
 body {
   font-family: monospace;
   color: #666;
   text-align: center;
+}
+#error {
+  display: block;
+  background-color: #f00;
+  color: #333;
+}
+#error.hide {
+  display: none;
 }
 .title {
   font-weight: bold;
@@ -33,12 +44,16 @@ a[href]:hover, a[href]:active {
   text-decoration: underline;
 }
 #map {
-  display: block;
+  display: none;
   margin: 0.5em 0;
+}
+a[href]#map {
+  display: block;
 }
 </style>
 </head>
 <body>
+<div id="error">Geogrophic information unavailable.</div>
 <div>
   <div class="title">Your location</div>
   <div class="black">latitude:<span id="lat">?</span><span class="deg">&deg;</span></div>
@@ -48,7 +63,11 @@ a[href]:hover, a[href]:active {
   <a id="map" target="_blank">open google map</a>
 </div>
 <script>
-if("geolocation" in navigator){
+if("geolocation" in navigator){/*
+  if(!/^https:/.test(location.protocol)){
+    location = "https://" + location.hostname + location.pathname;
+  }*/
+  document.getElementById("error").classList.add("hide");
   console.log("geolocation available");
   var lat = document.getElementById("lat");
   var lon = document.getElementById("lon");
@@ -69,6 +88,7 @@ if("geolocation" in navigator){
     function(error){
       console.log("fast estimation failed.");
       console.log(error);
+      document.getElementById("error").classList.remove("hide");
     },
     geo_option
   );
@@ -83,6 +103,7 @@ if("geolocation" in navigator){
     function(error){
       console.log("position watch failed.");
       console.log(error);
+      document.getElementById("error").classList.remove("hide");
     },
     geo_option
   );
