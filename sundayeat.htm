@@ -804,7 +804,7 @@ window.addEventListener("DOMContentLoaded", function(){
         list.appendChild(labels[op.o]);
         labels[op.o].children[0].style.transform = "scaleX(" + (percent / 100 * Math.pow(output.length, 1/2)) + ")";
         labels[op.o].children[1].children[0].innerText = percent + "%";
-        labels[op.o].children[1].children[2].innerText = "[" + op.n + "票]";
+        labels[op.o].children[1].children[2].innerText = "[" + op.n + "]";
       });
     }else{
       stop();
