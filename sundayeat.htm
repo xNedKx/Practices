@@ -20,40 +20,12 @@ document, body {
   overflow-x: hidden;
   overflow-y: auto;
 }
-main {
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-  overflow-x: hidden;
-}
 a[href], a[href]:link, a[href]:active, a[href]:hover, a[href]:visited {
   text-decoration: none;
   color: #666;
 }
 a[href]:hover {
   color: #999;
-}
-h1 {
-  background-color: #f9f9f9;
-  background-image: linear-gradient(30deg, #f9f9f9 0%, #fdfdfd 100%);
-  margin: 0 auto;
-  padding: 0.3em 0 0.1em;
-  font-size: 2.5em;
-  text-shadow: 0 0 4px rgba(0,0,0,0.3);
-}
-h1.no-save {
-  background-color: #ffcabd;
-  background-image: linear-gradient(30deg, rgba(255,104,66,1) 0%, rgba(255,222,103,1) 100%);
-}
-#hints {
-  display: none;
-}
-#hints.no-save {
-  display: block;
-  background-color: #eee;
-  color: #555;
-  font-size: 0.7em;
-  padding: 0.2em 0;
 }
 button, input[type=button], input[type=submit] {
   border: 0;
@@ -69,6 +41,34 @@ input {
   padding: 0.1em;
   font-size: 1.2em;
   vertical-align: middle;
+}
+main {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+#title {
+  background-color: #f9f9f9;
+  background-image: linear-gradient(30deg, #f9f9f9 0%, #fdfdfd 100%);
+  margin: 0 auto;
+  padding: 0.3em 0 0.1em;
+  font-size: 2.5em;
+  text-shadow: 0 0 4px rgba(0,0,0,0.3);
+}
+#title.no-save {
+  background-color: #ffcabd;
+  background-image: linear-gradient(30deg, rgba(255,104,66,1) 0%, rgba(255,222,103,1) 100%);
+}
+#hints {
+  display: none;
+}
+#hints.no-save {
+  display: block;
+  background-color: #eee;
+  color: #555;
+  font-size: 0.7em;
+  padding: 0.2em 0;
 }
 #options {
   margin: 0;
@@ -101,7 +101,7 @@ input {
   z-index: 20;
   background-color: rgba(50,50,50,0.05);
 }
-#options.run > li > button.x {
+#options.run > li > button.x, #options.noedit > li > button.x {
   display: none;
 }
 #options > li > .bar {
@@ -178,8 +178,14 @@ input {
 #f {
   margin: 0.5em 0;
 }
+#f.disabled {
+  display: none;
+}
 #output {
   padding-top: 0.5em;
+}
+#output.hidden {
+  display: none;
 }
 #log {
   height: 33vh;
@@ -190,14 +196,14 @@ input {
   background-color: #f9f9f9;
   margin: 0;
 }
-.title {
+#output_title {
   background-color: rgba(255,255,255,0.3);
   color: #555;
 }
 #share {
   display: flex;
   padding-top: 0.5em;
-  color: #666;
+  color: #555;
   font-size: 0.8em;
   flex-wrap: wrap;
   position: relative;
@@ -222,41 +228,247 @@ input {
 #shareLink:focus {
   outline: none;
 }
+#copy_link {
+  display: none;
+}
+#config > div:not(.config_title) {
+  opacity: 0;
+  height: 0;
+  transition: all 1s;
+  pointer-events: none;
+  user-select: none;
+}
+#container._show_config #config > div:not(.config_title) {
+  opacity: 1;
+  height: auto;
+  pointer-events: auto;
+  user-select: auto;
+}
+#config {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1.8em;
+  padding: 0.2em 0;
+  box-sizing: border-box;
+  z-index: 100;
+  overflow: hidden;
+  background-color: rgba(255,255,255,0.05);
+  box-shadow: inset 0 0 4px rgba(255,255,255,0.5);
+  transition: all 0.2s;
+}
+#container._show_config #config {
+  height: 100vh;
+  background-color: rgba(100,100,100,0.95);
+  box-shadow: none;
+}
+#container > *:not(#config){
+  transition: all 0.6s;
+}
+#container._show_config > *:not(#config){
+  opacity: 0.3;
+  pointer-events: none;
+  user-select: none;
+  cursor: default;
+}
+#config > * {
+  color: #eee;
+  font-size: 0.8em;
+}
+#config > .config_title {
+  color: #999;
+  font-size: 0.8em;
+  cursor: pointer;
+  text-decoration: underline;
+}
+#config > .config_title:hover {
+  text-decoration: none;
+  color: #ccc;
+  box-shadow: inset 0 0 2px rgba(100,100,100,0.2);
+}
+#container._show_config .config_title {
+  color: #eee;
+  font-size: 1.2em;
+  font-weight: bold;
+  cursor: inherit;
+  text-decoration: none;
+}
+.config_body {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.config_item > label {
+  display: flex;
+  flex-wrap: nowrap;
+  padding: 0.4em 0;
+  cursor: pointer;
+}
+.config_item:hover > label, .config_item.focus > label, .config_control > .config_control-buttons > a:hover {
+  background-color: rgba(255,255,255,0.1);
+  box-shadow: 0 0 2px rgba(255,255,255,0.1);
+}
+.config_item-title {
+  width: 27%;
+  text-align: right;
+}
+.config_item-title:after, #number_title:after, #output_title:after {
+  content: ":";
+  margin-right: 0.3em;
+}
+.config_item-input {
+  width: 73%;
+  text-align: left;
+}
+.config_item-field {
+  background-color: rgba(255,255,255,0);
+  background-image: linear-gradient(to right, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 95%);
+  box-sizing: border-box;
+  outline: 0 !important;
+}
+.config_item-field:not([type=checkbox]) {
+  font-size: 0.9em;
+  padding: 0.3em 0.5em 0.25em;
+  width: 100%;
+}
+.config_control > div {
+  margin: 0.5em 0;
+  display: flex;
+  justify-content: center;
+}
+#config_save {
+  padding: 0.5em 0.8em;
+}
+#config_save:hover {
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.6);
+}
+.config_control > .config_control-buttons > a {
+  width: 30%;
+  display: block;
+  color: #aaa;
+}
+.config_control > .config_control-buttons > a:hover {
+  color: #ddd;
+}
+.config_control-buttons > a.disabled {
+  display: none;
+}
 </style>
 </head>
 <body>
-<main>
-<h1 id="logo">星期天吃什麼</h1>
-<div>
-  <div id="hints">此為預先設定的清單: (<a href="#">點此回到自己的清單</a>)</div>
-  <ul id="options">
-  </ul>
-  <form id="f" href="#"><label><input id="text" placeholder="想吃什麼？"> <input type="submit" id="add" value="增加選項"></label></form>
-  <label>抉擇次數: <input id="numbers"> <button id="random">給我建議</button></label>
-</div>
-<div id="output">
-  <div class="title">抉擇紀錄:</div>
-  <pre id="log"></pre>
-  <div id="share">
-  <div>分享這個清單:</div>
-  <textarea id="shareLink" readonly rows="1" wrap="off"></textarea>
+<main id="container">
+<h1 id="title">星期天吃什麼</h1>
+<div id="hints">此為預先設定的清單: (<a href="javascript:void(0);" id="origin">點此回到自己的清單</a>)</div>
+<ul id="options"></ul>
+<div id="control">
+  <form id="f" href="">
+    <label><input id="text" placeholder="想吃什麼？"></label> <input type="submit" id="add" value="增加選項">
+  </form>
+  <div>
+    <label><span id="number_title">抉擇次數</span> <input id="numbers"></label>
+    <button id="random">給我建議</button>
   </div>
 </div>
+<div id="output">
+  <div id="output_title">抉擇紀錄</div>
+  <pre id="log"></pre>
+</div>
+<div id="share">
+  <div class="share-title">分享這個清單:<span id="copy_link"> (<a href="javascript:void(0);">點此複製連結</a>)</span></div>
+  <textarea id="shareLink" readonly rows="1" wrap="off"></textarea>
+</div>
+<form id="config" href="#">
+  <div class="config_title">進階設定</div>
+  <div class="config_body">
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">標題名稱</span>
+        <span class="config_item-input"><input class="config_item-field" id="setting_title"></span>
+      </label>
+    </div>
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">項目可編輯</span>
+        <span class="config_item-input"><input class="config_item-field" type="checkbox" id="setting_editable"></span>
+      </label>
+    </div>
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">項目輸入提示</span>
+        <span class="config_item-input"><input class="config_item-field" id="setting_hint"></span>
+      </label>
+    </div>
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">次數標題名稱</span>
+        <span class="config_item-input"><input class="config_item-field" id="setting_number_title"></span>
+      </label>
+    </div>
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">預設次數</span>
+        <span class="config_item-input"><input class="config_item-field" id="setting_number"></span>
+      </label>
+    </div>
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">按鈕名稱</span>
+        <span class="config_item-input"><input class="config_item-field" id="setting_button"></span>
+      </label>
+    </div>
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">顯示結果細節</span>
+        <span class="config_item-input"><input class="config_item-field" type="checkbox" id="setting_log"></span>
+      </label>
+    </div>
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">細節文字</span>
+        <span class="config_item-input"><input class="config_item-field" id="setting_detail"></span>
+      </label>
+    </div>
+  </div>
+  <div class="config_control">
+    <div><input type="submit" value="確認修改" id="config_save"></div>
+    <div class="config_control-buttons">
+      <a href="javascript:void(0);" id="config_reset_last">恢復前次設定</a>
+      <a href="javascript:void(0);" id="config_reset">恢復原始設定</a>
+      <a href="javascript:void(0);" id="config_cancel">取消</a>
+    </div>
+  </div>
+</form>
 </main>
 <script>
 window.addEventListener("DOMContentLoaded", function(){
 
-  var logo = document.getElementById("logo");
+  var container = document.getElementById("container");
+  var logo = document.getElementById("title");
   var hints = document.getElementById("hints");
+  var origin = document.getElementById("origin");
   var list = document.getElementById("options");
   var add = document.getElementById("add");
   var form = document.getElementById("f");
   var ran = document.getElementById("random");
   var text = document.getElementById("text");
+  var nt = document.getElementById("number_title");
   var numb = document.getElementById("numbers");
+  var out = document.getElementById("output");
   var log = document.getElementById("log");
   var share = document.getElementById("share");
   var link = document.getElementById("shareLink");
+  var configForm = document.getElementById("config");
+  var configReset = document.getElementById("config_reset");
+  var configLast = document.getElementById("config_reset_last");
+  var configCancel = document.getElementById("config_cancel");
+  var settingTitle = document.getElementById("setting_title");
+  var settingEditable = document.getElementById("setting_editable");
+  var settingHint = document.getElementById("setting_hint");
+  var settingNumberTitle = document.getElementById("setting_number_title");
+  var settingNumber = document.getElementById("setting_number");
+  var settingButton = document.getElementById("setting_button");
+  var settingLog = document.getElementById("setting_log");
+  var settingDetail = document.getElementById("setting_detail");
   
   var analyse = {};
   var saveOptions;
@@ -264,11 +476,179 @@ window.addEventListener("DOMContentLoaded", function(){
   var timer, times;
   var labels = {};
   var enableSave = localStorage ? true : false;
-  var defaultNumber;
   var query = {};
   var hashHistory = false;
-  setNumber(50);
+  var defaultSettings = {
+    title: "星期天吃什麼",
+    editable: true,
+    hint: "想吃什麼？",
+    number_title: "抉擇次數",
+    number: 50,
+    button: "給我建議",
+    log: true,
+    detail: "[項目] 一票"
+  };
+  var settings = {};
+  var lastSettings = {};
+  function copyProperties(f, t){
+    Object.keys(f).forEach(function(k){
+      t[k] = f[k];
+    });
+  }
+  copyProperties(defaultSettings, settings);
+  copyProperties(settings, lastSettings);
+  
+  function changeTitle(text){
+    settingTitle.value = document.title = logo.innerText = text;
+  }
+  
+  function changeEditable(bool){
+    settingEditable.checked = bool;
+    if(bool){
+      form.classList.remove("disabled");
+      list.classList.remove("noedit");
+    }else{
+      form.classList.add("disabled");
+      list.classList.add("noedit");
+    }
+  }
+  
+  function updateHint(hint){
+    settingHint.value = text.placeholder = hint;
+  }
+  
+  function changeNumberTitle(text){
+    settingNumberTitle.value = nt.innerText = text;
+  }
 
+  function setNumber(number){
+    if(isFinite(number) && number > 0 && number < 100000){
+      settingNumber.value = numb.placeholder = numb.value = +number;
+    }else{
+      settingNumber.value = numb.placeholder = numb.value = defaultSettings.number;
+    }
+  }
+  
+  function changeButtonName(text){
+    settingButton.value = ran.value = text;
+  }
+  
+  function setLogDisplay(bool){
+    settingLog.checked = bool;
+    if(bool){
+      out.classList.remove("hidden");
+    }else{
+      out.classList.add("hidden");
+    }
+  }
+  
+  function setDetail(text){
+    settingDetail.value = text;
+  }
+  
+  function updateSettings(newSettings){
+    if(newSettings != lastSettings){
+      copyProperties(settings, lastSettings);
+      configLast.classList.remove("disabled");
+    }else{
+      configLast.classList.add("disabled");
+    }
+    if(newSettings.hasOwnProperty("title") && typeof newSettings.title == "string"){
+      settings.title = newSettings.title;
+      changeTitle(settings.title);
+    }else{
+      settingTitle.value = settings.title;
+    }
+    if(newSettings.hasOwnProperty("editable") && typeof newSettings.editable == "boolean"){
+      settings.editable = newSettings.editable;
+      changeEditable(settings.editable);
+    }else{
+      settingEditable.checked = settings.editable;
+    }
+    if(newSettings.hasOwnProperty("hint") && typeof newSettings.hint == "string"){
+      settings.hint = newSettings.hint;
+      updateHint(settings.hint);
+    }else{
+      settingHint.value = settings.hint;
+    }
+    if(newSettings.hasOwnProperty("number_title") && typeof newSettings.number_title == "string"){
+      settings.number_title = newSettings.number_title;
+      changeNumberTitle(settings.number_title);
+    }else{
+      settingNumberTitle.value = settings.number_title;
+    }
+    if(newSettings.hasOwnProperty("number") && isFinite(newSettings.number) && newSettings.number > 0 && newSettings.number < 100000){
+      settings.number = newSettings.number;
+      setNumber(settings.number);
+    }else{
+      settingNumber.value = settings.number;
+    }
+    if(newSettings.hasOwnProperty("button") && typeof newSettings.button == "string"){
+      settings.button = newSettings.button;
+      changeButtonName(settings.button);
+    }else{
+      settingButton.value = settings.button;
+    }
+    if(newSettings.hasOwnProperty("log") && typeof newSettings.log == "boolean"){
+      settings.log = newSettings.log;
+      setLogDisplay(settings.log);
+    }else{
+      settingLog.checked = settings.log;
+    }
+    if(newSettings.hasOwnProperty("detail") && typeof newSettings.detail == "string" && /\[項目\]/.test(newSettings.detail)){
+      settings.detail = newSettings.detail;
+      setDetail(settings.detail);
+    }else{
+      settingDetail.value = settings.detail;
+    }
+    if(enableSave){
+      localStorage.setItem("settings", JSON.stringify(settings));
+    }
+  }
+  
+  function getSettings(){
+    var newSettings = {};
+    if(settingTitle.value != settings.title){
+      newSettings.title = settingTitle.value;
+    }
+    if(settingEditable.value != settings.editable){
+      newSettings.editable = settingEditable.checked;
+    }
+    if(settingTitle.value != settings.hint){
+      newSettings.hint = settingHint.value;
+    }
+    if(settingTitle.value != settings.number_title){
+      newSettings.number_title = settingNumberTitle.value;
+    }
+    if(settingTitle.value != settings.number){
+      newSettings.number = +settingNumber.value;
+    }
+    if(settingTitle.value != settings.button){
+      newSettings.button = settingButton.value;
+    }
+    if(settingTitle.value != settings.log){
+      newSettings.log = settingLog.checked;
+    }
+    if(settingTitle.value != settings.detail){
+      newSettings.detail = settingDetail.value;
+    }
+    return newSettings;
+  }
+
+  if(enableSave){
+    saveOptions = (localStorage.getItem("options") || "").split("|");
+    for( var i = 0; i < saveOptions.length; i++ ){
+      if(saveOptions[i] && !analyse.hasOwnProperty(saveOptions[i])){
+        addItem(saveOptions[i]);
+      }
+    }
+    if(localStorage.getItem("settings")){
+      try{
+        copyProperties(JSON.parse(localStorage.getItem("settings")), lastSettings);
+      }catch(er){}
+    }
+  }
+  
   if(location.hash){
     enableSave = false;
     logo.classList.add("no-save");
@@ -298,40 +678,38 @@ window.addEventListener("DOMContentLoaded", function(){
         case "number":
           query.number = decodeURIComponent(pair[1]);
         break;
+        case "e":
+        case "editable":
+          query.editable = +decodeURIComponent(pair[1]) ? true : false;
+        break;
+        case "h":
+        case "hint":
+          query.hint = decodeURIComponent(pair[1]);
+        break;
+        case "nt":
+        case "number_title":
+          query.number_title = decodeURIComponent(pair[1]);
+        break;
+        case "b":
+        case "button":
+          query.button = decodeURIComponent(pair[1]);
+        break;
+        case "l":
+        case "log":
+          query.log = +decodeURIComponent(pair[1]) ? true : false;
+        break;
+        case "d":
+        case "detail":
+          query.detail = decodeURIComponent(pair[1]);
+        break;
         default:
           query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
         }
       }
     });
-    if(query.title){
-      changeTitle(query.title);
-    }
-    if(query.number){
-      setNumber(query.number);
-    }
+    copyProperties(query, lastSettings);
   }
-
-  function changeTitle(text){
-    logo.innerText = text;
-    document.title = text;
-  }
-
-  function setNumber(number){
-    if(isFinite(number) && number > 0 && number < 100000){
-      defaultNumber = +number;
-      numb.placeholder = defaultNumber;
-      numb.value = defaultNumber;
-    }
-  }
-
-  if(enableSave){
-    saveOptions = (localStorage.getItem("options") || "").split("|");
-    for( var i = 0; i < saveOptions.length; i++ ){
-      if(saveOptions[i] && !analyse.hasOwnProperty(saveOptions[i])){
-        addItem(saveOptions[i]);
-      }
-    }
-  }
+  updateSettings(lastSettings);
 
   function addItem(text){
     var op = document.createElement("li");
@@ -412,7 +790,7 @@ window.addEventListener("DOMContentLoaded", function(){
     if(running > 0){
       var options = Object.keys(analyse);
       var index = Math.floor(Math.random() * options.length);
-      log.innerText += options[index] + " 一票\n";
+      log.innerText += settings.detail.replace("[項目]", options[index]) + "\n";
       log.scrollTop = log.scrollHeight;
       analyse[options[index]]++;
       running--;
@@ -452,10 +830,11 @@ window.addEventListener("DOMContentLoaded", function(){
   }
 
   function run(e){
+    e.preventDefault();
     if(Object.keys(analyse).length && running == 0){
       var n = +numb.value;
       if(!(isFinite(n) && n > 0)){
-        n = defaultNumber;
+        n = settings.number;
         numb.value = n;
       }
       var last = document.getElementsByClassName("win");
@@ -480,12 +859,95 @@ window.addEventListener("DOMContentLoaded", function(){
         ops.push(encodeURIComponent(list.children[i].dataset.option));
       }
     }
-    link.value = location.protocol + "//" + location.hostname + (location.port? location.port : "") + location.pathname + (location.search ? location.search : "") + (ops.length? "#" + ops.join(",") : "");
+    var s = [];
+    var ks = {
+      "title": "t",
+      "editable": "e",
+      "hint": "h",
+      "number_title": "nt",
+      "number": "n",
+      "button": "b",
+      "log": "l",
+      "detail": "d"
+    };
+    var t = {
+      "title": "s",
+      "editable": "b",
+      "hint": "s",
+      "number_title": "s",
+      "number": "n",
+      "button": "s",
+      "log": "b",
+      "detail": "s"
+    }
+    Object.keys(settings).forEach(function(k){
+      if(defaultSettings[k] != settings[k]){
+        var tmp;
+        switch(t[k]){
+        case "s":
+        case "n":
+          tmp = encodeURIComponent(settings[k]);
+        case "b":
+          tmp = encodeURIComponent(settings[k] ? 1 : 0);
+          s.push(ks[k] + "=" + tmp);
+        break;
+        }
+      }
+    });
+    link.value = location.protocol + "//" + location.hostname + (location.port? location.port : "") + location.pathname + (s.length ? "?" + s.join("&") : "") + (ops.length? "#" + ops.join(",") : "");
   }
   
   function fs(e){
     e.target.select();
     e.target.focus();
+  }
+  
+  var scrolling = false;
+  function scrollDown(){
+    document.body.scrollTop = document.body.scrollHeight;
+    if(scrolling){
+      requestAnimationFrame(scrollDown);
+    }
+  }
+  function scrollEnd(){
+    scrolling = false;
+  }
+  
+  function openConfig(e){
+    if(e){
+      e.preventDefault();
+    }
+    container.classList.add("_show_config");
+    scrolling = true;
+    requestAnimationFrame(scrollDown);
+    return false;
+  }
+  function closeConfig(e){
+    if(e){
+      e.preventDefault();
+    }
+    container.classList.remove("_show_config");
+    return false;
+  }
+  
+  function changeConfig(e){
+    e.preventDefault();
+    updateSettings(getSettings());
+    closeConfig();
+    createShareLink();
+    return false;
+  }
+  
+  function resetSettings(){
+    updateSettings(defaultSettings);
+    closeConfig();
+    createShareLink();
+  }
+  
+  function resetLast(){
+    updateSettings(lastSettings);
+    closeConfig();
+    createShareLink();
   }
 
   link.addEventListener("click", fs);
@@ -493,6 +955,24 @@ window.addEventListener("DOMContentLoaded", function(){
   numb.addEventListener("focus", fs);
   form.addEventListener("submit", addOption);
   ran.addEventListener("click", run);
+  configForm.addEventListener("submit", changeConfig);
+  configForm.children[0].addEventListener("click", openConfig);
+  configCancel.addEventListener("click", closeConfig);
+  configForm.addEventListener("transitionend", scrollEnd);
+  configReset.addEventListener("click", resetSettings);
+  configLast.addEventListener("click", resetLast);
+  origin.addEventListener("click", function(){
+    location.assign(location.protocol + "//" + location.hostname + (location.port? location.port : "") + location.pathname);
+  });
+  
+  settingTitle.addEventListener("focus", fs);
+  settingEditable.addEventListener("focus", fs);
+  settingHint.addEventListener("focus", fs);
+  settingNumberTitle.addEventListener("focus", fs);
+  settingNumber.addEventListener("focus", fs);
+  settingButton.addEventListener("focus", fs);
+  settingLog.addEventListener("focus", fs);
+  settingDetail.addEventListener("focus", fs);
 
   text.focus();
   createShareLink();
