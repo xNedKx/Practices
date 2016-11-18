@@ -428,6 +428,12 @@ main {
         <span class="config_item-input"><input class="config_item-field" id="setting_detail"></span>
       </label>
     </div>
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">單位</span>
+        <span class="config_item-input"><input class="config_item-field" id="setting_unit"></span>
+      </label>
+    </div>
   </div>
   <div class="config_control">
     <div><input type="submit" value="確認修改" id="config_save"></div>
@@ -469,6 +475,7 @@ window.addEventListener("DOMContentLoaded", function(){
   var settingButton = document.getElementById("setting_button");
   var settingLog = document.getElementById("setting_log");
   var settingDetail = document.getElementById("setting_detail");
+  var settingUnit = document.getElementById("setting_unit");
   
   var analyse = {};
   var saveOptions;
@@ -486,7 +493,8 @@ window.addEventListener("DOMContentLoaded", function(){
     number: 50,
     button: "給我建議",
     log: true,
-    detail: "[項目] 一票"
+    detail: "[項目] 一票",
+    unit: "票"
   };
   var settings = {};
   var lastSettings = {};
@@ -546,6 +554,10 @@ window.addEventListener("DOMContentLoaded", function(){
     settingDetail.value = text;
   }
   
+  function setUnit(text){
+    settingUnit.value = text;
+  }
+  
   function updateSettings(newSettings){
     if(newSettings != lastSettings){
       copyProperties(settings, lastSettings);
@@ -601,6 +613,12 @@ window.addEventListener("DOMContentLoaded", function(){
     }else{
       settingDetail.value = settings.detail;
     }
+    if(newSettings.hasOwnProperty("unit") && typeof newSettings.detail == "string"){
+      settings.unit = newSettings.unit;
+      setUnit(settings.unit);
+    }else{
+      settingDetail.value = settings.detail;
+    }
     if(enableSave){
       localStorage.setItem("settings", JSON.stringify(settings));
     }
@@ -631,6 +649,9 @@ window.addEventListener("DOMContentLoaded", function(){
     }
     if(settingTitle.value != settings.detail){
       newSettings.detail = settingDetail.value;
+    }
+    if(settingUnit.value != settings.unit){
+      newSettings.unit = settingUnit.value;
     }
     return newSettings;
   }
@@ -701,6 +722,10 @@ window.addEventListener("DOMContentLoaded", function(){
         case "d":
         case "detail":
           query.detail = decodeURIComponent(pair[1]);
+        break;
+        case "u":
+        case "unit":
+          query.unit = decodeURIComponent(pair[1]);
         break;
         default:
           query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
@@ -804,7 +829,7 @@ window.addEventListener("DOMContentLoaded", function(){
         list.appendChild(labels[op.o]);
         labels[op.o].children[0].style.transform = "scaleX(" + (percent / 100 * Math.pow(output.length, 1/2)) + ")";
         labels[op.o].children[1].children[0].innerText = percent + "%";
-        labels[op.o].children[1].children[2].innerText = "[" + op.n + "]";
+        labels[op.o].children[1].children[2].innerText = "[" + op.n + settings.unit + "]";
       });
     }else{
       stop();
@@ -868,7 +893,8 @@ window.addEventListener("DOMContentLoaded", function(){
       "number": "n",
       "button": "b",
       "log": "l",
-      "detail": "d"
+      "detail": "d",
+      "unit": "u"
     };
     var t = {
       "title": "s",
@@ -878,7 +904,8 @@ window.addEventListener("DOMContentLoaded", function(){
       "number": "n",
       "button": "s",
       "log": "b",
-      "detail": "s"
+      "detail": "s",
+      "unit": "s"
     }
     Object.keys(settings).forEach(function(k){
       if(defaultSettings[k] != settings[k]){
@@ -974,6 +1001,7 @@ window.addEventListener("DOMContentLoaded", function(){
   settingButton.addEventListener("focus", fs);
   settingLog.addEventListener("focus", fs);
   settingDetail.addEventListener("focus", fs);
+  settingUnit.addEventListener("focus", fs);
 
   text.focus();
   createShareLink();
