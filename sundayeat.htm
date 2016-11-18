@@ -365,7 +365,7 @@ main {
     <label><input id="text" placeholder="想吃什麼？"></label> <input type="submit" id="add" value="增加選項">
   </form>
   <div>
-    <label><span id="number_title">抉擇次數</span> <input id="numbers"></label>
+    <label><span id="number_title">抉擇次數</span> <input id="numbers" value="50" placeholder="50"></label>
     <button id="random">給我建議</button>
   </div>
 </div>
@@ -676,7 +676,7 @@ window.addEventListener("DOMContentLoaded", function(){
         break;
         case "n":
         case "number":
-          query.number = decodeURIComponent(pair[1]);
+          query.number = +decodeURIComponent(pair[1]);
         break;
         case "e":
         case "editable":
@@ -887,11 +887,12 @@ window.addEventListener("DOMContentLoaded", function(){
         case "s":
         case "n":
           tmp = encodeURIComponent(settings[k]);
+        break;
         case "b":
           tmp = encodeURIComponent(settings[k] ? 1 : 0);
-          s.push(ks[k] + "=" + tmp);
         break;
         }
+        s.push(ks[k] + "=" + tmp);
       }
     });
     link.value = location.protocol + "//" + location.hostname + (location.port? location.port : "") + location.pathname + (s.length ? "?" + s.join("&") : "") + (ops.length? "#" + ops.join(",") : "");
