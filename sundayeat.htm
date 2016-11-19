@@ -622,7 +622,17 @@ window.addEventListener("DOMContentLoaded", function(){
       settingDetail.value = settings.detail;
     }
     if(enableSave){
-      localStorage.setItem("settings", JSON.stringify(settings));
+      var save = {};
+      Object.keys(settings).forEach(function(k){
+        if(defaultSettings[k] != settings[k]){
+          save[k] = settings[k];
+        }
+      });
+      if(Object.keys(save).length){
+        localStorage.setItem("settings", JSON.stringify(save));
+      }else{
+        localStorage.removeItem("settings");
+      }
     }
   }
   
