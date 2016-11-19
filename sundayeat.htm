@@ -170,20 +170,27 @@ main {
 #numbers {
   width: 3em;
   text-align: center;
+  margin-right: 0.4em;
+}
+#numbers.hide {
+  display: none;
 }
 #add {
   background-color: #bdcaff;
 }
 #random {
   background-color: #ffcabd;
-  transform: scale(1.2) translateX(0.4em);
+  transform: scale(1.2);
   transform-origin: center;
 }
 #f {
   margin: 0.5em 0;
 }
 #f.disabled {
-  display: none;
+  height: 0;
+  overflow: hidden;
+  margin: 0.15em 0;
+  user-select: none;
 }
 #output {
   padding-top: 0.5em;
@@ -313,7 +320,7 @@ main {
   width: 27%;
   text-align: right;
 }
-.config_item-title:after, #number_title:after, #output_title:after {
+.config_item-title:after, #number_title:not(.hide):after, #output_title:not(.hide):after {
   content: ":";
   margin-right: 0.3em;
 }
@@ -538,6 +545,13 @@ window.addEventListener("DOMContentLoaded", function(){
   
   function changeNumberTitle(text){
     settingNumberTitle.value = nt.innerText = text;
+    if(text){
+      nt.classList.remove("hide");
+      numb.classList.remove("hide");
+    }else{
+      nt.classList.add("hide");
+      numb.classList.add("hide");
+    }
   }
 
   function setNumber(number){
@@ -563,6 +577,11 @@ window.addEventListener("DOMContentLoaded", function(){
   
   function changeLogTitle(text){
     settingLogTitle.value = lt.innerText = text;
+    if(text){
+      lt.classList.remove("hide");
+    }else{
+      lt.classList.add("hide");
+    }
   }
   
   function setDetail(text){
