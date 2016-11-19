@@ -2,7 +2,7 @@
 <html lang="zh-tw">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 <meta name="description" content="不知道星期天要吃什麼嗎？輸入你的選擇，看看會出現什麼結果！" />
 <meta name="author" content="xNedKx" />
 <meta name="copyright" content="xNedKx" />
@@ -266,7 +266,8 @@ main {
   transition: all 0.2s;
 }
 #container._show_config #config {
-  height: 100vh;
+  min-height: 100vh;
+  height: 26em;
   background-color: rgba(100,100,100,0.95);
   box-shadow: none;
 }
@@ -1002,7 +1003,7 @@ window.addEventListener("DOMContentLoaded", function(){
   
   var scrolling = false;
   function scrollDown(){
-    document.body.scrollTop = document.body.scrollHeight;
+    document.body.scrollTop = config.offsetTop;
     if(scrolling){
       requestAnimationFrame(scrollDown);
     }
