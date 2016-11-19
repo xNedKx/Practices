@@ -27,6 +27,10 @@ a[href], a[href]:link, a[href]:active, a[href]:hover, a[href]:visited {
 a[href]:hover {
   color: #999;
 }
+::selection {
+  color: #555;
+  background: #ddd;
+}
 button, input[type=button], input[type=submit] {
   border: 0;
   border-radius: 0.2em;
@@ -228,9 +232,6 @@ main {
 #shareLink:focus {
   outline: none;
 }
-#copy_link {
-  display: none;
-}
 #config > div:not(.config_title) {
   opacity: 0;
   height: 0;
@@ -374,7 +375,7 @@ main {
   <pre id="log"></pre>
 </div>
 <div id="share">
-  <div class="share-title">分享這個清單:<span id="copy_link"> (<a href="javascript:void(0);">點此複製連結</a>)</span></div>
+  <div class="share-title">分享這個清單:<span id="copy_link"> (<a href="javascript:void(0);" id="copy">點此複製連結</a>)</span></div>
   <textarea id="shareLink" readonly rows="1" wrap="off"></textarea>
 </div>
 <form id="config" href="#">
@@ -463,6 +464,7 @@ window.addEventListener("DOMContentLoaded", function(){
   var log = document.getElementById("log");
   var share = document.getElementById("share");
   var link = document.getElementById("shareLink");
+  var copy = document.getElementById("copy");
   var configForm = document.getElementById("config");
   var configReset = document.getElementById("config_reset");
   var configLast = document.getElementById("config_reset_last");
@@ -687,6 +689,7 @@ window.addEventListener("DOMContentLoaded", function(){
   window.addEventListener("hashchange", hashChange);
   
   if(location.search){
+    enableSave = false;
     location.search.slice(1).split("&").forEach(function(p){
       var pair = p.split("=");
       if(pair.length == 2){
@@ -925,6 +928,16 @@ window.addEventListener("DOMContentLoaded", function(){
     link.value = location.protocol + "//" + location.hostname + (location.port? location.port : "") + location.pathname + (s.length ? "?" + s.join("&") : "") + (ops.length? "#" + ops.join(",") : "");
   }
   
+  function copyLink(e){
+    if(e){
+      e.preventDefault();
+    }
+    link.focus();
+    link.select();
+    document.execCommand("copy");
+    return false;
+  }
+  
   function fs(e){
     e.target.select();
     e.target.focus();
@@ -983,6 +996,7 @@ window.addEventListener("DOMContentLoaded", function(){
   numb.addEventListener("focus", fs);
   form.addEventListener("submit", addOption);
   ran.addEventListener("click", run);
+  copy.addEventListener("click", copyLink);
   configForm.addEventListener("submit", changeConfig);
   configForm.children[0].addEventListener("click", openConfig);
   configCancel.addEventListener("click", closeConfig);
@@ -993,15 +1007,35 @@ window.addEventListener("DOMContentLoaded", function(){
     location.assign(location.protocol + "//" + location.hostname + (location.port? location.port : "") + location.pathname);
   });
   
-  settingTitle.addEventListener("focus", fs);
-  settingEditable.addEventListener("focus", fs);
-  settingHint.addEventListener("focus", fs);
-  settingNumberTitle.addEventListener("focus", fs);
-  settingNumber.addEventListener("focus", fs);
-  settingButton.addEventListener("focus", fs);
-  settingLog.addEventListener("focus", fs);
-  settingDetail.addEventListener("focus", fs);
-  settingUnit.addEventListener("focus", fs);
+  function settingFS(e){
+    var d = e.target;
+    d.focus();
+    d.select();
+    d.parentNode.parentNode.parentNode.classList.add("focus");
+  }
+  
+  function fo(e){
+    e.target.parentNode.parentNode.parentNode.classList.remove("focus");
+  }
+  
+  settingTitle.addEventListener("focus", settingFS);
+  settingEditable.addEventListener("focus", settingFS);
+  settingHint.addEventListener("focus", settingFS);
+  settingNumberTitle.addEventListener("focus", settingFS);
+  settingNumber.addEventListener("focus", settingFS);
+  settingButton.addEventListener("focus", settingFS);
+  settingLog.addEventListener("focus", settingFS);
+  settingDetail.addEventListener("focus", settingFS);
+  settingUnit.addEventListener("focus", settingFS);
+  settingTitle.addEventListener("focusout", fo);
+  settingEditable.addEventListener("focusout", fo);
+  settingHint.addEventListener("focusout", fo);
+  settingNumberTitle.addEventListener("focusout", fo);
+  settingNumber.addEventListener("focusout", fo);
+  settingButton.addEventListener("focusout", fo);
+  settingLog.addEventListener("focusout", fo);
+  settingDetail.addEventListener("focusout", fo);
+  settingUnit.addEventListener("focusout", fo);
 
   text.focus();
   createShareLink();
