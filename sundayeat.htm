@@ -425,6 +425,12 @@ main {
     </div>
     <div class="config_item">
       <label>
+        <span class="config_item-title">顯示結果標題</span>
+        <span class="config_item-input"><input class="config_item-field" id="setting_log_title"></span>
+      </label>
+    </div>
+    <div class="config_item">
+      <label>
         <span class="config_item-title">細節文字</span>
         <span class="config_item-input"><input class="config_item-field" id="setting_detail"></span>
       </label>
@@ -462,6 +468,7 @@ window.addEventListener("DOMContentLoaded", function(){
   var numb = document.getElementById("numbers");
   var out = document.getElementById("output");
   var log = document.getElementById("log");
+  var lt = document.getElementById("output_title");
   var share = document.getElementById("share");
   var link = document.getElementById("shareLink");
   var copy = document.getElementById("copy");
@@ -476,6 +483,7 @@ window.addEventListener("DOMContentLoaded", function(){
   var settingNumber = document.getElementById("setting_number");
   var settingButton = document.getElementById("setting_button");
   var settingLog = document.getElementById("setting_log");
+  var settingLogTitle = document.getElementById("setting_log_title");
   var settingDetail = document.getElementById("setting_detail");
   var settingUnit = document.getElementById("setting_unit");
   
@@ -495,6 +503,7 @@ window.addEventListener("DOMContentLoaded", function(){
     number: 50,
     button: "給我建議",
     log: true,
+    log_title: "抉擇紀錄",
     detail: "[項目] 一票",
     unit: "票"
   };
@@ -550,6 +559,10 @@ window.addEventListener("DOMContentLoaded", function(){
     }else{
       out.classList.add("hidden");
     }
+  }
+  
+  function changeLogTitle(text){
+    settingLogTitle.value = lt.innerText = text;
   }
   
   function setDetail(text){
@@ -609,6 +622,12 @@ window.addEventListener("DOMContentLoaded", function(){
     }else{
       settingLog.checked = settings.log;
     }
+    if(newSettings.hasOwnProperty("log_title") && typeof newSettings.log_title == "string"){
+      settings.log_title = newSettings.log_title;
+      changeLogTitle(settings.log_title);
+    }else{
+      settingNumberTitle.value = settings.number_title;
+    }
     if(newSettings.hasOwnProperty("detail") && typeof newSettings.detail == "string" && /\[項目\]/.test(newSettings.detail)){
       settings.detail = newSettings.detail;
       setDetail(settings.detail);
@@ -658,6 +677,9 @@ window.addEventListener("DOMContentLoaded", function(){
     }
     if(settingTitle.value != settings.log){
       newSettings.log = settingLog.checked;
+    }
+    if(settingTitle.value != settings.log_title){
+      newSettings.log_title = settingLogTitle.value;
     }
     if(settingTitle.value != settings.detail){
       newSettings.detail = settingDetail.value;
@@ -731,6 +753,10 @@ window.addEventListener("DOMContentLoaded", function(){
         case "l":
         case "log":
           query.log = +decodeURIComponent(pair[1]) ? true : false;
+        break;
+        case "lt":
+        case "log_title":
+          query.log_title = decodeURIComponent(pair[1]);
         break;
         case "d":
         case "detail":
@@ -906,6 +932,7 @@ window.addEventListener("DOMContentLoaded", function(){
       "number": "n",
       "button": "b",
       "log": "l",
+      "log_title": "lt",
       "detail": "d",
       "unit": "u"
     };
@@ -917,6 +944,7 @@ window.addEventListener("DOMContentLoaded", function(){
       "number": "n",
       "button": "s",
       "log": "b",
+      "log_title": "s",
       "detail": "s",
       "unit": "s"
     }
@@ -1035,6 +1063,7 @@ window.addEventListener("DOMContentLoaded", function(){
   settingNumber.addEventListener("focus", settingFS);
   settingButton.addEventListener("focus", settingFS);
   settingLog.addEventListener("focus", settingFS);
+  settingLogTitle.addEventListener("focus", settingFS);
   settingDetail.addEventListener("focus", settingFS);
   settingUnit.addEventListener("focus", settingFS);
   settingTitle.addEventListener("focusout", fo);
@@ -1044,6 +1073,7 @@ window.addEventListener("DOMContentLoaded", function(){
   settingNumber.addEventListener("focusout", fo);
   settingButton.addEventListener("focusout", fo);
   settingLog.addEventListener("focusout", fo);
+  settingLogTitle.addEventListener("focusout", fo);
   settingDetail.addEventListener("focusout", fo);
   settingUnit.addEventListener("focusout", fo);
 
