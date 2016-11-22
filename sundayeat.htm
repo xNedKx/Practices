@@ -220,6 +220,9 @@ main {
   position: relative;
   margin-bottom: 0.5em;
 }
+#copy_link.hide {
+  display: none;
+}
 #share > div {
   width: 100%;
 }
@@ -866,7 +869,9 @@ window.addEventListener("DOMContentLoaded", function(){
       location.hash = "#" + ops.join(",");
     }
     stop();
-    text.focus();
+    if(e.sourceCapabilities && !e.sourceCapabilities.firesTouchEvents){
+      text.focus();
+    }
     createShareLink();
   }
 
@@ -990,8 +995,7 @@ window.addEventListener("DOMContentLoaded", function(){
     if(e){
       e.preventDefault();
     }
-    link.focus();
-    link.select();
+    fsl();
     document.execCommand("copy");
     return false;
   }
@@ -999,6 +1003,14 @@ window.addEventListener("DOMContentLoaded", function(){
   function fs(e){
     e.target.select();
     e.target.focus();
+  }
+  
+  function fsl(e){
+    link.focus();
+    if(link.selectionStart != 0 && link.selectionEnd != link.value.length){
+      link.selectionStart = 0;
+      link.selectionEnd = link.value.length;
+    }
   }
   
   var scrolling = false;
@@ -1049,8 +1061,8 @@ window.addEventListener("DOMContentLoaded", function(){
     createShareLink();
   }
 
-  link.addEventListener("click", fs);
-  link.addEventListener("scroll", fs);
+  link.addEventListener("click", fsl);
+  link.addEventListener("scroll", fsl);
   numb.addEventListener("focus", fs);
   form.addEventListener("submit", addOption);
   ran.addEventListener("click", run);
@@ -1097,6 +1109,9 @@ window.addEventListener("DOMContentLoaded", function(){
   settingDetail.addEventListener("focusout", fo);
   settingUnit.addEventListener("focusout", fo);
 
+  if(/constructor/i.test(window.HTMLElement)){ // is safari check hack
+    document.getElementById("copy_link").classList.add("hide");
+  }
   text.focus();
   createShareLink();
 
