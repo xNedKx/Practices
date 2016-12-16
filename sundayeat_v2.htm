@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<meta name="description" content="不知道星期天要吃什麼嗎？輸入你的選擇，看看會出現什麼結果！" />
+<meta name="author" content="xNedKx" />
+<meta name="copyright" content="xNedKx" />
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAKa0ina6TG8zqsX1eTZ9r6gSWxRJ6NVD8&callback=gmapLoaded&libraries=geometry,places,visualization"></script>
+<title>星期天吃什麼</title>
+<style>
+document, body {
+  margin: 0;
+  background-color: #f0f0f0;
+  text-align: center;
+  font-family: "PT Sans Narrow", "Meiryo", "MS PGothic", "Apple LiGothic", "文泉驛正黑體", "SimHei", "Microsoft YaHei", "Microsoft JhengHei";
+  font-size: 16px;
+  color: #111;
+  width: 100vw;
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+a[href], a[href]:link, a[href]:active, a[href]:hover, a[href]:visited {
+  text-decoration: none;
+  color: #666;
+}
+a[href]:hover {
+  color: #999;
+}
+::selection {
+  color: #555;
+  background: #ddd;
+}
+button, input[type=button], input[type=submit] {
+  border: 0;
+  border-radius: 0.2em;
+  padding: 0.2em 0.6em;
+  font-size: 0.8em;
+  color: #333;
+  vertical-align: middle;
+  cursor: pointer;
+}
+input {
+  border: 0;
+  padding: 0.1em;
+  font-size: 1.2em;
+  vertical-align: middle;
+}
+main {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+#title {
+  background-color: #f9f9f9;
+  background-image: linear-gradient(30deg, #f9f9f9 0%, #fdfdfd 100%);
+  margin: 0 auto;
+  padding: 0.3em 0 0.1em;
+  font-size: 2.5em;
+  text-shadow: 0 0 4px rgba(0,0,0,0.3);
+}
+#title.no-save {
+  background-color: #ffcabd;
+  background-image: linear-gradient(30deg, rgba(255,104,66,1) 0%, rgba(255,222,103,1) 100%);
+}
+#hints {
+  display: none;
+}
+#hints.no-save {
+  display: block;
+  background-color: #eee;
+  color: #555;
+  font-size: 0.7em;
+  padding: 0.2em 0;
+}
+#options {
+  margin: 0;
+  padding: 0;
+  color: #666;
+  width: 100%;
+  max-height: 70vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+#options > li {
+  list-style: none;
+  padding: 0.1em 0;
+  position: relative;
+  transition: background-color 0.5s ease-in;
+}
+#options > li > div {
+  width: 100%;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+#options > li > button.x {
+  position: absolute;
+  right: 2px;
+  top: 2%;
+  width: 20%;
+  height: 96%;
+  max-width: 42px;
+  display: block;
+  z-index: 20;
+  background-color: rgba(50,50,50,0.05);
+}
+#options.run > li > button.x, #options.noedit > li > button.x {
+  display: none;
+}
+#options > li > .bar {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  transform-origin: left;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  transition: transform 50ms, background-color 0.5s ease-in;
+  transform: scaleX(0);
+}
+#options > li:nth-child(odd) > .bar {
+  background-color: rgba(0,0,0,0.1);
+}
+#options > li:nth-child(odd){
+  background-color: rgba(0,0,0,0.02);
+}
+#options > li:nth-child(even) > .bar {
+  background-color: rgba(0,0,0,0.15);
+}
+#options > li:nth-child(even){
+  background-color: rgba(0,0,0,0.01);
+}
+#options > li > .label {
+  position: relative;
+  z-index: 10;
+}
+#options > li > .label > span {
+  transition: color 0.5s ease-in;
+}
+#options > li .opt[data-name] {
+  cursor: pointer;
+}
+.percent, .vote {
+  font-size: 0.8em;
+  font-weight: normal;
+  color: #666;
+}
+.opt {
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #111;
+  margin: 0 0.2em;
+}
+#options > li.win:nth-child(odd) {
+  background-color: rgba(255,194,179,1);
+}
+#options > li.win:nth-child(even) {
+  background-color: rgba(255,202,189,1);
+}
+#options > li.win:nth-child(odd) > .bar {
+  background-color: rgba(255,157,133,0.5);
+}
+#options > li.win:nth-child(even) > .bar {
+  background-color: rgba(255,165,143,0.5);
+}
+#options > li.win > .label > span {
+  color: #333;
+}
+#place, #text {
+  width: 200px;
+}
+#suggestion[data-name]:not([data-name=""]){
+  background-color: #fefefe;
+  padding: 0.2em 0;
+  margin-bottom: 0.5em;
+}
+#suggestion[data-name]:not([data-name=""])::before {
+  content: "google 推薦的項目: ";
+}
+#suggestion::after {
+  content: attr(data-name);
+  color: #666;
+  cursor: pointer;
+}
+#suggestion:hover::after {
+  color: #999;
+  background-color: #333;
+}
+#numbers {
+  width: 3em;
+  text-align: center;
+  margin-right: 0.4em;
+}
+#numbers.hide {
+  display: none;
+}
+#add {
+  background-color: #bdcaff;
+}
+#random {
+  background-color: #ffcabd;
+  transform: scale(1.2);
+  transform-origin: center;
+}
+#f.disabled {
+  height: 0;
+  overflow: hidden;
+  margin: 0.15em 0;
+  user-select: none;
+}
+#f {
+  margin-bottom: 0.5em;
+}
+#f > label {
+  margin-top: 0.5em;
+  display: inline-block;
+}
+#output {
+  padding-top: 0.5em;
+}
+#output.hidden {
+  display: none;
+}
+#log {
+  height: 33vh;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  text-align: center;
+  background-color: #f9f9f9;
+  margin: 0;
+}
+#output_title {
+  background-color: rgba(255,255,255,0.3);
+  color: #555;
+}
+#share {
+  display: flex;
+  padding-top: 0.5em;
+  color: #555;
+  font-size: 0.8em;
+  flex-wrap: wrap;
+  position: relative;
+  margin-bottom: 0.5em;
+}
+#copy_link.hide {
+  display: none;
+}
+#share > div {
+  width: 100%;
+}
+#shareLink {
+  border: none;
+  width: 100%;
+  background-color: #f3f3f3;
+  text-align: center;
+  color: #999;
+  font-size: 0.8em;
+  text-overflow: ellipsis;
+  overflow-y: hidden;
+  overflow-x: auto;
+  resize: none;
+  height: 2.4em;
+}
+#shareLink:focus {
+  outline: none;
+}
+#config > div:not(.config_title) {
+  opacity: 0;
+  height: 0;
+  transition: all 1s;
+  pointer-events: none;
+  user-select: none;
+}
+#container._show_config #config > div:not(.config_title) {
+  opacity: 1;
+  height: auto;
+  pointer-events: auto;
+  user-select: auto;
+}
+#config {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1.8em;
+  padding: 0.2em 0;
+  box-sizing: border-box;
+  z-index: 100;
+  overflow: hidden;
+  background-color: rgba(255,255,255,0.05);
+  box-shadow: inset 0 0 4px rgba(255,255,255,0.5);
+  transition: all 0.2s;
+}
+#container._show_config #config {
+  min-height: 100vh;
+  height: 26em;
+  background-color: rgba(100,100,100,0.95);
+  box-shadow: none;
+}
+#container > *:not(#config){
+  transition: all 0.6s;
+}
+#container._show_config > *:not(#config){
+  opacity: 0.3;
+  pointer-events: none;
+  user-select: none;
+  cursor: default;
+}
+#config > * {
+  color: #eee;
+  font-size: 0.8em;
+}
+#config > .config_title {
+  color: #999;
+  font-size: 0.8em;
+  cursor: pointer;
+  text-decoration: underline;
+}
+#config > .config_title:hover {
+  text-decoration: none;
+  color: #ccc;
+  box-shadow: inset 0 0 2px rgba(100,100,100,0.2);
+}
+#container._show_config .config_title {
+  color: #eee;
+  font-size: 1.2em;
+  font-weight: bold;
+  cursor: inherit;
+  text-decoration: none;
+}
+.config_body {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.config_item > label {
+  display: flex;
+  flex-wrap: nowrap;
+  padding: 0.4em 0;
+  cursor: pointer;
+}
+.config_item:hover > label, .config_item.focus > label, .config_control > .config_control-buttons > a:hover {
+  background-color: rgba(255,255,255,0.1);
+  box-shadow: 0 0 2px rgba(255,255,255,0.1);
+}
+.config_item-title {
+  width: 27%;
+  text-align: right;
+}
+.config_item-title:after, #number_title:not(.hide):after, #output_title:not(.hide):after {
+  content: ":";
+  margin-right: 0.3em;
+}
+.config_item-input {
+  width: 73%;
+  text-align: left;
+}
+.config_item-field {
+  background-color: rgba(255,255,255,0);
+  background-image: linear-gradient(to right, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 95%);
+  box-sizing: border-box;
+  outline: 0 !important;
+}
+.config_item-field:not([type=checkbox]) {
+  font-size: 0.9em;
+  padding: 0.3em 0.5em 0.25em;
+  width: 100%;
+}
+.config_control > div {
+  margin: 0.5em 0;
+  display: flex;
+  justify-content: center;
+}
+#config_save {
+  padding: 0.5em 0.8em;
+}
+#config_save:hover {
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.6);
+}
+.config_control > .config_control-buttons > a {
+  width: 30%;
+  display: block;
+  color: #aaa;
+}
+.config_control > .config_control-buttons > a:hover {
+  color: #ddd;
+}
+.config_control-buttons > a.disabled {
+  display: none;
+}
+#modal {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: -100%;
+}
+#modal.show {
+  position: relative;
+  top: 0;
+}
+#message {
+  width: 100%;
+  padding: 0.2em 0;
+}
+#map {
+  width: 100%;
+  height: 100%;
+}
+#modal_controls {
+  width: 100%;
+  padding: 0.2em 0;
+}
+</style>
+</head>
+<body>
+<div id="modal">
+  <div id="modal_nav"></div>
+  <div id="message"></div>
+  <div id="map"></div>
+  <div id="modal_controls">
+    <button id="close_modal">關閉地圖</button>
+  </div>
+</div>
+<main id="container">
+<h1 id="title">星期天吃什麼</h1>
+<div id="hints">此為預先設定的清單: (<a href="javascript:void(0);" id="origin">點此回到自己的清單</a>)</div>
+<ul id="options"></ul>
+<div id="control">
+  <form id="f" href="">
+    <label><input id="place" placeholder="在哪裡？"></label>
+    <label><input id="text" placeholder="想吃什麼？"></label> <input type="submit" id="add" value="增加選項">
+  </form>
+  <div id="suggestion"></div>
+  <div>
+    <label><span id="number_title">抉擇次數</span> <input id="numbers" value="50" placeholder="50"></label>
+    <button id="random">給我建議</button>
+  </div>
+</div>
+<div id="output">
+  <div id="output_title">抉擇紀錄</div>
+  <pre id="log"></pre>
+</div>
+<div id="share">
+  <div class="share-title">分享這個清單:<span id="copy_link"> (<a href="javascript:void(0);" id="copy">點此複製連結</a>)</span></div>
+  <textarea id="shareLink" readonly rows="1" wrap="off"></textarea>
+</div>
+<form id="config" href="#">
+  <div class="config_title">進階設定</div>
+  <div class="config_body">
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">標題名稱</span>
+        <span class="config_item-input"><input class="config_item-field" id="setting_title"></span>
+      </label>
+    </div>
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">項目可編輯</span>
+        <span class="config_item-input"><input class="config_item-field" type="checkbox" id="setting_editable"></span>
+      </label>
+    </div>
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">項目輸入提示</span>
+        <span class="config_item-input"><input class="config_item-field" id="setting_hint"></span>
+      </label>
+    </div>
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">次數標題名稱</span>
+        <span class="config_item-input"><input class="config_item-field" id="setting_number_title"></span>
+      </label>
+    </div>
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">預設次數</span>
+        <span class="config_item-input"><input class="config_item-field" id="setting_number"></span>
+      </label>
+    </div>
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">按鈕名稱</span>
+        <span class="config_item-input"><input class="config_item-field" id="setting_button"></span>
+      </label>
+    </div>
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">顯示結果細節</span>
+        <span class="config_item-input"><input class="config_item-field" type="checkbox" id="setting_log"></span>
+      </label>
+    </div>
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">顯示結果標題</span>
+        <span class="config_item-input"><input class="config_item-field" id="setting_log_title"></span>
+      </label>
+    </div>
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">細節文字</span>
+        <span class="config_item-input"><input class="config_item-field" id="setting_detail"></span>
+      </label>
+    </div>
+    <div class="config_item">
+      <label>
+        <span class="config_item-title">單位</span>
+        <span class="config_item-input"><input class="config_item-field" id="setting_unit"></span>
+      </label>
+    </div>
+  </div>
+  <div class="config_control">
+    <div><input type="submit" value="確認修改" id="config_save"></div>
+    <div class="config_control-buttons">
+      <a href="javascript:void(0);" id="config_reset_last">恢復前次設定</a>
+      <a href="javascript:void(0);" id="config_reset">恢復原始設定</a>
+      <a href="javascript:void(0);" id="config_cancel">取消</a>
+    </div>
+  </div>
+</form>
+</main>
+<script>
+window.addEventListener("DOMContentLoaded", function(){
+
+  var modal = document.getElementById("modal");
+  var message = document.getElementById("message");
+  var container = document.getElementById("container");
+  var logo = document.getElementById("title");
+  var hints = document.getElementById("hints");
+  var origin = document.getElementById("origin");
+  var list = document.getElementById("options");
+  var add = document.getElementById("add");
+  var form = document.getElementById("f");
+  var ran = document.getElementById("random");
+  var place = document.getElementById("place");
+  var text = document.getElementById("text");
+  var suggestion = document.getElementById("suggestion");
+  var nt = document.getElementById("number_title");
+  var numb = document.getElementById("numbers");
+  var out = document.getElementById("output");
+  var log = document.getElementById("log");
+  var lt = document.getElementById("output_title");
+  var share = document.getElementById("share");
+  var link = document.getElementById("shareLink");
+  var copy = document.getElementById("copy");
+  var configForm = document.getElementById("config");
+  var configReset = document.getElementById("config_reset");
+  var configLast = document.getElementById("config_reset_last");
+  var configCancel = document.getElementById("config_cancel");
+  var settingTitle = document.getElementById("setting_title");
+  var settingEditable = document.getElementById("setting_editable");
+  var settingHint = document.getElementById("setting_hint");
+  var settingNumberTitle = document.getElementById("setting_number_title");
+  var settingNumber = document.getElementById("setting_number");
+  var settingButton = document.getElementById("setting_button");
+  var settingLog = document.getElementById("setting_log");
+  var settingLogTitle = document.getElementById("setting_log_title");
+  var settingDetail = document.getElementById("setting_detail");
+  var settingUnit = document.getElementById("setting_unit");
+  
+  var analyse = {};
+  var saveOptions;
+  var running = 0;
+  var timer, times;
+  var labels = {};
+  var enableSave = localStorage ? true : false;
+  var query = {};
+  var hashHistory = false;
+  var defaultSettings = {
+    title: "星期天吃什麼",
+    editable: true,
+    hint: "想吃什麼？",
+    number_title: "抉擇次數",
+    number: 50,
+    button: "給我建議",
+    log: true,
+    log_title: "抉擇紀錄",
+    detail: "[項目] 一票",
+    unit: "票"
+  };
+  var settings = {};
+  var lastSettings = {};
+  function copyProperties(f, t){
+    Object.keys(f).forEach(function(k){
+      t[k] = f[k];
+    });
+  }
+  copyProperties(defaultSettings, settings);
+  copyProperties(settings, lastSettings);
+  
+  function changeTitle(text){
+    settingTitle.value = document.title = logo.innerText = text;
+  }
+  
+  function changeEditable(bool){
+    settingEditable.checked = bool;
+    if(bool){
+      form.classList.remove("disabled");
+      list.classList.remove("noedit");
+    }else{
+      form.classList.add("disabled");
+      list.classList.add("noedit");
+    }
+  }
+  
+  function updateHint(hint){
+    settingHint.value = text.placeholder = hint;
+  }
+  
+  function changeNumberTitle(text){
+    settingNumberTitle.value = nt.innerText = text;
+    if(text){
+      nt.classList.remove("hide");
+      numb.classList.remove("hide");
+    }else{
+      nt.classList.add("hide");
+      numb.classList.add("hide");
+    }
+  }
+
+  function setNumber(number){
+    if(isFinite(number) && number > 0 && number < 100000){
+      settingNumber.value = numb.placeholder = numb.value = +number;
+    }else{
+      settingNumber.value = numb.placeholder = numb.value = defaultSettings.number;
+    }
+  }
+  
+  function changeButtonName(text){
+    settingButton.value = ran.innerText = text;
+  }
+  
+  function setLogDisplay(bool){
+    settingLog.checked = bool;
+    if(bool){
+      out.classList.remove("hidden");
+    }else{
+      out.classList.add("hidden");
+    }
+  }
+  
+  function changeLogTitle(text){
+    settingLogTitle.value = lt.innerText = text;
+    if(text){
+      lt.classList.remove("hide");
+    }else{
+      lt.classList.add("hide");
+    }
+  }
+  
+  function setDetail(text){
+    settingDetail.value = text;
+  }
+  
+  function setUnit(text){
+    settingUnit.value = text;
+  }
+  
+  function updateSettings(newSettings){
+    if(newSettings != lastSettings){
+      copyProperties(settings, lastSettings);
+      configLast.classList.remove("disabled");
+    }else{
+      configLast.classList.add("disabled");
+    }
+    if(newSettings.hasOwnProperty("title") && typeof newSettings.title == "string"){
+      settings.title = newSettings.title;
+      changeTitle(settings.title);
+    }else{
+      settingTitle.value = settings.title;
+    }
+    if(newSettings.hasOwnProperty("editable") && typeof newSettings.editable == "boolean"){
+      settings.editable = newSettings.editable;
+      changeEditable(settings.editable);
+    }else{
+      settingEditable.checked = settings.editable;
+    }
+    if(newSettings.hasOwnProperty("hint") && typeof newSettings.hint == "string"){
+      settings.hint = newSettings.hint;
+      updateHint(settings.hint);
+    }else{
+      settingHint.value = settings.hint;
+    }
+    if(newSettings.hasOwnProperty("number_title") && typeof newSettings.number_title == "string"){
+      settings.number_title = newSettings.number_title;
+      changeNumberTitle(settings.number_title);
+    }else{
+      settingNumberTitle.value = settings.number_title;
+    }
+    if(newSettings.hasOwnProperty("number") && isFinite(newSettings.number) && newSettings.number > 0 && newSettings.number < 100000){
+      settings.number = newSettings.number;
+      setNumber(settings.number);
+    }else{
+      settingNumber.value = settings.number;
+    }
+    if(newSettings.hasOwnProperty("button") && typeof newSettings.button == "string"){
+      settings.button = newSettings.button;
+      changeButtonName(settings.button);
+    }else{
+      settingButton.value = settings.button;
+    }
+    if(newSettings.hasOwnProperty("log") && typeof newSettings.log == "boolean"){
+      settings.log = newSettings.log;
+      setLogDisplay(settings.log);
+    }else{
+      settingLog.checked = settings.log;
+    }
+    if(newSettings.hasOwnProperty("log_title") && typeof newSettings.log_title == "string"){
+      settings.log_title = newSettings.log_title;
+      changeLogTitle(settings.log_title);
+    }else{
+      settingNumberTitle.value = settings.number_title;
+    }
+    if(newSettings.hasOwnProperty("detail") && typeof newSettings.detail == "string" && /\[項目\]/.test(newSettings.detail)){
+      settings.detail = newSettings.detail;
+      setDetail(settings.detail);
+    }else{
+      settingDetail.value = settings.detail;
+    }
+    if(newSettings.hasOwnProperty("unit") && typeof newSettings.detail == "string"){
+      settings.unit = newSettings.unit;
+      setUnit(settings.unit);
+    }else{
+      settingDetail.value = settings.detail;
+    }
+    if(enableSave){
+      var save = {};
+      Object.keys(settings).forEach(function(k){
+        if(defaultSettings[k] != settings[k]){
+          save[k] = settings[k];
+        }
+      });
+      if(Object.keys(save).length){
+        localStorage.setItem("settings", JSON.stringify(save));
+      }else{
+        localStorage.removeItem("settings");
+      }
+    }
+  }
+  
+  function getSettings(){
+    var newSettings = {};
+    if(settingTitle.value != settings.title){
+      newSettings.title = settingTitle.value;
+    }
+    if(settingEditable.value != settings.editable){
+      newSettings.editable = settingEditable.checked;
+    }
+    if(settingTitle.value != settings.hint){
+      newSettings.hint = settingHint.value;
+    }
+    if(settingTitle.value != settings.number_title){
+      newSettings.number_title = settingNumberTitle.value;
+    }
+    if(settingTitle.value != settings.number){
+      newSettings.number = +settingNumber.value;
+    }
+    if(settingTitle.value != settings.button){
+      newSettings.button = settingButton.value;
+    }
+    if(settingTitle.value != settings.log){
+      newSettings.log = settingLog.checked;
+    }
+    if(settingTitle.value != settings.log_title){
+      newSettings.log_title = settingLogTitle.value;
+    }
+    if(settingTitle.value != settings.detail){
+      newSettings.detail = settingDetail.value;
+    }
+    if(settingUnit.value != settings.unit){
+      newSettings.unit = settingUnit.value;
+    }
+    return newSettings;
+  }
+
+  if(enableSave){
+    saveOptions = (localStorage.getItem("options") || "").split("|");
+    for( var i = 0; i < saveOptions.length; i++ ){
+      if(saveOptions[i] && !analyse.hasOwnProperty(saveOptions[i])){
+        addItem(saveOptions[i]);
+      }
+    }
+    if(localStorage.getItem("settings")){
+      try{
+        copyProperties(JSON.parse(localStorage.getItem("settings")), lastSettings);
+      }catch(er){}
+    }
+  }
+  
+  if(location.hash){
+    enableSave = false;
+    logo.classList.add("no-save");
+    hints.classList.add("no-save");
+    location.hash.slice(1).split(",").forEach(function(op){
+      op = decodeURIComponent(op);
+      if(op && !analyse.hasOwnProperty(op)){
+        addItem(op);
+      }
+    });
+  }
+  function hashChange(){
+    location.reload(true);
+  }
+  window.addEventListener("hashchange", hashChange);
+  
+  if(location.search){
+    enableSave = false;
+    location.search.slice(1).split("&").forEach(function(p){
+      var pair = p.split("=");
+      if(pair.length == 2){
+        switch(decodeURIComponent(pair[0])){
+        case "t":
+        case "title":
+          query.title = decodeURIComponent(pair[1]);
+        break;
+        case "n":
+        case "number":
+          query.number = +decodeURIComponent(pair[1]);
+        break;
+        case "e":
+        case "editable":
+          query.editable = +decodeURIComponent(pair[1]) ? true : false;
+        break;
+        case "h":
+        case "hint":
+          query.hint = decodeURIComponent(pair[1]);
+        break;
+        case "nt":
+        case "number_title":
+          query.number_title = decodeURIComponent(pair[1]);
+        break;
+        case "b":
+        case "button":
+          query.button = decodeURIComponent(pair[1]);
+        break;
+        case "l":
+        case "log":
+          query.log = +decodeURIComponent(pair[1]) ? true : false;
+        break;
+        case "lt":
+        case "log_title":
+          query.log_title = decodeURIComponent(pair[1]);
+        break;
+        case "d":
+        case "detail":
+          query.detail = decodeURIComponent(pair[1]);
+        break;
+        case "u":
+        case "unit":
+          query.unit = decodeURIComponent(pair[1]);
+        break;
+        default:
+          query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+        }
+      }
+    });
+    copyProperties(query, lastSettings);
+  }
+  updateSettings(lastSettings);
+
+  function addItem(text, params = {}){
+    var op = document.createElement("li");
+    var d = document.createElement("div");
+    d.className = "bar";
+    op.appendChild(d);
+    d = document.createElement("div");
+    d.className = "label";
+    op.appendChild(d);
+    var s = document.createElement("span");
+    s.className = "percent";
+    d.appendChild(s);
+    s = document.createElement("span");
+    s.className = "opt"
+    s.innerText = params.name || text;
+    s.title = params.addr || text;
+    if(params.lat && params.lng){
+      s.dataset.name = params.name;
+      s.dataset.lat = params.lat;
+      s.dataset.lng = params.lng;
+      s.dataset.addr = params.addr;
+      s.addEventListener("click", showOnMap);
+    }
+    d.appendChild(s);
+    s = document.createElement("span");
+    s.className = "vote";
+    d.appendChild(s);
+    d = document.createElement("button");
+    d.innerText = "X";
+    d.className = "x";
+    d.addEventListener("click", removeOption, false);
+    op.appendChild(d);
+    op.dataset.option = text;
+    list.appendChild(op);
+    list.scrollTop = list.scrollHeight;
+    labels[text] = op;
+    analyse[text] = 0;
+    return op;
+  }
+
+  function addOption(e){
+    e.preventDefault();
+    if(text.value == "" || analyse.hasOwnProperty(text.value)){
+      text.select();
+      text.focus();
+      return;
+    }
+    stop();
+    if(enableSave){
+      saveOptions.push(text.value);
+      localStorage.setItem("options", saveOptions.join("|"));
+    }else if(hashHistory){
+      location.hash += "," + encodeURIComponent(text.value);
+    }
+    addItem(text.value);
+    text.value = "";
+    text.focus();
+    createShareLink();
+    return;
+  }
+
+  function removeOption(e){
+    var option = e.target.parentNode;
+    delete labels[option.dataset.option];
+    delete analyse[option.dataset.option];
+    option.parentNode.removeChild(option);
+    if(enableSave){
+      var i = saveOptions.indexOf(option.dataset.option);
+      if( i != -1 ){
+        saveOptions.splice(i, 1);
+      }
+      localStorage.setItem("options", saveOptions.join("|"));
+    }else if(hashHistory){
+      var ops = [];
+      for( var i = 0; i < list.children.length; i++ ){
+        ops.push(encodeURIComponent(list.children[i].dataset.option));
+      }
+      location.hash = "#" + ops.join(",");
+    }
+    stop();
+    if(e.sourceCapabilities && !e.sourceCapabilities.firesTouchEvents){
+      text.focus();
+    }
+    createShareLink();
+  }
+
+  function vote(){
+    if(running > 0){
+      var options = Object.keys(analyse);
+      var index = Math.floor(Math.random() * options.length);
+      log.innerText += settings.detail.replace("[項目]", options[index]) + "\n";
+      log.scrollTop = log.scrollHeight;
+      analyse[options[index]]++;
+      running--;
+      var output = [];
+      for( i in analyse ){
+        output.push({o: i, n: analyse[i]});
+      }
+      output.sort(function(a,b){return b.n - a.n});
+      output.forEach(function(op, i){
+        var percent = Math.round(10000 * op.n / (times - running)) / 100;
+        list.appendChild(labels[op.o]);
+        labels[op.o].children[0].style.transform = "scaleX(" + (percent / 100 * Math.pow(output.length, 1/2)) + ")";
+        labels[op.o].children[1].children[0].innerText = percent + "%";
+        labels[op.o].children[1].children[2].innerText = "[" + op.n + settings.unit + "]";
+      });
+    }else{
+      stop();
+      var t = 0;
+      for( var i = 0; i < list.children.length; i++ ){
+        if(analyse[list.children[i].dataset.option] >= t){
+          t = analyse[list.children[i].dataset.option];
+          list.children[i].classList.add("win");
+        }else{
+          break;
+        }
+      }
+    }
+  }
+
+  function stop(){
+    if(timer){
+      clearInterval(timer);
+      timer = 0;
+      running = 0;
+      list.classList.remove("run");
+    }
+  }
+
+  function run(e){
+    e.preventDefault();
+    if(Object.keys(analyse).length && running == 0){
+      var n = +numb.value;
+      if(!(isFinite(n) && n > 0)){
+        n = settings.number;
+        numb.value = n;
+      }
+      var last = document.getElementsByClassName("win");
+      while(last.length){
+        last[0].classList.remove("win");
+      }
+      for( var i in analyse ){
+        analyse[i] = 0;
+      }
+      times = running = n;
+      log.innerText = "";
+      list.scrollTop = 0;
+      timer = setInterval(function(){requestAnimationFrame(vote)}, 400 * Math.pow(Math.log(n), 2) * Math.pow(n, 1 / n) / n);
+      list.classList.add("run");
+    }
+  }
+  
+  function createShareLink(){
+    var ops = [];
+    for( var i = 0; i < list.children.length; i++ ){
+      if(list.children[i].dataset.option){
+        ops.push(encodeURIComponent(list.children[i].dataset.option));
+      }
+    }
+    var s = [];
+    var ks = {
+      "title": "t",
+      "editable": "e",
+      "hint": "h",
+      "number_title": "nt",
+      "number": "n",
+      "button": "b",
+      "log": "l",
+      "log_title": "lt",
+      "detail": "d",
+      "unit": "u"
+    };
+    var t = {
+      "title": "s",
+      "editable": "b",
+      "hint": "s",
+      "number_title": "s",
+      "number": "n",
+      "button": "s",
+      "log": "b",
+      "log_title": "s",
+      "detail": "s",
+      "unit": "s"
+    }
+    Object.keys(settings).forEach(function(k){
+      if(defaultSettings[k] != settings[k]){
+        var tmp;
+        switch(t[k]){
+        case "s":
+        case "n":
+          tmp = encodeURIComponent(settings[k]);
+        break;
+        case "b":
+          tmp = encodeURIComponent(settings[k] ? 1 : 0);
+        break;
+        }
+        s.push(ks[k] + "=" + tmp);
+      }
+    });
+    link.value = location.protocol + "//" + location.hostname + (location.port? location.port : "") + location.pathname + (s.length ? "?" + s.join("&") : "") + (ops.length? "#" + ops.join(",") : "");
+  }
+  
+  function copyLink(e){
+    if(e){
+      e.preventDefault();
+    }
+    fsl();
+    document.execCommand("copy");
+    return false;
+  }
+  
+  function fs(e){
+    e.target.select();
+    e.target.focus();
+  }
+  
+  function fsl(e){
+    link.focus();
+    if(link.selectionStart != 0 && link.selectionEnd != link.value.length){
+      link.selectionStart = 0;
+      link.selectionEnd = link.value.length;
+    }
+  }
+  
+  var scrolling = false;
+  function scrollDown(){
+    document.body.scrollTop = config.offsetTop;
+    if(scrolling){
+      requestAnimationFrame(scrollDown);
+    }
+  }
+  function scrollEnd(){
+    scrolling = false;
+  }
+  
+  function openConfig(e){
+    if(e){
+      e.preventDefault();
+    }
+    container.classList.add("_show_config");
+    scrolling = true;
+    requestAnimationFrame(scrollDown);
+    return false;
+  }
+  function closeConfig(e){
+    if(e){
+      e.preventDefault();
+    }
+    container.classList.remove("_show_config");
+    return false;
+  }
+  
+  function changeConfig(e){
+    e.preventDefault();
+    updateSettings(getSettings());
+    closeConfig();
+    createShareLink();
+    return false;
+  }
+  
+  function resetSettings(){
+    updateSettings(defaultSettings);
+    closeConfig();
+    createShareLink();
+  }
+  
+  function resetLast(){
+    updateSettings(lastSettings);
+    closeConfig();
+    createShareLink();
+  }
+
+  link.addEventListener("click", fsl);
+  link.addEventListener("scroll", fsl);
+  numb.addEventListener("focus", fs);
+  form.addEventListener("submit", addOption);
+  ran.addEventListener("click", run);
+  copy.addEventListener("click", copyLink);
+  configForm.addEventListener("submit", changeConfig);
+  configForm.children[0].addEventListener("click", openConfig);
+  configCancel.addEventListener("click", closeConfig);
+  configForm.addEventListener("transitionend", scrollEnd);
+  configReset.addEventListener("click", resetSettings);
+  configLast.addEventListener("click", resetLast);
+  origin.addEventListener("click", function(){
+    location.assign(location.protocol + "//" + location.hostname + (location.port? location.port : "") + location.pathname);
+  });
+  
+  function settingFS(e){
+    var d = e.target;
+    d.focus();
+    d.select();
+    d.parentNode.parentNode.parentNode.classList.add("focus");
+  }
+  
+  function fo(e){
+    e.target.parentNode.parentNode.parentNode.classList.remove("focus");
+  }
+  
+  settingTitle.addEventListener("focus", settingFS);
+  settingEditable.addEventListener("focus", settingFS);
+  settingHint.addEventListener("focus", settingFS);
+  settingNumberTitle.addEventListener("focus", settingFS);
+  settingNumber.addEventListener("focus", settingFS);
+  settingButton.addEventListener("focus", settingFS);
+  settingLog.addEventListener("focus", settingFS);
+  settingLogTitle.addEventListener("focus", settingFS);
+  settingDetail.addEventListener("focus", settingFS);
+  settingUnit.addEventListener("focus", settingFS);
+  settingTitle.addEventListener("focusout", fo);
+  settingEditable.addEventListener("focusout", fo);
+  settingHint.addEventListener("focusout", fo);
+  settingNumberTitle.addEventListener("focusout", fo);
+  settingNumber.addEventListener("focusout", fo);
+  settingButton.addEventListener("focusout", fo);
+  settingLog.addEventListener("focusout", fo);
+  settingLogTitle.addEventListener("focusout", fo);
+  settingDetail.addEventListener("focusout", fo);
+  settingUnit.addEventListener("focusout", fo);
+
+  if(/constructor/i.test(window.HTMLElement)){ // is safari check hack
+    document.getElementById("copy_link").classList.add("hide");
+  }
+  text.focus();
+  createShareLink();
+
+  //google map related
+  function changeLocation(e){
+    if(geocoder){
+      if(this.value){
+        geocoder.geocode({address: this.value, componentRestrictions: {country: "tw"}}, (r,s) => {
+          if(s == google.maps.GeocoderStatus.OK){
+            gmap.setCenter(r[0].geometry.location)
+            if(text.value){
+              textChange(e)
+            }
+          }
+        })
+      }else{
+        gmap.setCenter(new google.maps.LatLng(24.15, 120.65))
+        gmap.setZoom(20)
+      }
+    }
+  }
+  place.addEventListener("input", changeLocation)
+  
+  function getSuggestions(){
+    return new Promise((s,j) => {
+      if(gplaces){
+        if(text.value){
+          gplaces.textSearch({query: text.value, location: gmap.getCenter(), radius: 200, types: ["restaurant", "food", "cafe", "meal_takeaway", "bakery", "convenience_store", "grocery_or_supermarket"]},(r,status) => {
+            if(status == google.maps.places.PlacesServiceStatus.OK){
+              s(r)
+            }else{
+              j(status)
+            }
+          })
+        }else{
+          j("novalue")
+        }
+      }else{
+        j()
+      }
+    })
+  }
+  function textChange(e){
+    if(gmap){
+      getSuggestions().then(r => {
+        let s = Math.floor(Math.random() * 1000), i = 1
+        while(s > 0){
+          s -= i * i
+          i++
+        }
+        let item = r[r.length - Math.min(i, r.length)]
+        suggestion.dataset.lat = item.geometry.location.lat()
+        suggestion.dataset.lng = item.geometry.location.lng()
+        suggestion.dataset.addr = item.formatted_address
+        suggestion.dataset.name = item.name
+        suggestion.title = item.formatted_address
+      }).catch(s => {
+        if(s == google.maps.places.PlacesServiceStatus.ZERO_RESULTS){
+          suggestion.dataset.lat = ""
+          suggestion.dataset.lng = ""
+          suggestion.dataset.addr = ""
+          suggestion.dataset.name = "沒有建議的項目"
+          suggestion.title = ""
+        }else if(s == "novalue"){
+          suggestion.dataset.lat = ""
+          suggestion.dataset.lng = ""
+          suggestion.dataset.addr = ""
+          suggestion.dataset.name = ""
+          suggestion.title = ""
+        }else{
+          throw(s)
+        }
+      })
+    }
+  }
+  text.addEventListener("input", textChange)
+  
+  function showOnMap(e){
+    if(gmap){
+      if(suggestion.dataset.lat && suggestion.dataset.lng){
+        modal.classList.add("show")
+        let pos = new google.maps.LatLng(+this.dataset.lat,+this.dataset.lng)
+        let info = "<b>" + this.dataset.name +"</b><br>" + this.dataset.addr
+        gmap.setCenter(pos)
+        gmap.setZoom(20)
+        gmarker.setPosition(pos)
+        gmarker.setTitle(this.dataset.name)
+        gminfo.setContent(info)
+        message.innerHTML = info
+      }
+    }
+  }
+  suggestion.addEventListener("click", function(e){
+    if(!analyse.hasOwnProperty(this.dataset.name) && this.dataset.name != "沒有建議的項目"){
+      if(enableSave){
+        saveOptions.push(this.dataset.name);
+        localStorage.setItem("options", saveOptions.join("|"));
+      }else if(hashHistory){
+        location.hash += "," + encodeURIComponent(this.dataset.name);
+      }
+      stop();
+      addItem(this.dataset.name, {
+        name: this.dataset.name,
+        addr: this.dataset.addr,
+        lat: this.dataset.lat,
+        lng: this.dataset.lng
+      })
+    }
+  })
+  
+  function closeModal(e){
+    modal.classList.remove("show");
+    message.innerHTML = ""
+    changeLocation()
+  }
+  document.getElementById("close_modal").addEventListener("click", closeModal)
+  
+});
+
+var gmap, geocoder, gplaces, gmarker, gminfo
+function gmapLoaded(){
+  gmap = new google.maps.Map(document.getElementById('map'), {
+    center: new google.maps.LatLng(24.15, 120.65),
+    zoom: 20
+  });
+  geocoder = new google.maps.Geocoder()
+  gplaces = new google.maps.places.PlacesService(gmap)
+  gmarker = new google.maps.Marker({position: gmap.getCenter(), map: gmap, title: ""})
+  gminfo = new google.maps.InfoWindow({content: ""})
+  gmarker.addListener("click", e => gminfo.open(gmap, gmarker))
+  // do map things
+}
+</script>
+</body>
+</html>
