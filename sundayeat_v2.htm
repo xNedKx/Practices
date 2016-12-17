@@ -1322,6 +1322,13 @@ if(enableSave){
   message.addEventListener("click", function(e){
     gmap.panTo(this.pos)
   })
+  place.addEventListener("keydown", e => {
+    if(e.keyCode == 13){
+      e.preventDefault()
+      text.focus()
+      text.select()
+    }
+  })
 }
   
   function closeModal(e){
