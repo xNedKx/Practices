@@ -1339,7 +1339,6 @@ if(enableSave){
   function getAddr(){
     geocoder.geocode({location: dplace}, (r,s) => {
       let d = r.sort((a,b) => b.address_components.length - a.address_components.length)
-      console.log(d)
       if(s == google.maps.GeocoderStatus.OK){
         place.value = d[0].address_components.filter(c => {
           c.ftypes = c.types.filter(t => /^administrative_area_level_[123]$/.test(t))
