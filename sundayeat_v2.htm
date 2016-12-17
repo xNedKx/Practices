@@ -408,6 +408,7 @@ main {
 #message {
   width: 100%;
   padding: 0.2em 0;
+  cursor: pointer;
 }
 #map {
   width: 100%;
@@ -1192,20 +1193,39 @@ window.addEventListener("DOMContentLoaded", function(){
 
   //google map related
 if(enableSave){
+  var mapLocation
   function changeLocation(e){
     if(geocoder){
       if(this.value){
         geocoder.geocode({address: this.value, componentRestrictions: {country: "tw"}}, (r,s) => {
           if(s == google.maps.GeocoderStatus.OK){
-            gmap.setCenter(r[0].geometry.location)
-            if(text.value){
-              textChange(e)
+            let ar = r.filter(a => a.address_components.filter(c => {
+              c.ftypes = c.types.filter(t => /^administrative_area_level_[123]$/.test(t))
+              return c.ftypes.length && c.long_name != "臺灣省"
+            }).length > 0 ).sort((a,b) => b.address_components.length - a.address_components.length)
+            if(ar.length){
+              mapLocation = ar[0].geometry.location
+              if(text.value){
+                textChange(e)
+              }
+            }else{
+              gplaces.textSearch({query: this.value, location: r.sort((a,b) => b.address_components.length - a.address_components.length)[0].geometry.location, radius: 10000}, (r,s) => {
+                if(s == google.maps.places.PlacesServiceStatus.OK){
+                  let ar = r.filter(a => {
+                    a.ftypes = a.types.filter(t => /^(?:administrative_area_level_[1234]|(?:sub)?locality|political|colloquial_area|neighborhood|point_of_interest|sublocality_level_[1234])$/.test(t)).sort()
+                    return a.ftypes.length
+                  }).sort((a,b) => b.ftypes.length - a.ftypes.length || a.name.length - b.name.length || a.types[0].localeCompare(b.types[0]))
+                  if(ar.length){
+                    mapLocation = ar[0].geometry.location
+                    if(text.value){
+                      textChange(e)
+                    }
+                  }
+                }
+              })
             }
           }
         })
-      }else{
-        gmap.setCenter(new google.maps.LatLng(24.15, 120.65))
-        gmap.setZoom(20)
       }
     }
   }
@@ -1215,7 +1235,7 @@ if(enableSave){
     return new Promise((s,j) => {
       if(gplaces){
         if(text.value){
-          gplaces.textSearch({query: text.value, location: gmap.getCenter(), radius: 200, types: ["restaurant", "food", "cafe", "meal_takeaway", "bakery", "convenience_store", "grocery_or_supermarket"]},(r,status) => {
+          gplaces.textSearch({query: text.value, location: mapLocation || gmap.getCenter(), radius: 500, types: ["restaurant", "food", "cafe", "meal_takeaway", "bakery", "convenience_store", "grocery_or_supermarket"]},(r,status) => {
             if(status == google.maps.places.PlacesServiceStatus.OK){
               s(r)
             }else{
@@ -1277,6 +1297,7 @@ if(enableSave){
         gmarker.setTitle(this.dataset.name)
         gminfo.setContent(info)
         message.innerHTML = info
+        message.pos = pos
       }
     }
   }
@@ -1298,6 +1319,9 @@ if(enableSave){
       createShareLink();
     }
   })
+  message.addEventListener("click", function(e){
+    gmap.panTo(this.pos)
+  })
 }
   
   function closeModal(e){
@@ -1309,11 +1333,24 @@ if(enableSave){
   
 });
 
-var gmap, geocoder, gplaces, gmarker, gminfo
+var gmap, geocoder, gplaces, gmarker, gminfo, dplace
 function gmapLoaded(){
 if(enableSave){
+  function getAddr(){
+    geocoder.geocode({location: dplace}, (r,s) => {
+      let d = r.sort((a,b) => b.address_components.length - a.address_components.length)
+      console.log(d)
+      if(s == google.maps.GeocoderStatus.OK){
+        place.value = d[0].address_components.filter(c => {
+          c.ftypes = c.types.filter(t => /^administrative_area_level_[123]$/.test(t))
+          return c.ftypes.length && c.long_name != "臺灣省"
+        }).sort((a,b) => a.ftypes[0].localeCompare(b.ftypes[0])).map(c => c.long_name).join("")
+      }
+    })
+  }
+  dplace = new google.maps.LatLng(24.15, 120.65)
   gmap = new google.maps.Map(document.getElementById('map'), {
-    center: new google.maps.LatLng(24.15, 120.65),
+    center: dplace,
     zoom: 20
   });
   geocoder = new google.maps.Geocoder()
@@ -1321,6 +1358,21 @@ if(enableSave){
   gmarker = new google.maps.Marker({position: gmap.getCenter(), map: gmap, title: ""})
   gminfo = new google.maps.InfoWindow({content: ""})
   gmarker.addListener("click", e => gminfo.open(gmap, gmarker))
+  getAddr()
+  if("geolocation" in navigator){
+    var geo_option = {
+      enableHighAccuracy: true,
+      timeout: 30000,
+      maximumAge: 100
+    }
+    navigator.geolocation.getCurrentPosition(
+      function(position){
+        dplace = new google.maps.LatLng(position.coords.latitude, position.coords.longitude)
+        changeLocation()
+        getAddr()
+      }, function(error){}, geo_option
+    )
+  }
 }else{
   place.classList.add("hide")
 }
