@@ -171,6 +171,9 @@ main {
 #place, #text {
   width: 200px;
 }
+#place.hide {
+  display: none;
+}
 #suggestion[data-name]:not([data-name=""]){
   background-color: #fefefe;
   padding: 0.2em 0;
@@ -523,6 +526,7 @@ main {
 </form>
 </main>
 <script>
+var enableSave
 window.addEventListener("DOMContentLoaded", function(){
 
   var modal = document.getElementById("modal");
@@ -566,7 +570,7 @@ window.addEventListener("DOMContentLoaded", function(){
   var running = 0;
   var timer, times;
   var labels = {};
-  var enableSave = localStorage ? true : false;
+  enableSave = localStorage ? true : false;
   var query = {};
   var hashHistory = false;
   var defaultSettings = {
@@ -1187,6 +1191,7 @@ window.addEventListener("DOMContentLoaded", function(){
   createShareLink();
 
   //google map related
+if(enableSave){
   function changeLocation(e){
     if(geocoder){
       if(this.value){
@@ -1290,8 +1295,10 @@ window.addEventListener("DOMContentLoaded", function(){
         lat: this.dataset.lat,
         lng: this.dataset.lng
       })
+      createShareLink();
     }
   })
+}
   
   function closeModal(e){
     modal.classList.remove("show");
@@ -1304,6 +1311,7 @@ window.addEventListener("DOMContentLoaded", function(){
 
 var gmap, geocoder, gplaces, gmarker, gminfo
 function gmapLoaded(){
+if(enableSave){
   gmap = new google.maps.Map(document.getElementById('map'), {
     center: new google.maps.LatLng(24.15, 120.65),
     zoom: 20
@@ -1313,7 +1321,9 @@ function gmapLoaded(){
   gmarker = new google.maps.Marker({position: gmap.getCenter(), map: gmap, title: ""})
   gminfo = new google.maps.InfoWindow({content: ""})
   gmarker.addListener("click", e => gminfo.open(gmap, gmarker))
-  // do map things
+}else{
+  place.classList.add("hide")
+}
 }
 </script>
 </body>
