@@ -1,0 +1,114 @@
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="author" content="xnedkx">
+<title>Text Dotize</title>
+</head>
+<body>
+<div>
+  <label>輸入想要顯示的文字：<input id="t" value="龍骨水車" onkeyup="draw()"></label>
+  <label style="font-size: small; color: #777; cursor: pointer;">疊合<input type="checkbox" onclick="document.getElementById('m').style.transform = this.checked?'scaleX(1)':'scaleX(-1)'"></label>
+  <label style="font-size: small; color: #777; cursor: pointer;">顯示文字<input type="checkbox" onclick="document.getElementById('o').style.display = this.checked?'block':'none'"></label>
+  <label style="font-size: small; color: #777; cursor: pointer;">反色<input type="checkbox" onclick="re = this.checked; draw(1)"></label>
+</div>
+<div id="a" style="width: 1024px; height: 300px; position: relative;">
+<canvas id="c" style="position: absolute; z-index: 5;"></canvas>
+<canvas id="m" style="position: absolute; transform: scaleX(-1); transform-origin: 100% 0%; z-index: 10;"></canvas>
+<canvas id="o" style="position: absolute; display: none; z-index: 1;"></canvas>
+</div>
+<script>
+var t = document.getElementById("t")
+
+var a = document.getElementById("a")
+var c = document.getElementById("c")
+var mr = document.getElementById("m")
+var o = document.getElementById("o")
+
+var m = Math.floor(a.offsetWidth / 2), n = Math.floor(a.offsetHeight)
+c.width = m
+mr.width = m
+o.width = m
+c.height = n
+mr.height = n
+o.height = n
+
+var p = c.getContext('2d')
+var pm = mr.getContext('2d')
+var po = o.getContext('2d')
+var txt = ""
+var re = false
+var pts = []
+
+var d = 2
+var th = 0.2
+var mt = 0.2
+
+function draw(force = false){
+  if(!force && txt == t.value){return}
+  txt = t.value
+  let f = Math.min( m * 0.95 / (txt.length||1), n )
+  let u = Math.floor( Math.sqrt(f) / 2)
+  let mu = Math.floor(m / u) - 1, nu = Math.floor(n / u) - 1, l = mu * nu
+  let r = u * 0.4
+  
+  let cp = new Map()
+  pts = []
+  
+  p.clearRect(0,0,m,n)
+  pm.clearRect(0,0,m,n)
+  po.clearRect(0,0,m,n)
+  
+  po.textAlign = "center"
+  po.textBaseline = "middle"
+  po.font = "700 "+f+"px serif"
+  po.fillStyle = "#BBB"
+  po.fillText(txt, m/2, n/2)
+
+  for( let i = 0; i < l * d; i++ ) {
+    let isMirror = Math.floor(Math.random()*2)
+    let t = Math.floor( l * Math.random() )
+    if( cp.has(t) ) {
+      let cpf = cp.get(t)
+      if( cpf == 3 || cpf == 2 && isMirror || cpf == 1 && !isMirror || Math.random() > mt ){
+        continue
+      }
+      cp.set( t, cpf | 1 << isMirror )
+    }else{
+      cp.set( t, 1 << isMirror )
+    }
+    let x = t % mu, xu = (x + 1) * u
+    let y = (t - x) / mu, yu = (y + 1) * u
+    let op = po.getImageData(Math.max(0,xu-r),Math.max(0,yu-r),u - Math.max(xu + r - m,0), u - Math.max(yu + r - n,0))
+    let q = 0
+    for( let j = 0; j < op.width * op.height; j++ ){
+      q += op.data[4*j+3]
+    }
+    let inText = re ^ (q / (255 * op.width * op.height) > th)
+    if ( inText ) {
+      if ( isMirror ){
+        pm.beginPath()
+        pm.fillStyle = "rgba(0,0,0,0.5)"
+        pm.arc( xu, yu, r, 0, 2 * Math.PI )
+        pm.fill()
+      }else{
+        p.beginPath()
+        p.fillStyle = "rgba(0,0,0,0.5)"
+        p.arc( xu, yu, r, 0, 2 * Math.PI )
+        p.fill()
+      }
+    }
+    pts.push({x:xu,y:yu,r,inText,isMirror});
+  }
+}
+draw()
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-78696465-1', 'auto');
+  ga('send', 'pageview');
+</script>
+</body>
+</html>
