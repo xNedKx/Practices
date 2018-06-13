@@ -226,7 +226,7 @@ main {
 #share > div {
   width: 100%;
 }
-#shareLink {
+#shareLinkText {
   border: none;
   width: 100%;
   background-color: #f3f3f3;
@@ -239,7 +239,7 @@ main {
   resize: none;
   height: 2.4em;
 }
-#shareLink:focus {
+#shareLinkText:focus {
   outline: none;
 }
 #config > div:not(.config_title) {
@@ -386,8 +386,8 @@ main {
   <pre id="log"></pre>
 </div>
 <div id="share">
-  <div class="share-title">分享這個清單:<span id="copy_link"> (<a href="javascript:void(0);" id="copy">點此複製連結</a>)</span></div>
-  <textarea id="shareLink" readonly rows="1" wrap="off"></textarea>
+  <div class="sharelink-title">分享這個清單:<span id="copy_link"> (<a href="javascript:void(0);" id="copy">點此複製連結</a>)</span></div>
+  <textarea id="shareLinkText" readonly rows="1" wrap="off"></textarea>
 </div>
 <form id="config" href="#">
   <div class="config_title">進階設定</div>
@@ -481,7 +481,7 @@ window.addEventListener("DOMContentLoaded", function(){
   var log = document.getElementById("log");
   var lt = document.getElementById("output_title");
   var share = document.getElementById("share");
-  var link = document.getElementById("shareLink");
+  var link = document.getElementById("shareLinkText");
   var copy = document.getElementById("copy");
   var configForm = document.getElementById("config");
   var configReset = document.getElementById("config_reset");
