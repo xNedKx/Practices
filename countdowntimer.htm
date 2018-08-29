@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="A Box in 3D." />
+<meta name="author" content="xNedKx" />
+<meta name="copyright" content="xNedKx" />
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<title>Countdown Timer in Seconds</title>
+<style>
+document, body {
+  margin: 0;
+  overflow: hidden;
+  color: #151515;
+  height: 100vh;
+  width: 100vw;
+}
+#form {
+  position: relative;
+  z-index: 10;
+  padding: 0.6em;
+  margin: 0.3em;
+  text-align: center;
+}
+#len {
+  width: 2em;
+}
+#btn {
+  width: 12em;
+  cursor: pointer;
+}
+#timer.running {
+  cursor: pointer;
+}
+#timer {
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  font-size: 40vh;
+  line-height: 100vh;
+  text-align: center;
+  cursor: default;
+}
+#timer.timeup {
+  font-size: 10vw;
+}
+#timer.timeup::before {
+  content: "Time's up!";
+}
+</style>
+</head>
+<body>
+<form action="#" id="form" title="Available input: 1~300 seconds
+[Tab] to select the input
+[Enter] to toggle the timer start/stop
+[Space] or mouse click on the number to refresh timer
+">
+  <label for="len">Countdown Seconds:<input id="len" value="30" maxlength="3"></label>
+  <input type="submit" id="btn" value="start">
+</form>
+<div id="timer"></div>
+<script>
+let len = document.getElementById("len"), btn = document.getElementById("btn"), timer = document.getElementById("timer");
+let begin = 0, length = 0, running = false, timeup = false, triggered = Infinity;
+function loop(ts){
+  let t, lt, n, nl;
+  if( running ) {
+    if( begin == 0 ){
+      begin = ts;
+      t = 0;
+    }else{
+      t = (ts - begin)/1000;
+    }
+    n = length - t;
+    nl = n/length;
+    lt = length - Math.floor(t);
+    timeup = lt <= 0;
+    if( !timeup ){
+      timer.innerText = lt;
+      let r = Math.ceil(200 + nl * nl * 55), g = b = Math.ceil(nl * nl * 200 + 55);
+      timer.style.backgroundColor = "rgb(" + r +"," + g + "," + b + ")";
+      if( n >= 120 ){
+        if( (lt-120)%60 == 0 && triggered - lt >= 60 ){
+          triggered = lt;
+          sound();
+        }
+      }else if( n >= 60 ){
+        if( (lt-60)%30 == 0 && triggered - lt >= 30 ){
+          triggered = lt;
+          sound();
+        }
+      }else if( n >= 30 ){
+        audio.volume = 0.6;
+        if( (lt-30)%15 == 0 && triggered - lt >= 15 ){
+          triggered = lt;
+          sound();
+        }
+      }else if( n >= 10 ){
+        audio.volume = 0.7;
+        if( (lt-10)%10 == 0 && triggered - lt >= 10 ){
+          triggered = lt;
+          sound();
+        }
+      }else if( n >= 3 ){
+        audio.volume = 0.8;
+        if( triggered - n >= 1 ){
+          triggered = n;
+          sound();
+        }
+      }else if( n >= 1.5 ){
+        audio.volume = (18-2*n)/15;
+        if( triggered - n >= (3*n-4)/5 ){
+          triggered = n;
+          sound();
+        }
+      }else{
+        audio.volume = 1;
+        if( triggered - n >= 0.1 ){
+          triggered = n;
+          sound();
+        }
+      }
+      requestAnimationFrame(loop);
+    }else{
+      stop();
+      timer.classList.add("timeup");
+      timer.style.backgroundColor = "rgb(200,55,55)";
+    }
+  }else{
+    timer.innerText = "";
+    timer.classList.remove("timeup");
+    timer.style.backgroundColor = "rgb(255,255,255)";
+  }
+}
+function start(){
+  if( length > 0 ){
+    len.blur();
+    btn.blur();
+    running = true;
+    timeup = false;
+    requestAnimationFrame(loop);
+    btn.value = "stop";
+    timer.classList.add("running");
+    timer.classList.remove("timeup");
+    timer.style.backgroundColor = "rgb(255,255,255)";
+    triggered = length;
+    audio.volume = 0.5;
+  }
+}
+function stop(){
+  begin = 0;
+  running = false;
+  timeup = false;
+  btn.value = "start";
+  timer.innerText = "";
+  timer.classList.remove("running");
+  timer.classList.remove("timeup");
+  timer.style.backgroundColor = "rgb(255,255,255)";
+}
+function toggle(e){
+  e.preventDefault();
+  e.stopPropagation();
+  if(!running){
+    start();
+  }else{
+    stop();
+  }
+}
+function skip(){
+  if( running ){
+    requestAnimationFrame(function(s){
+      timer.innerText = length;
+      begin = s;
+      triggered = length;
+      audio.volume = 0.5;
+    });
+  }
+}
+function getLen(){
+  if( !running ){
+    let l = len.value.replace(/[^0-9.]/g,"");
+    if(isFinite(l) && +l > 0 && +l <= 300){
+      length = +Math.round(l);
+      len.value = length;
+    }else{
+      length = 0;
+      len.value = "";
+      len.focus();
+    }
+  }else{
+    len.value = length;
+  }
+}
+function getKey(e){
+  switch(e.code){
+  case "Space":
+    skip();
+    break;
+  case "Enter":
+  case "NumpadEnter":
+    toggle(e);
+    break;
+  case "Tab":
+    e.preventDefault();
+    len.select();
+    break;
+  }
+}
+let audio = document.createElement("audio");
+audio.src = "./coin.mp3";
+audio.volume = 0.5;
+audio.loop = false;
+audio.load();
+document.body.appendChild(audio);
+function sound(){
+  audio.currentTime = 0;
+  audio.play();
+}
+getLen();
+len.addEventListener("change",getLen);
+timer.addEventListener("click",skip);
+form.addEventListener("submit",toggle);
+document.body.addEventListener("keydown",getKey);
+</script>
+</body>
+</html>
