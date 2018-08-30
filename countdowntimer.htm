@@ -221,6 +221,7 @@ function sound(){
 }
 getLen();
 len.addEventListener("change",getLen);
+len.addEventListener("focus",function(){this.select();});
 timer.addEventListener("click",skip);
 form.addEventListener("submit",toggle);
 document.body.addEventListener("keydown",getKey);
