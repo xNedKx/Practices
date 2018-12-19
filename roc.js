@@ -345,7 +345,7 @@ if(typeof document != "undefined"){
       cnv.beginPath();
       cnv.moveTo(x,y);
     }
-    DOMinfo.innerHTML = "<span>[ROC plotted]<br>If [" + fl + "] " + DOMselectMode.value + " 'threshold' then [" + bl + "] is predicted to be '" + DOMtarget.value + "'</span><table style='border-collapse: collapse;'><tr style='background-color: #ffff; font-size: large; margin: 0; font-family: monospace; font-weight: bold;'><th>[Index]</th><th width='100'>Threshold:</th><th>(</th><th width='140'>Sensitivity</th><th>,</th><th width='140'>1 - specificity</th><th>)</th></tr><tr>" + o.map(({t,step,sen,spe})=>`<tr style="color: hsl(${Math.floor(360*step/points.length)},90%,40%); background-color: #ffff; font-size: large; margin: 0; font-family: monospace; font-weight: bold;"><td>[${step}]</td><td>${t}:</td><td>(</td><td>${sen}</td><td>,</td><td>${1-spe}</td><td>)</td></tr>`).join("") + "</table>";
+    DOMinfo.innerHTML = "<span>[ROC plotted]<br>If [" + fl + "] " + DOMselectMode.value + " 'threshold' then [" + bl + "] is predicted to be '" + DOMtarget.value + "'</span><table style='border-collapse: collapse; margin: 0 auto;'><tr style='background-color: #ffff; font-size: large; margin: 0; font-family: monospace; font-weight: bold;'><th>[Index]</th><th width='100'>Threshold:</th><th>(</th><th width='140'>Sensitivity</th><th>,</th><th width='140'>1 - specificity</th><th>)</th></tr><tr>" + o.map(({t,step,sen,spe})=>`<tr style="color: hsl(${Math.floor(360*step/points.length)},90%,40%); background-color: #ffff; font-size: large; margin: 0; font-family: monospace; font-weight: bold;"><td>[${step}]</td><td>${t}:</td><td>(</td><td>${sen}</td><td>,</td><td>${1-spe}</td><td>)</td></tr>`).join("") + "</table>";
   }
   let setupCanvas = (e)=>{
     DOMcanvas.width = 320;
