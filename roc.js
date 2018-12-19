@@ -5,7 +5,7 @@
 
 (()=>{
 // global var
-var data = [], n = 101, points = [], colCache = {};
+var data = [], n = 100, points = [], colCache = {};
 var alertLv = 0;
 function error(str, ret, ertype=Error){
   if(alertLv){
@@ -103,13 +103,13 @@ function roc(data,bl,fl,pn,params){
   if(!(bin && fac)){return error("unable to calculate roc")}
   let target = params && params.target, model = params && params.model;
   let amin = params && params.amin, amax = params && params.amax;
-  let min = isFinite(amin)? amin:fac.min, max = isFinite(amax)? amax:fac.max, range = max - min, steps = +pn - 2;
+  let min = isFinite(amin)? amin:fac.min, max = isFinite(amax)? amax:fac.max, range = max - min;
   let predL = typeof target != "undefined" && target ? target : Object.keys(bin.v)[0];
   predL = bin.factor ? +predL : predL;
   let tn = bin.v[predL].length, fn = bin.size - tn;
   let mf = typeof model == "function" ? model : create_roc_model(model);
-  for( let i = 0; i <= +pn; i++ ){
-    let t = min + range * ((i-1)/steps), tps = 0, tns = 0;
+  for( let i = -1; i <= +pn + 1; i++ ){
+    let t = min + range * (i/+pn), tps = 0, tns = 0;
     for( let j = 1; j < data.length; j++ ){
       let p = mf(t,data[j][fac.i])
       if(p && data[j][bin.i] == predL){
@@ -227,7 +227,8 @@ if(typeof document != "undefined"){
   DOMbody.lastChild.style.margin = "6px auto 1px";
   
   DOMbody.lastChild.append(DOMnumberLabel);
-  DOMnumberLabel.innerText = "Threshold sampling times:"
+  DOMnumberLabel.innerText = "Threshold step times:";
+  DOMnumberLabel.title = "The total point number will add 3 with this, 2 for the ends and 1 because of to contain n blocks requires n+1 borders.";
   DOMnumberLabel.append(DOMnumber);
   DOMnumber.style.width = "2.5em";
   DOMnumber.defaultValue = n;
@@ -311,10 +312,10 @@ if(typeof document != "undefined"){
   }
   let check_number = (e)=>{
     let i = DOMnumber.value
-    if(isFinite(i) && i > 2){
+    if(isFinite(i) && i > 0){
       n = +DOMnumber.value;
     }else if(isFinite(i)){
-      DOMnumber.value = 3;
+      DOMnumber.value = 1;
       n = +DOMnumber.value;
     }else{
       DOMnumber.value = n;
