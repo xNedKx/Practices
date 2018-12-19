@@ -334,12 +334,12 @@ if(typeof document != "undefined"){
     let o = roc(data, bl, fl, n,{model:DOMselectMode.value,target:DOMtarget.value});
     points = roc_to_points(o);
     cnv.beginPath();
-    cnv.moveTo(points[0][0]*300+10,(1-points[0][1])*300+10);
+    cnv.moveTo(points[0][1]*300+10,(1-points[0][0])*300+10);
     cnv.lineWidth = 3;
     for( let i in points ){
       cnv.strokeStyle = "hsl("+Math.floor(360*i/points.length)+",90%,40%)";
-      let x = points[i][0]*300+10;
-      let y = (1-points[i][1])*300+10;
+      let y = (1-points[i][0])*300+10;
+      let x = points[i][1]*300+10;
       cnv.lineTo(x,y);
       cnv.stroke();
       cnv.beginPath();
