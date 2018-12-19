@@ -1,11 +1,11 @@
-// ROC curve with csv loading and canvas ploting
+// simple ROC curve with csv loading and canvas ploting
 // author: xNedKx | gmail.com
 // 2018/12/19
 // copyright reserved
 
 (()=>{
 // global var
-var data = [], n = 99, points = [], colCache = {};
+var data = [], n = 101, points = [], colCache = {};
 var alertLv = 0;
 function error(str, ret, ertype=Error){
   if(alertLv){
@@ -103,12 +103,13 @@ function roc(data,bl,fl,pn,params){
   if(!(bin && fac)){return error("unable to calculate roc")}
   let target = params && params.target, model = params && params.model;
   let amin = params && params.amin, amax = params && params.amax;
-  let min = isFinite(amin)? amin:fac.min, max = isFinite(amax)? amax:fac.max, range = max - min, steps = +pn + 2;
+  let min = isFinite(amin)? amin:fac.min, max = isFinite(amax)? amax:fac.max, range = max - min, steps = +pn - 2;
   let predL = typeof target != "undefined" && target ? target : Object.keys(bin.v)[0];
+  predL = bin.factor ? +predL : predL;
   let tn = bin.v[predL].length, fn = bin.size - tn;
   let mf = typeof model == "function" ? model : create_roc_model(model);
-  for( let i = 0; i <= steps; i++ ){
-    let t = min + range * ((i-1)/+pn), tps = 0, tns = 0;
+  for( let i = 0; i <= +pn; i++ ){
+    let t = min + range * ((i-1)/steps), tps = 0, tns = 0;
     for( let j = 1; j < data.length; j++ ){
       let p = mf(t,data[j][fac.i])
       if(p && data[j][bin.i] == predL){
@@ -155,7 +156,7 @@ if(typeof document != "undefined"){
   DOMroot.style.textAlign = "center";
   
   DOMroot.append(DOMheader);
-  DOMheader.innerHTML = "ROC Curve";
+  DOMheader.innerHTML = "Simple ROC Curve";
   DOMheader.style.fontSize= "2em";
   DOMheader.style.backgroundColor = "#FFFF";
   DOMheader.style.marginBottom = "2px";
@@ -237,10 +238,10 @@ if(typeof document != "undefined"){
   DOMbody.lastChild.style.backgroundColor = "#FFF6";
   
   DOMbody.lastChild.append(DOMrun);
-  DOMrun.innerText = "run curve";
+  DOMrun.innerText = "plot curve";
   
   DOMbody.lastChild.append(DOMreset);
-  DOMreset.innerText = "reset plot";
+  DOMreset.innerText = "clear plot";
   
   
   DOMbody.append(DOMcanvas);
@@ -308,9 +309,20 @@ if(typeof document != "undefined"){
       DOMselectFactor.style.textDecoration = "";
     }
   }
+  let check_number = (e)=>{
+    let i = DOMnumber.value
+    if(isFinite(i) && i > 2){
+      n = +DOMnumber.value;
+    }else if(isFinite(i)){
+      DOMnumber.value = 3;
+      n = +DOMnumber.value;
+    }else{
+      DOMnumber.value = n;
+    }
+  }
   let plot = (e)=>{
     let bl = DOMselectBinary.value, fl = DOMselectFactor.value;
-    n = DOMnumber.value;
+    check_number();
     if(!data.length){
       DOMinfo.innerText = "import data first";
       return error("import data first");
@@ -333,7 +345,7 @@ if(typeof document != "undefined"){
       cnv.beginPath();
       cnv.moveTo(x,y);
     }
-    DOMinfo.innerHTML = "<span>[ROC plotted]<br>If [" + fl + "] " + DOMselectMode.value + " thresholdthen [" + bl + "] is predicted to be '" + DOMtarget.value + "'</span><pre style='background-color: #ffff; font-size: large; margin: 0; font-family: monospace; font-weight: bold;'>[Index] Threshold: (Sensitivity, 1 - specificity)</span><br>" + o.map(({t,step,sen,spe})=>`<pre style="color: hsl(${Math.floor(360*step/points.length)},90%,40%); background-color: #ffff; font-size: large; margin: 0; font-family: monospace; font-weight: bold;">[${step}] ${("      "+t.toString().slice(0,6)).slice(-6)}: ( ${("      "+sen.toString().slice(0,6)).slice(-6)}, ${("      "+(1-spe).toString().slice(0,6)).slice(-6)} )</pre>`).join("");
+    DOMinfo.innerHTML = "<span>[ROC plotted]<br>If [" + fl + "] " + DOMselectMode.value + " 'threshold' then [" + bl + "] is predicted to be '" + DOMtarget.value + "'</span><table style='border-collapse: collapse;'><tr style='background-color: #ffff; font-size: large; margin: 0; font-family: monospace; font-weight: bold;'><th>[Index]</th><th width='100'>Threshold:</th><th>(</th><th width='140'>Sensitivity</th><th>,</th><th width='140'>1 - specificity</th><th>)</th></tr><tr>" + o.map(({t,step,sen,spe})=>`<tr style="color: hsl(${Math.floor(360*step/points.length)},90%,40%); background-color: #ffff; font-size: large; margin: 0; font-family: monospace; font-weight: bold;"><td>[${step}]</td><td>${t}:</td><td>(</td><td>${sen}</td><td>,</td><td>${1-spe}</td><td>)</td></tr>`).join("") + "</table>";
   }
   let setupCanvas = (e)=>{
     DOMcanvas.width = 320;
@@ -361,6 +373,7 @@ if(typeof document != "undefined"){
   DOMloader.addEventListener("change",readFile);
   DOMselectBinary.addEventListener("change",update_binary_option);
   DOMselectFactor.addEventListener("change",check_factor);
+  DOMnumber.addEventListener("change",check_number);
   DOMrun.addEventListener("click",plot);
   DOMreset.addEventListener("click",reset);
   document.addEventListener('DOMContentLoaded', (e)=>{
