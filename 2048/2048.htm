@@ -16,13 +16,10 @@ body {
     text-align: center;
 }
 #main {
-    width: 264px;
-    height: 264px;
     margin: 0 auto;
     font-size: 28px;
 }
 .row {
-    width: 262px;
     height: 62px;
     margin: 0 auto;
 }
@@ -91,18 +88,32 @@ body {
 <div id="main"></div>
 <div id="footer">SCORE: <span id="score">0</span></div>
 <script>
-var n = 4, s = new square(4,8192), m = document.getElementById("main"), d, d2, item = [];
-for(var y=0; y<n; y++){
-    d = document.createElement("div");
-    d.className = "row";
-    m.appendChild(d);
-    item[y] = [];
-    for(var x=0; x<n; x++){
-        d2 = document.createElement("div");
-        d2.className = "unit";
-        d.appendChild(d2);
-        item[y][x] = d2;
+// setup square
+var n, s, item = [], end = false;
+function setup(v,t){
+    var m = document.getElementById("main");
+    n = v;
+    s = new square(n,t);
+    while(m.childNodes.length){
+        m.removeChild(m.firstChild);
     }
+    for(var y=0; y<n; y++){
+        var d = document.createElement("div");
+        d.className = "row";
+        d.style.width = (66 * n) + "px";
+        m.appendChild(d);
+        item[y] = [];
+        for(var x=0; x<n; x++){
+            var d2 = document.createElement("div");
+            d2.className = "unit";
+            d.appendChild(d2);
+            item[y][x] = d2;
+        }
+    }
+    m.style.width = (66 * n) + "px";
+    m.style.height = (66 * n) + "px";
+    end = false;
+    refresh();
 }
 function refresh(){
     for(var y=0; y<n; y++){
@@ -112,13 +123,29 @@ function refresh(){
         }
     }
     document.getElementById("score").textContent = s.score();
-    if(s.status == "end"){
-        if(confirm("Game End. Play again?")){s.init();refresh();}
-    }else if(s.status == "win"){
-        if(confirm("Congratulations, You achieved the goal. Play again?")){s.init();refresh();}
+    if(!end){
+        if(s.status == "end"){
+            end = true;
+            setTimeout(function(){
+                if(confirm("No Move is available. Play again?")){
+                    s.init();
+                    refresh();
+                }
+            }, 100);
+        }else if(s.status == "win"){
+            end = true;
+            setTimeout(function(){
+                if(confirm("Congratulations, You achieved the goal. Play again?")){
+                    s.init();
+                    refresh();
+                }
+            }, 100);
+        }
     }
 }
-refresh();
+setup(4,8192);
+
+// keyboard control
 function keyMove(e){
     switch(e.keyCode){
     case 38:
@@ -138,6 +165,7 @@ function keyMove(e){
     refresh();
 }
 window.addEventListener("keyup", keyMove, false) ;
+// touch control
 var x, y;
 function startTouch(e){
     if(e.touches){
@@ -205,7 +233,6 @@ window.addEventListener("touchstart", startTouch, false);
 window.addEventListener("touchend", endTouch, false);
 window.addEventListener("touchcancel", endTouch, false);
 window.addEventListener("touchleave", endTouch, false);
-
 </script>
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
