@@ -169,6 +169,7 @@ function stop(){
 function toggle(e){
   e.preventDefault();
   e.stopPropagation();
+  audio.load();
   if(!running){
     start();
   }else{
