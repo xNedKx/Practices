@@ -39,13 +39,13 @@ function analyse(data, col){
   if(!(isFinite(i)&&i>=0&&i<data[0].length)){
     return error("unable to locate the column in the data",null);
   }
-  let min = Infinity, max = -Infinity, sum = 0, se, values = {}, mode, label = data[0][i], size = data.length-1, isn = true
+  let min = Infinity, max = -Infinity, sum = 0, values = {}, label = data[0][i], size = data.length-1, isn = true
   for( let j = 1; j < data.length; j++ ){
     let v = data[j][i];
     if(isn){
       if(isNaN(v)){
         isn = false;
-        min = max = sum = se = NaN;
+        min = max = sum = NaN;
       }else{
         v = +v;
         min = Math.min(min,v);
