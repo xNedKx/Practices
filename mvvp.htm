@@ -133,10 +133,6 @@ let loadVideo = (e) => {
   })
 }
 let videoSetup = ( elm, src ) => {
-  elm.onload = (e) => {
-    // config
-    elm.controls = false
-  }
   try{
     if( src instanceof File || src instanceof Blob ){
       if( !elm.canPlayType(src.type) ){ throw Error() }
@@ -151,7 +147,6 @@ let videoSetup = ( elm, src ) => {
       elm.removeEventListener("play",elm.cts.eventListener.play)
       elm.removeEventListener("pause",elm.cts.eventListener.pause)
       elm.removeEventListener("ratechange",elm.cts.eventListener.ratechange)
-      //elm.removeEventListener("seeking",elm.cts.eventListener.seeking)
     }
     let copy = document.createElement("video")
     copy.src = elm.src
@@ -175,7 +170,7 @@ let videoSetup = ( elm, src ) => {
       },
       audio:{
         rate: NaN,
-        analyser: null, // might need to be lazy to wait for playing
+        analyser: null,
         img: []
       },
       thumbnails: [],
