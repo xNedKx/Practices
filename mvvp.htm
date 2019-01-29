@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="A video file player that displays 30 frame at the same time with sound waves. (It currently has better performance in chrome than in Firefox.)" />
+<meta name="author" content="xNedKx" />
+<meta name="copyright" content="xNedKx" />
+<title>Multiview Video Player</title>
+<style>
+document,body {
+  margin: 0;
+  padding: 0;
+  background-color: #000;
+  overflow-x: hidden;
+}
+#container {
+  width: 100vw;
+  display: flex;
+  background-color: #000;
+  flex-wrap: wrap;
+  overflow: hidden;
+}
+#video {
+  margin: 0 auto;
+  max-width: 100vw;
+  max-height: 80vh;
+  display: none;
+}
+#UI {
+  width: 100vw;
+  min-height: 200px;
+  min-height: 20vh;
+  background-color: #fff3;
+}
+#con {
+  margin: 1px auto;
+  text-align: center;
+}
+#btn {
+  display: inline-block;
+  border: none;
+  background-color: #222;
+  color: #eee;
+  font-weight: bold;
+  padding: 6px 8px;
+  margin: 0 6px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+#btn:hover {
+  background-color: #404040;
+  color: #fff;
+}
+#con label {
+  background-color: #222;
+  color: #ccc;
+  font-size: 0.8em;
+  display: inline-block;
+  padding: 2px 4px 2px 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+#con label:hover {
+  background-color: #404040;
+  color: #ddd;
+}
+#con label input {
+  vertical-align: sub;
+}
+#upload {
+  display: none;
+}
+#thumbs {
+  padding: 0;
+}
+#thumbs canvas {
+  display: block;
+  float: left;
+  margin: 0;
+  padding: 0;
+}
+</style>
+</head>
+<body>
+  <div id="container">
+    <video id="video" controls></video>
+    <div id="UI">
+      <div id="con">
+        <button id="btn">Click to choose video file to play</button>
+        <label><input type="checkbox" id="bg" checked="checked">Thumbnail</label>
+        <label><input type="checkbox" id="spec" checked="checked">Spectrum</label>
+        <label><input type="checkbox" id="wave" checked="checked">Wave</label>
+      </div>
+      <input id="upload" type="file" accept="video/*">
+      <div id="thumbs"></div>
+    </div>
+  </div>
+<script>
+let container = document.getElementById("container")
+let video = document.getElementById("video")
+let UI = document.getElementById("UI")
+let btn = document.getElementById("btn")
+let bg = document.getElementById("bg")
+let spec = document.getElementById("spec")
+let wave = document.getElementById("wave")
+let upload = document.getElementById("upload")
+let thumbs = document.getElementById("thumbs")
+let fly = document.getElementById("fly")
+let loadVideo = (e) => {
+  if(!e.target.files.length){return}
+  btn.blur()
+  upload.blur()
+  return new Promise((s,j) => {
+    if(e.target.files[0] instanceof Blob){
+      try{
+        let fr = new FileReader()
+        fr.addEventListener("load", ev => s(fr.result))
+        fr.readAsArrayBuffer(e.target.files[0])
+      }catch(er){j(er)}
+    }else{
+      j(TypeError("no file selected."))
+    }
+  }).then(buffer => {
+    video.pause()
+    container.removeChild(video)
+    video = document.createElement("video")
+    video.id = "video"
+    video.controls = true
+    container.insertBefore(video,UI)
+    videoSetup( video, e.target.files[0] )
+  })
+}
+let videoSetup = ( elm, src ) => {
+  elm.onload = (e) => {
+    // config
+    elm.controls = false
+  }
+  try{
+    if( src instanceof File || src instanceof Blob ){
+      if( !elm.canPlayType(src.type) ){ throw Error() }
+      elm.src = URL.createObjectURL( src )
+    }else if( src instanceof MediaStream ){
+      elm.srcObject = src
+    }else{
+      let url = new URL(src)
+      elm.src = url
+    }
+    if(elm.cts){
+      elm.removeEventListener("play",elm.cts.eventListener.play)
+      elm.removeEventListener("pause",elm.cts.eventListener.pause)
+      elm.removeEventListener("ratechange",elm.cts.eventListener.ratechange)
+      //elm.removeEventListener("seeking",elm.cts.eventListener.seeking)
+    }
+    let copy = document.createElement("video")
+    copy.src = elm.src
+    copy.muted = true
+    elm.cts = {
+      copy,
+      trace_handle: null,
+      start_perf_time: NaN,
+      start_point: 0,
+      delta_perf_time: 0,
+      trace_count: 0,
+      speed: 1,
+      tick: 1000/30,
+      step: 1000/30/1,
+      last_trace_perf_time: NaN,
+      eventListener: {
+        play: elPlay.bind(elm,elm),
+        pause: elPause.bind(elm,elm),
+        ratechange: elChange.bind(elm,elm),
+        callbacks: [updateThumbnail]
+      },
+      audio:{
+        rate: NaN,
+        analyser: null, // might need to be lazy to wait for playing
+        img: []
+      },
+      thumbnails: [],
+      start_frame: 0,
+      last_frame: 0,
+      delta_frame: 0,
+      cacheSize: 30,
+      cacheLines: 5
+    }
+    while(thumbs.childNodes.length){thumbs.removeChild(thumbs.firstChild)}
+    for( let i = 0; i < elm.cts.cacheSize; i++ ){
+      let canvas = document.createElement("canvas")
+      elm.cts.audio.img.push(canvas)
+    }
+    elm.addEventListener("play",elm.cts.eventListener.play)
+    elm.addEventListener("pause",elm.cts.eventListener.pause)
+    elm.addEventListener("ratechange",elm.cts.eventListener.ratechange)
+    elm.play()
+    return elm
+  }catch(er){
+  }
+  elm.src = ""
+  return null
+}
+function elPlay (elm,e) {
+  elm.cts.start_perf_time = elm.cts.last_trace_perf_time = performance.now()
+  elm.cts.start_point = getCT(elm)
+  elm.cts.trace_count = 0
+  elm.cts.start_frame = elm.cts.last_frame = Math.floor(elm.cts.start_point / elm.cts.tick) * elm.cts.tick
+  elm.cts.delta_frame = 0
+  elm.cts.trace_handle = setTimeout(()=>{trace(elm)}, elm.cts.step - (elm.cts.start_point - elm.cts.start_frame) - elm.cts.delta_perf_time)
+  if(!elm.cts.audio.analyser){
+    elm.cts.audio.analyser = getAudioAnalyser(elm)
+  }
+}
+function elPause (elm,e) {
+  elm.cts.start_perf_time = elm.cts.last_trace_perf_time = NaN
+  elm.cts.start_point = getCT(elm)
+  elm.currentTime = elm.cts.last_frame/1000
+}
+function elChange (elm,e) {
+  let p = elm.paused
+  if(!p){
+    elm.pause()
+  }
+  elm.cts.speed = getSpeed(elm)
+  elm.cts.step = elm.cts.tick / elm.cts.speed
+  if(!p){
+    elm.play()
+  }
+}
+function playPause (elm) {
+  if(elm.paused){
+    elm.play()
+  }else{
+    elm.pause()
+  }
+}
+function trace (elm) {
+  if(elm.paused){return}
+  let perf_time = performance.now()
+  elm.cts.delta_perf_time = ( elm.cts.trace_count * elm.cts.delta_perf_time + perf_time - elm.cts.last_trace_perf_time - elm.cts.step ) / ( elm.cts.trace_count + 1 )
+  elm.cts.trace_count++
+  elm.cts.last_trace_perf_time = perf_time
+  elm.cts.trace_handle = setTimeout( ()=>{ trace(elm) }, elm.cts.step - elm.cts.delta_perf_time )
+  getSnapFrame(elm,true)
+  try{
+    for( let cb of elm.cts.eventListener.callbacks ){
+      cb(elm)
+    }
+  }catch(er){
+    clearTimeout(elm.cts.trace_handle)
+    throw Error(er)
+  }
+}
+function getSnapFrame (elm, update = false) {
+  let t = getCT(elm), f
+  if(elm.paused){
+    f = Math.floor(t / elm.cts.tick) * elm.cts.tick // the frame before current time
+  }else{
+    let c = {}
+    let etl = Math.round((t - elm.cts.start_point)/elm.cts.tick)
+    let ptl = Math.round((elm.cts.last_trace_perf_time - elm.cts.start_perf_time)/elm.cts.step)
+    let ctl = elm.cts.trace_count
+    let fc = Math.round((elm.cts.last_frame - elm.cts.start_frame)/elm.cts.tick)+1
+    c[etl] = (c[etl]||0)+1
+    c[ptl] = (c[ptl]||0)+1
+    c[ctl] = (c[ctl]||0)+1
+    c[fc] = (c[fc]||0)+1
+    f = Object.entries(c).sort(([at,ac],[bt,bc])=>bc-ac||bt-at)[0][0] * elm.cts.tick
+    elm.cts.delta_frame += f - (t - elm.cts.start_point) // frame adjust
+    if(Math.abs(elm.cts.delta_frame/elm.cts.trace_count) > elm.cts.tick/2){
+      f -= Math.floor(elm.cts.delta_frame/elm.cts.trace_count/elm.cts.tick)*elm.cts.tick
+    }else{
+      elm.cts.delta_frame = elm.cts.delta_frame * (ctl - 1)/ctl
+    }
+    f += elm.cts.start_frame
+  }
+  if(update){elm.cts.last_frame = f}
+  return f
+}
+function updateThumbnail (elm) {
+  let c = elm.cts.audio.img[0], x = c.getContext("2d")
+  let t = new Date(elm.currentTime*1000)
+  let t2 = new Date(elm.cts.last_frame)
+  c.title = ("0"+t.getUTCHours()).slice(-2)+":"+("0"+t.getUTCMinutes()).slice(-2)+":"+("0"+t.getSeconds()).slice(-2)+"."+("00"+t.getMilliseconds()).slice(-3) + " =?> " + ("0"+t2.getUTCHours()).slice(-2)+":"+("0"+t2.getUTCMinutes()).slice(-2)+":"+("0"+t2.getSeconds()).slice(-2)+"."+("00"+t2.getMilliseconds()).slice(-3)
+  let w = elm.videoWidth, h = elm.videoHeight, q = Math.min(Math.floor(w*h/1e5),3)
+  let analyser = elm.cts.audio.analyser
+  c.height = h
+  c.width = w
+  if(bg.checked){
+    x.drawImage(elm,0,0,w,h,0,0,w,h)
+  }else{
+    x.fillStyle = "#0000"
+    x.fillRect(0,0,w,h)
+  }
+  if(spec.checked){
+    let l = Math.round(analyser.frequencyBinCount*44100/elm.cts.audio.rate), data = new Uint8Array(l), sw = w/l
+    // band = rate/fftsize
+    analyser.getByteFrequencyData(data)
+    x.fillStyle = "#9999"
+    // vocal ~ 86-1046
+    for( let i = 0; i< l; i++ ){
+      let v = data[i] / 256
+      x.fillRect(i*sw,(1-v)*h,sw,v*h)
+    }
+  }
+  if(wave.checked){
+    let l2 = Math.round(elm.cts.audio.rate * elm.cts.step / 1000), data2 = new Uint8Array(l2), sw2 = w/l2
+    analyser.getByteTimeDomainData(data2)
+    x.strokeStyle = "#FFFF"
+    x.lineWidth = q+2
+    x.beginPath()
+    x.moveTo(0,data2[0] / 128 * h / 2)
+    for( let i = 1; i< l2; i++ ){
+      let v = data2[i] / 128
+      x.lineTo(i*sw2,v*h/2)
+    }
+    x.stroke();
+    x.strokeStyle = "#999F"
+    x.lineWidth = q
+    x.beginPath()
+    x.moveTo(0,data2[0] / 128 * h / 2)
+    for( let i = 1; i< l2; i++ ){
+      let v = data2[i] / 128
+      x.lineTo(i*sw2,v*h/2)
+    }
+    x.stroke();
+  }
+  elm.cts.audio.img = elm.cts.audio.img.slice(1).concat(elm.cts.audio.img[0])
+  appendDemo(thumbs,elm)
+  return elm
+}
+function appendDemo (target,elm) {
+  elm.cts.audio.img.forEach(d=>{
+    d.style.width = 100 / elm.cts.cacheSize * elm.cts.cacheLines + "vw"
+    d.style.height = "auto"
+    target.appendChild(d)
+  })
+}
+function getCT (elm) {
+  return Math.round(elm.currentTime*1000) // in ms
+}
+function getAudioAnalyser (elm) {
+  if(!elm){throw Error()}
+  let audio = new AudioContext()
+  let analyser = audio.createAnalyser()
+  let source = audio.createMediaElementSource(elm)
+  source.connect(analyser)
+  analyser.connect(audio.destination)
+  // FFT size: ~ bit rate * tick(ms) / 1000
+  elm.cts.audio.rate = audio.sampleRate
+  analyser.fftSize = Math.pow(2,Math.ceil(Math.log2(audio.sampleRate * elm.cts.tick / 1000))+2)
+  return analyser
+}
+upload.addEventListener( "change", loadVideo )
+btn.addEventListener("click",e=>{
+  upload.click()
+})
+window.addEventListener("keydown",function(e){
+  if(e.key == " "){
+    e.preventDefault()
+    e.stopPropagation()
+    playPause(video)
+  }
+})
+window.addEventListener("mousedown", function(e){
+  if(e.target == bg||e.target == spec || e.target == wave || e.target == btn|| e.target.querySelectorAll("input").length){
+    return
+  }
+  if(video.hasOwnProperty("cts")){
+    playPause(video)
+  }
+})
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-78696465-1', 'auto');
+  ga('send', 'pageview');
+</script>
+</body>
+</html>
