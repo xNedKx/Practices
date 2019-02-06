@@ -1091,7 +1091,7 @@ window.addEventListener("DOMContentLoaded", function(){
   
   var scrolling = false;
   function scrollDown(){
-    document.body.scrollTop = config.offsetTop;
+    document.documentElement.scrollTop = configForm.offsetTop + configForm.offsetHeight - document.body.offsetHeight;
     if(scrolling){
       requestAnimationFrame(scrollDown);
     }
