@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="CAN'T STOP Statistics - Calculate the probability in the table game." />
+<meta name="author" content="xNedKx" />
+<meta name="copyright" content="xNedKx" />
+<link href="https://fonts.googleapis.com/css?family=Bitter" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script src="./cantstopprob.js"></script>
+<title>CAN'T STOP Statistics</title>
+<style>
+body,document {
+  margin: 0;
+  font-family: Bitter, serif;
+  text-align: center;
+  background-color: #333;
+}
+#header {
+  padding: 0.5em 0;
+  font-size: 1.5em;
+  margin: 0 auto;
+  color: #aaa;
+  background-color: #333;
+  display: block;
+  font-weight: bold;
+}
+#container {
+  margin: 0 auto;
+  background-color: #ddd;
+}
+#inputs {
+  width: 32em;
+  margin: 0 auto;
+}
+#inputs input {
+  width: 2em;
+  font-weight: bold;
+  text-align: center;
+  border: 1px solid #3333;
+  background-color: #fcfcfc;
+}
+#boxholder {
+  height: 30px;
+  width: 330px;
+  margin: 0.25em auto;
+}
+.box {
+  float: left;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #3333;
+  position: relative;
+}
+.boxlabel {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  border-radius: 1px;
+  background-color: #eeea;
+}
+.boxlabel.checked {
+  font-weight: bold;
+  background-color: #ccca;
+}
+.boxlabel > span {
+  display: block;
+  margin: 0 auto;
+  text-align: center;
+  font-size: 18px;
+  line-height: 28px;
+}
+.boxlabel > input[type="checkbox"] {
+  display: none;
+}
+textarea {
+  display: block;
+  margin: 0.25em auto 0.5em;
+  text-align: center;
+  resize: none;
+  border: none;
+  background-color: #fcfcfc;
+}
+.title {
+  padding: 0.25em 0;
+  margin: 0 auto;
+  font-weight: bold;
+  color: #333;
+}
+#footer {
+  padding: 0.5em;
+  margin: 0 auto;
+  font-size: 0.5em;
+  font-weight: 400;
+  color: #aaa;
+  background-color: #333;
+}
+</style>
+</head>
+<body>
+<div id="header">
+  CAN'T STOP Statistics
+</div>
+<div id="container">
+  <div id="inputs">
+    <div class="title">Choose up to 3 numbers(2~12) to get the statistic.</div>
+    <label><input id="n1" v-model="n1" maxlength="2" autofocus></label>
+    <label><input id="n2" v-model="n2" maxlength="2"></label>
+    <label><input id="n3" v-model="n3" maxlength="2"></label>
+  </div>
+  <div>
+    <textarea id="info" :value="chances" rows="7" cols="41"></textarea>
+  </div>
+  <div class="title">
+    Choose finished numbers to get the statistic.
+  </div>
+  <div id="boxholder">
+    <div v-for="e in es" :key="e.n" class="box">
+      <label class="boxlabel" :class="{checked:e.checked}">
+        <span>{{e.n}}</span>
+        <input type="checkbox" v-model="e.checked" >
+      </label>
+    </div>
+  </div>
+  <div>
+    <textarea id="burst" :value="burst" rows="1" cols="41"></textarea>
+  </div>
+  <div id="footer">Calculated By xNedKx</div>
+</div>
+<script>
+/*(()=>{
+  document.addEventListener("DOMContentLoaded", function(){*/
+    function p(s,l,r){
+      s = s.toString()
+      let p = s.indexOf("."), ll, rl
+      if(p == -1){
+        ll = s.length
+        rl = -1
+      }else{
+        ll = p
+        rl = s.length - p - 1
+      }
+      if( rl > r ){
+        s = (Math.round(+s*Math.pow(10,r))/Math.pow(10,r)).toString()
+        while(s.length < l + r + 1){
+          s += "0"
+        }
+      }else if(rl < 0){
+        for( let i = 0; i < r - rl; i++ ){
+          s += " "
+        }
+      }else{
+        for( let i = 0; i < r - rl; i++ ){
+          s += "0"
+        }
+      }
+      for( let i = 0; i < l-ll; i++ ){
+        s = " " + s
+      }
+      return s
+    }
+    function padL(s,n){
+      s = s.toString()
+      while(s.length < n){
+        s = " " + s
+      }
+      return s
+    }
+    let container = new Vue({
+      el: "#container",
+      data: {
+        n1: "",
+        n2: "",
+        n3: "",
+        es: [
+          {n: 2, checked: false},
+          {n: 3, checked: false},
+          {n: 4, checked: false},
+          {n: 5, checked: false},
+          {n: 6, checked: false},
+          {n: 7, checked: false},
+          {n: 8, checked: false},
+          {n: 9, checked: false},
+          {n: 10, checked: false},
+          {n: 11, checked: false},
+          {n: 12, checked: false}
+        ]
+      },
+      computed: {
+        chances: function(){
+          let ns = new Set(), a, b, c, n1, n2, n3, output = ""
+          if(isFinite(this.n1) && this.n1 > 1 && this.n1 < 13){
+            n1 = Math.floor(+this.n1)
+            ns.add(n1)
+          }
+          if(isFinite(this.n2) && this.n2 > 1 && this.n2 < 13){
+            n2 = Math.floor(+this.n2)
+            ns.add(n2)
+          }
+          if(isFinite(this.n3) && this.n3 > 1 && this.n3 < 13){
+            n3 = Math.floor(+this.n3)
+            ns.add(n3)
+          }
+          [a=Infinity,b=Infinity,c=Infinity] = [...ns].sort((a,b)=>a-b)
+          switch(ns.size){
+          case 3:
+            h = a.toString()+"|"+b.toString()+"|"+c.toString()
+            output += padL("["+h+"]",10) + "  "
+            output += "P: " + p(probs.d3[h].p,1,7) + "  "
+            output += "E: " + p(probs.d3[h].e,2,6) + "\n"
+            h = a.toString()+"|"+b.toString()
+            output += padL("["+h+"]",10) + "  "
+            output += "P: " + p(probs.d2[h].p,1,7) + "  "
+            output += "E: " + p(probs.d2[h].e,2,6) + "\n"
+            h = a.toString()+"|"+c.toString()
+            output += padL("["+h+"]",10) + "  "
+            output += "P: " + p(probs.d2[h].p,1,7) + "  "
+            output += "E: " + p(probs.d2[h].e,2,6) + "\n"
+            h = b.toString()+"|"+c.toString()
+            output += padL("["+h+"]",10) + "  "
+            output += "P: " + p(probs.d2[h].p,1,7) + "  "
+            output += "E: " + p(probs.d2[h].e,2,6) + "\n"
+            h = a.toString()
+            output += padL("["+h+"]",10) + "  "
+            output += "P: " + p(probs.d1[h].p,1,7) + "  "
+            output += "E: " + p(probs.d1[h].e,2,6) + "\n"
+            h = b.toString()
+            output += padL("["+h+"]",10) + "  "
+            output += "P: " + p(probs.d1[h].p,1,7) + "  "
+            output += "E: " + p(probs.d1[h].e,2,6) + "\n"
+            h = c.toString()
+            output += padL("["+h+"]",10) + "  "
+            output += "P: " + p(probs.d1[h].p,1,7) + "  "
+            output += "E: " + p(probs.d1[h].e,2,6)
+          break
+          case 2:
+            h = a.toString()+"|"+b.toString()
+            output += padL("["+h+"]",10) + "  "
+            output += "P: " + p(probs.d2[h].p,1,7) + "  "
+            output += "E: " + p(probs.d2[h].e,2,6) + "\n"
+            h = a.toString()
+            output += padL("["+h+"]",10) + "  "
+            output += "P: " + p(probs.d1[h].p,1,7) + "  "
+            output += "E: " + p(probs.d1[h].e,2,6) + "\n"
+            h = b.toString()
+            output += padL("["+h+"]",10) + "  "
+            output += "P: " + p(probs.d1[h].p,1,7) + "  "
+            output += "E: " + p(probs.d1[h].e,2,6)
+          break
+          case 1:
+            h = a.toString()
+            output += padL("["+h+"]",10) + "  "
+            output += "P: " + p(probs.d1[h].p,1,7) + "  "
+            output += "E: " + p(probs.d1[h].e,2,6)
+          break
+          case 0:
+          default:
+          }
+          return output
+        },
+        burst: function(){
+          let es = []
+          for( let i = 2; i < 13; i++ ){
+            if(this.es[i-2].checked){
+              es.push(i)
+            }
+          }
+          return "STOP CHANCE: " + p(probs.stops[es.length][es.join(",")].w / probs.pairs.wsum,1,7)
+        }
+      },
+      methods: {
+        update: function(){
+          this.$forceUpdate()
+        }
+      }
+    })
+/*  });
+})();*/
+</script>
+</body>
+</html>
