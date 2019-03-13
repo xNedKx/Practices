@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="方劑組成資料庫" />
+<meta name="author" content="xNedKx" />
+<meta name="copyright" content="xNedKx" />
+<meta name="keyword" content="中藥,方劑,資料庫" />
+<meta property="og:title" content="TCM 方劑組成資料庫" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://xnedkx.github.io/Practices/tcm-med-db.htm" />
+<title>TCM 方劑組成資料庫</title>
+<style>
+body,document{
+  margin: 0;
+  text-align: center;
+  transition: all 0.2s ease;
+  color: #060606;
+  background-color: #fdfdfd;
+  overflow-x: hidden;
+  font-size: 16px;
+  font-family: "微軟正黑體", sans-serif;
+}
+#head {
+  position: fixed;
+  z-index: 200;
+  pointer-events: none;
+  text-align: left;
+  color: #fffa;
+  font-size: 10px;
+  top: 0px;
+  left: 0px;
+}
+#main {
+  padding: 4px 0 6px;
+  width: 100vw;
+  color: #000;
+  background-color: #999;
+  height: 27px;
+  position: fixed;
+  top: 0;
+  z-index: 100;
+}
+#main label {
+  font-size: 13px;
+  display: inline-block;
+}
+#order {
+  padding: 1px 0;
+  height: 23px;
+  vertical-align: middle;
+}
+#search {
+  height: 17px;
+  vertical-align: middle;
+}
+#main button {
+  height: 25px;
+  vertical-align: middle;
+}
+#toggle {
+  cursor: pointer;
+}
+#toggle:hover {
+  color: #ccc;
+}
+#add {
+  display: none;
+  height: 0;
+  width: 100vw;
+  padding: 2px 0;
+  color: #000;
+  background-color: #eee;
+  border-bottom: solid 1px #666;
+  position: fixed;
+  top: 37px;
+  z-index: 50;
+}
+#add.show {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+}
+#add label {
+  display: flex;
+  width: 100vw;
+  margin: 2px 0;
+  padding: 0 1em;
+  box-sizing: border-box;
+  font-size: 13px;
+  line-height: 26px;
+}
+#add input, #add textarea {
+  flex: 1;
+  font-size: 13px;
+}
+#add input {
+  height: 20px;
+  padding-left: 2px;
+}
+#add #comb {
+  resize: none;
+  vertical-align: middle;
+  padding: 2px 1px 2px 2px;
+  height: 50px;
+}
+#addBtn {
+  margin: 0 auto;
+  width: 100%;
+}
+#list {
+  list-style: none outside;
+  padding: 0;
+  margin: 37px auto 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.data:first-of-type {
+  margin-top: 0;
+}
+.data {
+  margin: 4px auto 5px;
+  padding: 4px 0 5px;
+  background-color: #eee;
+  box-shadow: 0 0 3px #ddd;
+}
+.title {
+  font-weight: bold;
+  background-color: #fdfdfd;
+  border-color: #ccc;
+  border-style: solid;
+  border-width: 1px 0;
+}
+.title span {
+  display: inline-block;
+}
+.title .origin::before{
+  content: "〈";
+}
+.title .origin::after{
+  content: "〉";
+}
+.type {
+  font-size: 13px;
+  color: #777;
+  padding: 4px 0;
+}
+.comb {
+  padding: 8px 0;
+  background-color: #fdfdfd;
+  border-color: #ddd;
+  border-style: solid;
+  border-width: 1px 0;
+}
+.comb .herb {
+  border-radius: 1px;
+  padding: 1px 6px 2px;
+  margin: 1px 1px;
+  display: inline-block;
+}
+.matches {
+  color: #333;
+  padding: 4px 0 0;
+  font-size: 12px;
+  color: #333;
+}
+.match {
+  background-color: #fcc;
+}
+.hide {
+  display: none;
+}
+</style>
+</head>
+<body>
+<div id="head">方劑組成資料庫</div>
+<!-- search -->
+<form id="main">
+  <label>排序：<select id="order">
+    <option value="name" selected>方名</option>
+    <option value="type">分類</option>
+    <option value="origin">出處</option>
+    <option value="match">符合度</option>
+    <option value="match_herb">符合量</option>
+  </select></label>
+  <label><input id="search" title="空白分隔要搜尋的項目。用 [ 與 ] 可搜尋方名、 < 與 > 可搜尋出處、 ( 與 ) 可搜尋分類。"></label>
+  <label><button id="submit">搜尋</button></label>
+  <label><button id="clear">清除</button></label>
+  <label><a id="toggle">新增方劑</a></label>
+</form>
+<!-- add -->
+<form id="add">
+  <label>方名：<input id="name" placeholder="方劑名稱(必要項目)"></label>
+  <label>分類：<input id="type" placeholder="方劑類別"></label>
+  <label>出處：<input id="origin" placeholder="方劑出處"></label>
+  <label>組成：<textarea id="comb" placeholder="藥物組成(必要項目)，請使用空白、換行與逗號分隔各項組成。"></textarea></label>
+  <label><button id="addBtn">新增方劑</button></label>
+</form>
+<!-- list -->
+<ul id="list"><li>項目載入中...</li></ul>
+<script src="https://www.gstatic.com/firebasejs/5.8.6/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.8.6/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.8.6/firebase-database.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyCQwmmEMXBCdMEAkrwiyNVjtITqw9KKyB0",
+    authDomain: "tryout-5be99.firebaseapp.com",
+    databaseURL: "https://tryout-5be99.firebaseio.com",
+    projectId: "tryout-5be99",
+    storageBucket: "tryout-5be99.appspot.com",
+    messagingSenderId: "491834122190"
+  };
+  firebase.initializeApp(config);
+</script>
+<script>
+let main_form = document.getElementById("main");
+let order_input = document.getElementById("order");
+let search_input = document.getElementById("search");
+let submit_button = document.getElementById("submit");
+let clear_button = document.getElementById("clear");
+let toggle_add = document.getElementById("toggle");
+let add_div = document.getElementById("add");
+let list = document.getElementById("list");
+let name_input = document.getElementById("name");
+let type_input = document.getElementById("type");
+let comb_input = document.getElementById("comb");
+let origin_input = document.getElementById("origin");
+let add_button = document.getElementById("addBtn");
+class Data{
+  constructor (name="",type="",comb="",origin=""){
+    this.name = name;
+    this.type = type;
+    this.comb = comb.split(/[\s,;、，；。]/u).filter(d=>d).sort((a,b)=>a.localeCompare(b,"zh-tw"));
+    this.origin = origin;
+    this.time = +new Date();
+    this.uid = firebase.auth().currentUser.uid;
+    this.like = 0;
+    this.hide = 0;
+  }
+}
+firebase.auth().signInAnonymously();
+firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+let dbRef = firebase.database().ref("db");
+let db = [], data = new Map(), hidden = [];
+/*dbRef.once("value").then(r=>{
+  let kdb = r.val()||{};
+  for( let [k,d] of Object.entries(kdb) ){
+    d.key = k;
+    let n = `${d.name}\n${d.origin}`;
+    let dn = data.get(n);
+    if(!dn){
+      dn = [];
+      data.set(n,dn);
+    }
+    dn.push(d);
+    dn.sort((a,b)=>b.time-a.time);
+  }
+  for( let [n,ds] of data ){
+    ds[0].elm = elm(ds[0]);
+    db.push(ds[0]);
+  }
+  console.log("value",kdb);
+  refresh();
+});*/
+dbRef.on("child_added",r=>{
+  let d = r.val();
+  d.key = r.key;
+  let n = `${d.name}\n${d.origin}`;
+  let dn = data.get(d.name);
+  if(!dn){
+    dn = [];
+    data.set(n,dn);
+  }
+  dn.push(d);
+  dn.sort((a,b)=>b.time-a.time);
+  if(dn[0] == d){
+    for( let i in db ){
+      if(`${db[i].name}\n${db[i].origin}` == n){
+        db.splice(i,1);
+        break;
+      }
+    }
+    d.elm = elm(d);
+    db.push(d);
+  }
+  //console.log("data added:",d);
+  refresh();
+});
+dbRef.on("child_changed",r=>{
+  let d = r.val();
+  d.key = r.key;
+  let n = `${d.name}\n${d.origin}`;
+  let dn = data.get(d.name);
+  for( let i in dn ){
+    if(dn[i].key == d.key){
+      dn.splice(i,1,d);
+      if(i == 0){
+        for( let j in db ){
+          if(db[j].key == d.key){
+            db.splice(i,1,d);
+            if(dn.length){
+              dn[0].elm = elm(dn[0]);
+              db.push(dn[0]);
+            }
+          }
+          break
+        }
+      }
+      break;
+    }
+  }
+  //console.log("data changed:",d);
+  refresh();
+});
+dbRef.on("child_removed",r=>{
+  let d = r.val();
+  d.key = r.key;
+  let n = `${d.name}\n${d.origin}`;
+  let dn = data.get(d.name);
+  for( let i in dn ){
+    if(dn[i].key == d.key){
+      dn.splice(i,1);
+      if(i == 0){
+        for( let j in db ){
+          if(db[j].key == d.key){
+            db.splice(i,1);
+            if(dn.length){
+              dn[0].elm = elm(dn[0]);
+              db.push(dn[0]);
+            }
+          }
+          break;
+        }
+      }
+      break;
+    }
+  }
+  //console.log("data removed:",d);
+  refresh();
+});
+function add(e){
+  e.preventDefault();
+  add_button.removeEventListener("click",add);
+  if(name_input.value && comb_input.value){
+    update( new Data( name_input.value, type_input.value, comb_input.value, origin_input.value ) ).then(r=>{
+      add_button.addEventListener("click",add);
+      name_input.value = "";
+      type_input.value = "";
+      comb_input.value = "";
+      origin_input.value = "";
+      toggle();
+    });
+  }else{
+    add_button.addEventListener("click",add);
+  }
+}
+function update(data){
+  if(data){
+    let dbPush = dbRef.push();
+    return dbPush.set(data);
+  }else{
+    return Promise.resolve();
+  }
+}
+function sort(){
+  //console.log("sort data");
+  let sk = order_input.value;
+  for( let d of db ){
+    d.mh = d.mh || [];
+    d.match = d.match || 0;
+  }
+  switch(sk){
+  default:
+  case "name":
+    db.sort((a,b)=>a.name.localeCompare(b.name,"zh-tw")||a.type.localeCompare(b.type,"zh-tw")||b.match-a.match||b.mh.length-a.mh.length);
+  break;
+  case "type":
+    db.sort((a,b)=>a.type.localeCompare(b.type,"zh-tw")||a.name.localeCompare(b.name,"zh-tw")||b.match-a.match||b.mh.length-a.mh.length);
+  break;
+  case "origin":
+    db.sort((a,b)=>a.origin.localeCompare(b.origin,"zh-tw")||a.type.localeCompare(b.type,"zh-tw")||a.name.localeCompare(b.name,"zh-tw")||b.match-a.match||b.mh.length-a.mh.length);
+  break;
+  case "match":
+    db.sort((a,b)=>b.match-a.match||b.mh.length-a.mh.length||a.name.localeCompare(b.name,"zh-tw")||a.type.localeCompare(b.type,"zh-tw"));
+  break;
+  case "match_herb":
+    db.sort((a,b)=>b.mh.length-a.mh.length||a.comb.length-b.comb.length||a.name.localeCompare(b.name,"zh-tw")||a.type.localeCompare(b.type,"zh-tw"));
+  break;
+  }
+}
+function refresh(){
+  find(kw);
+  sort();
+  while(list.childNodes.length){
+    list.removeChild(list.firstChild);
+  }
+  for(let d of db ){
+    list.appendChild(d.elm);
+  }
+}
+function elm(d){
+  let dom = document.createElement("li");
+  let title = document.createElement("div");
+  let name = document.createElement("span");
+  let origin = document.createElement("span");
+  let type = document.createElement("div");
+  let comb = document.createElement("div");
+  let matches = document.createElement("div");
+  dom.classList.add("data");
+  title.classList.add("title");
+  name.classList.add("name");
+  type.classList.add("type");
+  comb.classList.add("comb");
+  origin.classList.add("origin");
+  matches.classList.add("matches");
+  name.innerText = d.name;
+  type.innerText = d.type;
+  origin.innerText = d.origin;
+  matches.innerText = `(0%) 0 / ${(d.comb||[]).length}`;
+  dom.appendChild(title);
+  title.appendChild(name);
+  title.appendChild(document.createTextNode(" "));
+  title.appendChild(origin);
+  dom.appendChild(type);
+  dom.appendChild(comb);
+  for( let herb of d.comb ){
+    let h = document.createElement("span");
+    h.classList.add("herb");
+    h.innerText = herb;
+    h.dataset.herb = herb;
+    comb.appendChild(h);
+    comb.appendChild(document.createTextNode(" "));
+  }
+  dom.appendChild(matches);
+  return dom;
+}
+function toggle(e){
+  e&&e.preventDefault();
+  if(add_div.classList.contains("show")){
+    add_div.classList.remove("show");
+    toggle_add.innerText = "新增方劑";
+  }else{
+    add_div.classList.add("show");
+    toggle_add.innerText = "新增方劑(關閉)";
+  }
+}
+let kw = "";
+function search(e){
+  e.preventDefault();
+  kw = search_input.value;
+  refresh();
+}
+function find(w){
+  //console.log(`find: ${kw}`);
+  let str = w;
+  let name = str.match(/\[(.*?)\]/ug);
+  let type = str.match(/\((.*?)\)/ug);
+  let origin = str.match(/<(.*?)>/ug);
+  if(name){
+    str = str.replace(/\[(.*?)\]/ug,"");
+  }
+  if(type){
+    str = str.replace(/\((.*?)\)/ug,"");
+  }
+  if(origin){
+    str = str.replace(/<(.*?)>/ug,"");
+  }
+  let comb = str.split(/[\s,;、，；。]+/u).filter(d=>d).sort((a,b)=>a.localeCompare(b,"zh-tw"));
+  let ms = document.querySelectorAll(".match");
+  for( let m of ms ){
+    m.classList.remove("match");
+  }
+  for( let d of db ){
+    d.mn = 0;
+    d.mt = 0;
+    d.mo = 0;
+    d.mh = [];
+    d.match = 0;
+    for( let n of name||[] ){
+      if(d.name.match(n)){
+        d.mn = 1;
+        d.elm.querySelector(".name").classList.add("match");
+      }
+    }
+    for( let t of type||[] ){
+      if(d.type.match(t)){
+        d.mt = 1;
+        d.elm.querySelector(".type").classList.add("match");
+      }
+    }
+    for( let o of origin||[] ){
+      if(!d.origin.match(o)){
+        d.mo = 1;
+        d.elm.querySelector(".origin").classList.add("match");
+      }
+    }
+    for( let c of comb||[] ){
+      for( let b of d.comb ){
+        if(b.match(c)){
+          d.mh.push(b);
+          d.elm.querySelector(`.herb[data-herb="${b}"]`).classList.add("match");
+        }
+      }
+    }
+    d.match = d.mh.length / d.comb.length;
+    d.elm.querySelector(".matches").innerText = `(${Math.round(d.match*10000)/100}%) ${d.mh.length} / ${d.comb.length}`;
+    if(w && !(d.match||d.mn||d.mt||d.mo)){
+      d.elm.classList.add("hide");
+    }else{
+      d.elm.classList.remove("hide");
+    }
+  }
+  return db;
+}
+function clear(e){
+  search_input.value = "";
+  name_input.value = "";
+  type_input.value = "";
+  comb_input.value = "";
+  origin_input.value = "";
+  kw = "";
+  refresh();
+}
+main_form.addEventListener("submit",search);
+submit_button.addEventListener("click",search);
+order_input.addEventListener("change",refresh);
+clear_button.addEventListener("click",clear);
+toggle_add.addEventListener("click",toggle);
+add_button.addEventListener("click",add);
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-78696465-1', 'auto');
+  ga('send', 'pageview');
+</script>
+</body>
+</html>
