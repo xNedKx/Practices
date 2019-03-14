@@ -30,8 +30,8 @@ body{
   padding: 4px 0 6px;
   width: 100vw;
   color: #000;
-  background-color: #999;
-  height: 27px;
+  background-color: #e6e6e6;
+  height: 48px;
   position: fixed;
   top: 0;
   z-index: 100;
@@ -41,16 +41,6 @@ body{
   font-size: 13px;
   display: inline-block;
 }
-#head {
-  position: absolute;
-  z-index: 200;
-  pointer-events: none;
-  text-align: left;
-  color: #fffa;
-  font-size: 10px;
-  top: 0px;
-  left: 0px;
-}
 #order {
   padding: 1px 0;
   height: 23px;
@@ -58,8 +48,9 @@ body{
 }
 #search {
   height: 17px;
-  width: 166px;
+  width: 210px;
   vertical-align: middle;
+  text-indent:2px;
 }
 #main button {
   height: 25px;
@@ -69,7 +60,7 @@ body{
   cursor: pointer;
 }
 #toggle:hover {
-  color: #ccc;
+  color: #999;
 }
 #add {
   display: none;
@@ -81,7 +72,7 @@ body{
   background-color: #eee;
   border-bottom: solid 1px #666;
   position: fixed;
-  top: 37px;
+  top: 58px;
   z-index: 50;
 }
 #add.show {
@@ -120,7 +111,7 @@ body{
 #list {
   list-style: none outside;
   padding: 0;
-  margin: 37px auto 0;
+  margin: 58px auto 0;
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -129,19 +120,30 @@ body{
 }
 .data {
   margin: 4px auto 5px;
-  padding: 4px 0 5px;
-  background-color: #eee;
-  box-shadow: 0 0 3px #ddd;
+  background-color: #ddd;
+  box-shadow: 0 0 3px #aaa;
 }
 .title {
-  font-weight: bold;
+  font-size: 16px;
   background-color: #fdfdfd;
-  border-color: #ccc;
-  border-style: solid;
-  border-width: 1px 0;
+  min-height: 21px;
+  line-height: 21px;
+  padding: 2px 0;
+  margin: 2px 0;
 }
 .title span {
   display: inline-block;
+  height: 21px;
+  vertical-align: bottom;
+}
+.matches {
+  font-size: 10px;
+  color: #999;
+  float: left;
+  padding: 0 4px;
+}
+.title .name, .title .origin {
+  font-weight: bold;
 }
 .title .origin::before{
   content: "〈";
@@ -150,16 +152,14 @@ body{
   content: "〉";
 }
 .type {
-  font-size: 13px;
-  color: #777;
-  padding: 4px 0;
+  color: #666;
+}
+.title .type::before, .title .type::after {
+  content: "-";
 }
 .comb {
   padding: 8px 0;
   background-color: #fdfdfd;
-  border-color: #ddd;
-  border-style: solid;
-  border-width: 1px 0;
 }
 .comb .herb {
   border-radius: 1px;
@@ -167,14 +167,12 @@ body{
   margin: 1px 1px;
   display: inline-block;
 }
-.matches {
-  color: #333;
-  padding: 4px 0 0;
-  font-size: 12px;
-  color: #333;
+.find .comb {
+  color: #aaa;
 }
 .match {
   background-color: #fcc;
+  color: #060606;
 }
 .hide {
   display: none;
@@ -183,27 +181,8 @@ body{
   display: none;
 }
 @media only screen and (max-width: 480px) {
-  #main {
-    height: 48px;
-  }
-  #head {
-    top: 34px;
-    right: 8px;
-    left: initial;
-  }
   #toggle:hover {
     color: inherit;
-  }
-  #add {
-    top: 58px;
-  }
-  #list {
-    margin: 58px auto 0;
-  }
-}
-@media only screen and (max-width: 360px) {
-  .mobile {
-    display: initial;
   }
 }
 </style>
@@ -211,7 +190,10 @@ body{
 <body>
 <!-- search -->
 <form id="main">
-  <div id="head">方劑組成資料庫</div>
+  <label><input id="search" placeholder="在此搜尋方劑組成資料庫" title="空白分隔要搜尋的項目。用 [ 與 ] 可搜尋方名、 < 與 > 可搜尋出處、 ( 與 ) 可搜尋分類。"></label>
+  <label><button id="submit">搜尋</button></label>
+  <label><button id="clear">清除</button></label>
+  <br>
   <label>排序：<select id="order">
     <option value="name" selected>方名</option>
     <option value="type">分類</option>
@@ -219,9 +201,6 @@ body{
     <option value="match">符合度</option>
     <option value="match_herb">符合量</option>
   </select></label>
-  <label><input id="search" title="空白分隔要搜尋的項目。用 [ 與 ] 可搜尋方名、 < 與 > 可搜尋出處、 ( 與 ) 可搜尋分類。"></label><br class="mobile">
-  <label><button id="submit">搜尋</button></label>
-  <label><button id="clear">清除</button></label>
   <label><a id="toggle">新增方劑</a></label>
 </form>
 <!-- add -->
@@ -393,8 +372,12 @@ function add(e){
 }
 function update(data){
   if(data){
-    let dbPush = dbRef.push();
-    return dbPush.set(data);
+    if(data.key){
+      return deRef.update({[data.key]:data});
+    }else{
+      let dbPush = dbRef.push();
+      return dbPush.set(data);
+    }
   }else{
     return Promise.resolve();
   }
@@ -440,9 +423,9 @@ function elm(d){
   let title = document.createElement("div");
   let name = document.createElement("span");
   let origin = document.createElement("span");
-  let type = document.createElement("div");
+  let type = document.createElement("span");
   let comb = document.createElement("div");
-  let matches = document.createElement("div");
+  let matches = document.createElement("span");
   dom.classList.add("data");
   title.classList.add("title");
   name.classList.add("name");
@@ -453,12 +436,15 @@ function elm(d){
   name.innerText = d.name;
   type.innerText = d.type;
   origin.innerText = d.origin;
-  matches.innerText = `(0%) 0 / ${(d.comb||[]).length}`;
+  matches.innerText = `0 / ${(d.comb||[]).length} (0%)`;
   dom.appendChild(title);
+  title.appendChild(matches);
+  title.appendChild(document.createTextNode(" "));
   title.appendChild(name);
   title.appendChild(document.createTextNode(" "));
   title.appendChild(origin);
-  dom.appendChild(type);
+  title.appendChild(document.createTextNode(" "));
+  title.appendChild(type);
   dom.appendChild(comb);
   for( let herb of d.comb ){
     let h = document.createElement("span");
@@ -468,7 +454,6 @@ function elm(d){
     comb.appendChild(h);
     comb.appendChild(document.createTextNode(" "));
   }
-  dom.appendChild(matches);
   return dom;
 }
 function toggle(e){
@@ -490,8 +475,13 @@ function search(e){
 function escape(str){
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
-function find(w){
+function find(w=""){
   //console.log(`find: ${kw}`);
+  if(w){
+    list.classList.add("find");
+  }else{
+    list.classList.remove("find");
+  }
   let str = w;
   let name = str.match(/\[(.*?)\]/ug);
   let type = str.match(/\((.*?)\)/ug);
@@ -543,7 +533,7 @@ function find(w){
       }
     }
     d.match = d.mh.length / d.comb.length;
-    d.elm.querySelector(".matches").innerText = `(${Math.round(d.match*10000)/100}%) ${d.mh.length} / ${d.comb.length}`;
+    d.elm.querySelector(".matches").innerText = `${d.mh.length} / ${d.comb.length} (${Math.round(d.match*100)}%)`;
     if(w && !(d.match||d.mn||d.mt||d.mo)){
       d.elm.classList.add("hide");
     }else{
