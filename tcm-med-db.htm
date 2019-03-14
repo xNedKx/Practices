@@ -383,7 +383,7 @@ function sort(){
     db.sort((a,b)=>a.origin.localeCompare(b.origin,"zh-tw")||a.type.localeCompare(b.type,"zh-tw")||a.name.localeCompare(b.name,"zh-tw")||b.match-a.match||b.mh.length-a.mh.length);
   break;
   case "match":
-    db.sort((a,b)=>b.match-a.match||b.mh.length-a.mh.length||a.name.localeCompare(b.name,"zh-tw")||a.type.localeCompare(b.type,"zh-tw"));
+    db.sort((a,b)=>(b.mn+1)*(b.mt+1)*(b.mo+1)*(b.match+1)-(a.mn+1)*(a.mt+1)*(a.mo+1)*(a.match+1)||b.match-a.match||b.mh.length-a.mh.length||a.name.localeCompare(b.name,"zh-tw")||a.type.localeCompare(b.type,"zh-tw"));
   break;
   case "match_herb":
     db.sort((a,b)=>b.mh.length-a.mh.length||a.comb.length-b.comb.length||a.name.localeCompare(b.name,"zh-tw")||a.type.localeCompare(b.type,"zh-tw"));
@@ -452,12 +452,15 @@ function search(e){
   kw = search_input.value;
   refresh();
 }
+function escape(str){
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 function find(w){
   //console.log(`find: ${kw}`);
   let str = w;
   let name = str.match(/\[(.*?)\]/ug);
   let type = str.match(/\((.*?)\)/ug);
-  let origin = str.match(/<(.*?)>/ug);
+  let origin = str.match(/<(.*?)>|〈(.*?)〉/ug);
   if(name){
     str = str.replace(/\[(.*?)\]/ug,"");
   }
@@ -465,7 +468,7 @@ function find(w){
     str = str.replace(/\((.*?)\)/ug,"");
   }
   if(origin){
-    str = str.replace(/<(.*?)>/ug,"");
+    str = str.replace(/<(.*?)>|〈(.*?)〉/ug,"");
   }
   let comb = str.split(/[\s,;、，；。]+/u).filter(d=>d).sort((a,b)=>a.localeCompare(b,"zh-tw"));
   let ms = document.querySelectorAll(".match");
@@ -479,19 +482,19 @@ function find(w){
     d.mh = [];
     d.match = 0;
     for( let n of name||[] ){
-      if(d.name.match(n)){
+      if(d.name.match(new RegExp(escape(n.replace(/[\[\]]/ug,"")),"u"))){
         d.mn = 1;
         d.elm.querySelector(".name").classList.add("match");
       }
     }
     for( let t of type||[] ){
-      if(d.type.match(t)){
+      if(d.type.match(new RegExp(escape(t.replace(/[\(\)]/ug,"")),"u"))){
         d.mt = 1;
         d.elm.querySelector(".type").classList.add("match");
       }
     }
     for( let o of origin||[] ){
-      if(!d.origin.match(o)){
+      if(!d.origin.match(new RegExp(escape(o.replace(/[<>〈〉]/ug,"")),"u"))){
         d.mo = 1;
         d.elm.querySelector(".origin").classList.add("match");
       }
