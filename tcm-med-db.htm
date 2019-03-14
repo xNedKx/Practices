@@ -58,6 +58,7 @@ body{
 }
 #search {
   height: 17px;
+  width: 166px;
   vertical-align: middle;
 }
 #main button {
@@ -178,6 +179,9 @@ body{
 .hide {
   display: none;
 }
+.mobile {
+  display: none;
+}
 @media only screen and (max-width: 480px) {
   #main {
     height: 48px;
@@ -197,6 +201,11 @@ body{
     margin: 58px auto 0;
   }
 }
+@media only screen and (max-width: 360px) {
+  .mobile {
+    display: initial;
+  }
+}
 </style>
 </head>
 <body>
@@ -210,7 +219,7 @@ body{
     <option value="match">符合度</option>
     <option value="match_herb">符合量</option>
   </select></label>
-  <label><input id="search" title="空白分隔要搜尋的項目。用 [ 與 ] 可搜尋方名、 < 與 > 可搜尋出處、 ( 與 ) 可搜尋分類。"></label>
+  <label><input id="search" title="空白分隔要搜尋的項目。用 [ 與 ] 可搜尋方名、 < 與 > 可搜尋出處、 ( 與 ) 可搜尋分類。"></label><br class="mobile">
   <label><button id="submit">搜尋</button></label>
   <label><button id="clear">清除</button></label>
   <label><a id="toggle">新增方劑</a></label>
