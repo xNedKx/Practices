@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-tw">
+<html lang="zh-Hant">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -31,6 +31,7 @@ body{
   width: 100vw;
   color: #000;
   background-color: #e6e6e6;
+  background-image: linear-gradient(300deg, #f0f0f0 -100%, #d0d0d0 300% );
   height: 48px;
   position: fixed;
   top: 0;
@@ -115,22 +116,21 @@ body{
   margin: 58px auto 0;
   overflow-x: hidden;
   overflow-y: auto;
+  text-shadow: 0 0 3px #ddd;
 }
 .data:first-of-type {
   margin-top: 0;
 }
 .data {
-  margin: 4px auto 5px;
-  background-color: #ddd;
-  box-shadow: 0 0 3px #aaa;
 }
 .title {
   font-size: 16px;
-  background-color: #fdfdfd;
+  background-color: #f0f0f0;
   min-height: 21px;
   line-height: 21px;
   padding: 2px 0;
   margin: 2px 0;
+  background-image: linear-gradient(300deg, #ddd -100%, #fff 300% );
 }
 .title span {
   display: inline-block;
@@ -175,13 +175,15 @@ body{
   cursor: pointer;
 }
 .brief .title:hover {
-  background-color: #efefef;
+  background-color: #f9f9f9;
+  background-image: linear-gradient(300deg, #eee -100%, #fff 300% );
 }
 .brief .data:not(.open) .type, .brief .data:not(.open) .comb {
   display: none;
 }
 .match {
-  background-color: #fcc;
+  background-color: #ffcccc;
+  background-image: linear-gradient(300deg, #fcc -100%, #ffc 300% );
   color: #060606;
 }
 .hide {
@@ -258,7 +260,7 @@ class Data{
   constructor (name="",type="",comb="",origin=""){
     this.name = name;
     this.type = type;
-    this.comb = comb.split(/[\s,;、，；。]/u).filter(d=>d).sort((a,b)=>a.localeCompare(b,"zh-tw"));
+    this.comb = comb.split(/[\s,;、，；。]/u).filter(d=>d).sort((a,b)=>a.localeCompare(b,"zh-Hant"));
     this.origin = origin;
     this.time = +new Date();
     this.uid = firebase.auth().currentUser.uid;
@@ -404,19 +406,19 @@ function sort(){
   switch(sk){
   default:
   case "name":
-    db.sort((a,b)=>a.name.localeCompare(b.name,"zh-tw")||a.type.localeCompare(b.type,"zh-tw")||b.match-a.match||b.mh.length-a.mh.length);
+    db.sort((a,b)=>a.name.localeCompare(b.name,"zh-Hant")||a.type.localeCompare(b.type,"zh-Hant")||b.match-a.match||b.mh.length-a.mh.length);
   break;
   case "type":
-    db.sort((a,b)=>a.type.localeCompare(b.type,"zh-tw")||a.name.localeCompare(b.name,"zh-tw")||b.match-a.match||b.mh.length-a.mh.length);
+    db.sort((a,b)=>a.type.localeCompare(b.type,"zh-Hant")||a.name.localeCompare(b.name,"zh-Hant")||b.match-a.match||b.mh.length-a.mh.length);
   break;
   case "origin":
-    db.sort((a,b)=>a.origin.localeCompare(b.origin,"zh-tw")||a.type.localeCompare(b.type,"zh-tw")||a.name.localeCompare(b.name,"zh-tw")||b.match-a.match||b.mh.length-a.mh.length);
+    db.sort((a,b)=>a.origin.localeCompare(b.origin,"zh-Hant")||a.type.localeCompare(b.type,"zh-Hant")||a.name.localeCompare(b.name,"zh-Hant")||b.match-a.match||b.mh.length-a.mh.length);
   break;
   case "match":
-    db.sort((a,b)=>(b.mn+1)*(b.mt+1)*(b.mo+1)*(b.match+1)-(a.mn+1)*(a.mt+1)*(a.mo+1)*(a.match+1)||b.match-a.match||b.mh.length-a.mh.length||a.name.localeCompare(b.name,"zh-tw")||a.type.localeCompare(b.type,"zh-tw"));
+    db.sort((a,b)=>(b.mn+1)*(b.mt+1)*(b.mo+1)*(b.match+1)-(a.mn+1)*(a.mt+1)*(a.mo+1)*(a.match+1)||b.match-a.match||b.mh.length-a.mh.length||a.comb.length-b.comb.length||a.name.localeCompare(b.name,"zh-Hant")||a.type.localeCompare(b.type,"zh-Hant"));
   break;
   case "match_herb":
-    db.sort((a,b)=>b.mh.length-a.mh.length||a.comb.length-b.comb.length||a.name.localeCompare(b.name,"zh-tw")||a.type.localeCompare(b.type,"zh-tw"));
+    db.sort((a,b)=>b.mh.length-a.mh.length||a.comb.length-b.comb.length||a.name.localeCompare(b.name,"zh-Hant")||a.type.localeCompare(b.type,"zh-Hant"));
   break;
   }
 }
@@ -508,7 +510,7 @@ function find(w=""){
   if(origin){
     str = str.replace(/<(.*?)>|〈(.*?)〉/ug,"");
   }
-  let comb = str.split(/[\s,;、，；。]+/u).filter(d=>d).sort((a,b)=>a.localeCompare(b,"zh-tw"));
+  let comb = str.split(/[\s,;、，；。]+/u).filter(d=>d).sort((a,b)=>a.localeCompare(b,"zh-Hant"));
   let ms = document.querySelectorAll(".match");
   for( let m of ms ){
     m.classList.remove("match");
