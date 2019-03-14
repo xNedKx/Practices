@@ -12,8 +12,11 @@
 <meta property="og:url" content="https://xnedkx.github.io/Practices/tcm-med-db.htm" />
 <title>TCM 方劑組成資料庫</title>
 <style>
-body,document{
+document {
   margin: 0;
+}
+body{
+  margin: 0 auto;
   text-align: center;
   transition: all 0.2s ease;
   color: #060606;
@@ -21,16 +24,7 @@ body,document{
   overflow-x: hidden;
   font-size: 16px;
   font-family: "微軟正黑體", sans-serif;
-}
-#head {
-  position: fixed;
-  z-index: 200;
-  pointer-events: none;
-  text-align: left;
-  color: #fffa;
-  font-size: 10px;
-  top: 0px;
-  left: 0px;
+  max-width: 720px;
 }
 #main {
   padding: 4px 0 6px;
@@ -41,10 +35,21 @@ body,document{
   position: fixed;
   top: 0;
   z-index: 100;
+  max-width: 720px;
 }
 #main label {
   font-size: 13px;
   display: inline-block;
+}
+#head {
+  position: absolute;
+  z-index: 200;
+  pointer-events: none;
+  text-align: left;
+  color: #fffa;
+  font-size: 10px;
+  top: 0px;
+  left: 0px;
 }
 #order {
   padding: 1px 0;
@@ -68,6 +73,7 @@ body,document{
 #add {
   display: none;
   height: 0;
+  max-width: 720px;
   width: 100vw;
   padding: 2px 0;
   color: #000;
@@ -90,6 +96,7 @@ body,document{
   box-sizing: border-box;
   font-size: 13px;
   line-height: 26px;
+  max-width: 720px;
 }
 #add input, #add textarea {
   flex: 1;
@@ -171,12 +178,31 @@ body,document{
 .hide {
   display: none;
 }
+@media only screen and (max-width: 480px) {
+  #main {
+    height: 48px;
+  }
+  #head {
+    top: 34px;
+    right: 8px;
+    left: initial;
+  }
+  #toggle:hover {
+    color: inherit;
+  }
+  #add {
+    top: 58px;
+  }
+  #list {
+    margin: 58px auto 0;
+  }
+}
 </style>
 </head>
 <body>
-<div id="head">方劑組成資料庫</div>
 <!-- search -->
 <form id="main">
+  <div id="head">方劑組成資料庫</div>
   <label>排序：<select id="order">
     <option value="name" selected>方名</option>
     <option value="type">分類</option>
