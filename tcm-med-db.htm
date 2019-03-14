@@ -56,10 +56,12 @@ body{
   height: 25px;
   vertical-align: middle;
 }
-#toggle {
+.abtn {
   cursor: pointer;
+  padding: 2px;
+  margin: 0 2px;
 }
-#toggle:hover {
+.abtn:hover {
   color: #999;
 }
 #add {
@@ -170,6 +172,15 @@ body{
 .find .comb {
   color: #aaa;
 }
+.brief .title {
+  cursor: pointer;
+}
+.brief .title:hover {
+  background-color: #efefef;
+}
+.brief .data:not(.open) .type, .brief .data:not(.open) .comb {
+  display: none;
+}
 .match {
   background-color: #fcc;
   color: #060606;
@@ -201,7 +212,8 @@ body{
     <option value="match">符合度</option>
     <option value="match_herb">符合量</option>
   </select></label>
-  <label><a id="toggle">新增方劑</a></label>
+  <label><a id="briefBtn" class="abtn" title="切換資料顯示詳細度">精簡顯示</a></label>
+  <label><a id="toggle" class="abtn" title="開關新增方劑分頁">新增方劑</a></label>
 </form>
 <!-- add -->
 <form id="add">
@@ -234,6 +246,7 @@ let order_input = document.getElementById("order");
 let search_input = document.getElementById("search");
 let submit_button = document.getElementById("submit");
 let clear_button = document.getElementById("clear");
+let toggle_brief = document.getElementById("briefBtn");
 let toggle_add = document.getElementById("toggle");
 let add_div = document.getElementById("add");
 let list = document.getElementById("list");
@@ -454,6 +467,7 @@ function elm(d){
     comb.appendChild(h);
     comb.appendChild(document.createTextNode(" "));
   }
+  title.addEventListener("click",openBrief);
   return dom;
 }
 function toggle(e){
@@ -551,10 +565,35 @@ function clear(e){
   kw = "";
   refresh();
 }
+function briefMode(e){
+  let ms = document.querySelectorAll(".open");
+  for( let m of ms ){
+    m.classList.remove("open");
+  }
+  if(list.classList.contains("brief")){
+    list.classList.remove("brief");
+    toggle_brief.innerText = "精簡顯示";
+  }else{
+    list.classList.add("brief");
+    toggle_brief.innerText = "精簡顯示(關閉)";
+  }
+}
+function openBrief(e){
+  e.preventDefault();
+  if( list.classList.contains("brief") ){
+    let p = this.parentNode;
+    if( p.classList.contains("open") ){
+      p.classList.remove("open");
+    }else{
+      p.classList.add("open");
+    }
+  }
+}
 main_form.addEventListener("submit",search);
 submit_button.addEventListener("click",search);
 order_input.addEventListener("change",refresh);
 clear_button.addEventListener("click",clear);
+toggle_brief.addEventListener("click",briefMode);
 toggle_add.addEventListener("click",toggle);
 add_button.addEventListener("click",add);
 </script>
