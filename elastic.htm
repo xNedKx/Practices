@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elastic Block</title>
+<title></title>
+<style>
+body {
+  padding: 0;
+  margin: 0;
+  height: 100vh;
+  width: 100vw;
+  overscroll-behavior: contain;
+  overflow: hidden;
+  background-color: #000;
+}
+#container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.outer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.box {
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 100px;
+  min-height: 100px;
+  width: 100%;
+  height: 100%;
+}
+.box::before {
+  z-index: 1;
+  content: "";
+  background-color: #2229;
+  display: block;
+  width: 100%;
+  padding-top: 100%;
+}
+.image {
+  z-index: 2;
+  background-color: #999;
+  min-width: 100px;
+  min-height: 100px;
+}
+img {
+  object-fit: scale-down;
+  max-width: 100%;
+  max-height: 100%;
+}
+.layer > div, .box, .box::before, .image > img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.box, .box > .image {
+  display: flex;
+  align-items: center;
+}
+.box > .image, .image > img {
+  margin: 0 auto;
+}
+#front {
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+<div id="container">
+  <div id="back" class="layer">
+  </div>
+  <div id="front" class="layer grav">
+    <div class="outer">
+      <div class="box">
+        <div class="image mass">
+          <img id="frontImage" src="./xnedkx3d.png" title="Drag this image and move your finger.">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+let RAF_gravity,
+    tick = 10,
+    gravity_root = null,
+    root_point = null,
+    gravity_start = null,
+    gravity_last = null,
+    gravity_point = null,
+    objects = new Set(),
+    global_tp = null,
+    object_tp = null,
+    start_tp = null,
+    start_op = null,
+    touch_point = null,
+    last_tp = null,
+    touching_dom = null,
+    gravity_factor = 25,
+    touch_factor = 100,
+    friction_limit = 2,
+    friction = 1,
+    v_limit = 0.5,
+    p_limit = 0.5,
+    p_max = 2,
+    v_max = 1,
+    border = 1.6
+
+let count = 0
+
+function gravity(ts){
+  let tg = Number.EPISLON, tt = 0
+  if(gravity_start == null){ gravity_start = ts }
+  else{ tt = ts - gravity_start }
+  if(gravity_last != null){ tg = ts - gravity_last }
+  
+  // 已知物件質量 m = w * h 物件速度 v 物件座標 p 引力系數 k1 觸控系數 k2 引力應變 x1 = gp - p 觸控應變 x2 = tp - p
+  // 求物件新座標 p'
+  // 計算引力拉力(彈性)：F1 = k1x1
+  // 計算觸控拉力(彈性)：F2 = k2x2 k2 > k1
+  // 計算合力： F = ma => a = (k1x1+k2x2)/m
+  // 未超過最大靜摩擦力則合力為零
+  // 當速度不為零時，減去動摩擦力
+  // 新速度 v' = v + a = v + k1gp/m - (k1+k2)p/m + k2tp/m
+  // 新座標 p' = p + v' = p + v + a = p + v + k1/m*gp - k1/m*p + k2/m*tp - k2/m*p = v + (m-k1-k2)p/m + k1gp/m + k2tp/m
+  // 如果已無觸控(F2=0)： F = k1x1 => v' = v + k1gp/m - k1p/m => p' = v + (m-k1)/m + k1gp/m
+  // p 接近 gp 且 v' = 0 時自動復位。
+  
+  // 如果 |p - gp| 大於閾值，那麼移動後不得小於閾值
+  
+  const gp = gravity_point
+  const tp = touch_point
+  const gk = gravity_factor
+  const tk = touch_factor
+  const ft = friction_limit
+  const ff = friction
+  const t = tg / tick
+  const vth = v_limit
+  const pth = p_limit
+  const mult = 10
+  
+  for( let obj of objects ){
+    const {p,v,m} = obj
+    let nv = {...v}, np = {...p}
+    let gx = gp.x - p.x, gy = gp.y - p.y, gfx = gk*gx, gfy = gk*gy
+    let tx, ty, tfx, tfy
+    if(tp){
+      tx = tp.x - p.x
+      ty = tp.y - p.y
+      tfx = tk*tx
+      tfy = tk*ty
+    }else{
+      tx = ty = null
+      tfx = tfy = 0
+      gfx *= mult
+      gfy *= mult
+    }
+    let fx = gfx + tfx, fy = gfy + tfy, f = Math.sqrt(Math.pow(fx,2)+Math.pow(fy,2)), fr, frx, fry
+    if( Math.abs(v.x) < Number.EPSILON && Math.abs(v.y) < Number.EPSILON ){
+      if(f < ft){
+        fx = fy = f = 0
+      }
+      fr = frx = fry = 0
+    }else{
+      let vv = Math.sqrt(Math.pow(v.x,2)+Math.pow(v.y,2))
+      fr = m * ff
+      frx = -v.x / vv * fr
+      fry = -v.y / vv * fr
+    }
+    let ax = (fx+frx)/m, ay = (fy+fry)/m, vx = v.x + ax * t, vy = v.y + ay * t, px = p.x + vx * t, py = p.y + vy * t
+    if(Math.abs(vx) < vth){
+      vx = 0
+    }
+    if(Math.abs(vy) < vth){
+      vy = 0
+    }
+    if(Math.abs(px-gp.x) < pth){
+      px = gp.x
+    }
+    if(Math.abs(py-gp.y) < pth){
+      py = gp.y
+    }
+    if(!tp && Math.abs(vx) < vth && Math.abs(vy) < vth && Math.abs(ax) < vth && Math.abs(ay) < vth){
+      px = gp.x
+      py = gp.y
+    }
+    if( Math.abs(px-gp.x) > p_max * gp.x ){
+      px = Math.sign(px-gp.x) * p_max * gp.x + gp.x
+    }
+    if( Math.abs(py-gp.y) > p_max * gp.y ){
+      py = Math.sign(py-gp.y) * p_max * gp.y + gp.y
+    }
+    if( Math.abs(vx) > v_max * gp.x ){
+      vx = Math.sign(vx) * v_max * gp.x
+    }
+    if( Math.abs(vy) > v_max * gp.y ){
+      vy = Math.sign(vy) * v_max * gp.y
+    }
+    if(obj.out){
+      
+    }else{
+      if( Math.sqrt(Math.pow(px-gp.x,2) + Math.pow(py-gp.y,2)) > border * Math.sqrt(Math.pow(gp.x,2) + Math.pow(gp.y,2)) ){
+        obj.out = true
+      }
+    }
+    obj.p = {x:px,y:py}
+    obj.v = {x:vx,y:vy}
+    /*
+    console.log("[loop]",count)
+    console.log("touch point, time",tp,t)
+    console.log("friction: fr frx fry",fr,frx,fry)
+    console.log("gravity: dx fx dy fy",gx,gfx,gy,gfy)
+    console.log("touch: dx fx dy fy",tx,tfx,ty,tfy)
+    console.log("fx fy f",fx,fy,f)
+    console.log("p p' v v' a",p,obj.p,v,obj.v,{x:ax, y:ay},v.x, ax * t,v.y, ay * t)
+    */
+  }
+  
+  count++
+  
+  updatePosition()
+  
+  gravity_last = ts
+  RAF_gravity = requestAnimationFrame(gravity)
+}
+function updatePosition(){
+  for( let obj of objects ){
+    if(obj != touching_dom && obj.p.x == gravity_point.x && obj.p.y == gravity_point.y && obj.v.x == 0 && obj.v.y == 0){
+      obj.style.left = `0px`
+      obj.style.top = `0px`
+      objects.delete(obj)
+      //console.log("[stop]",obj)
+    }else{
+      obj.style.left = `${obj.p.x - gravity_point.x}px`
+      obj.style.top = `${obj.p.y - gravity_point.y}px`
+      //console.log("[move]",obj)
+    }
+  }
+}
+function startGravity(dom){
+  gravity_root = dom
+  const rect = dom.getBoundingClientRect()
+  gravity_point = {x: rect.width/2, y: rect.height/2}
+  root_point = {x: window.pageXOffset + rect.x, y: window.pageYOffset + rect.y, w: rect.width, h: rect.height}
+  
+  document.documentElement.addEventListener("mousedown", startTouch)
+  gravity(performance.now())
+  /*
+  console.log("[gravity start]")
+  console.log("root offset",rect)
+  console.log("gravity point",gravity_point)
+  console.log("root point",root_point)
+  */
+}
+function stopGravity(){
+  document.documentElement.removeEventListener("mousedown", startTouch)
+  gravity_root = null
+  root_point = null
+  gravity_start = null
+  gavity_last = null
+  cancelAnimationFrame(RAF_gravity)
+  //console.log("[gravity stop]")
+}
+function startTouch(e){
+  e.preventDefault()
+  let elm = e.target
+  
+  while(elm && elm != gravity_root && !elm.classList.contains("grav")){
+    elm = elm.parentNode
+  }
+  if(!elm || elm == gravity_root){ return }
+  
+  start_tp = {x: e.pageX, y: e.pageY}
+  last_tp = {x: e.pageX, y: e.pageY}
+  
+  const root_rect = gravity_root.getBoundingClientRect()
+  const rect = elm.getBoundingClientRect()
+  start_op = {x: rect.x - root_rect.x + rect.width/2, y: rect.y - root_rect.y + rect.height/2}
+  
+  touching_dom = elm
+  if(!("rect" in elm)){
+    elm.rect = {x: rect.x - root_rect.x, y: rect.y - root_rect.y, w: rect.width, h: rect.height}
+    elm.p = {x: gravity_point.x, y: gravity_point.y}
+    elm.v = {x: 0, y: 0}
+    let mass = elm.querySelector(".mass")
+    if(mass){
+      const mr = mass.getBoundingClientRect()
+      elm.m = mr.width * mr.height
+    }else{
+      elm.m = rect.width * rect.height
+    }
+  }
+
+  touch_point = {
+    x: start_op.x,
+    y: start_op.y
+  }
+  
+  objects.add(elm)
+  
+  document.documentElement.addEventListener("mousemove", updateTouch)
+  document.documentElement.addEventListener("mouseleave", releaseTouch)
+  document.documentElement.addEventListener("mouseup", releaseTouch)
+  /*
+  console.log("[touch start]")
+  console.log("touched obj offset",rect)
+  console.log("elm: offset p v m",elm.rect,elm.p,elm.v,elm.m)
+  console.log("start: tp op",start_tp,start_op)
+  console.log("touch point",touch_point)
+  */
+}
+function updateTouch(e){
+  e.preventDefault();
+  const root_rect = gravity_root.getBoundingClientRect()
+  const rect = touching_dom.getBoundingClientRect()
+  touch_point = {
+    x: start_op.x + e.pageX - start_tp.x,
+    y: start_op.y + e.pageY - start_tp.y
+  }
+  last_tp = {x: e.pageX, y: e.pageY}
+  /*
+  console.log("[touch move]")
+  console.log("last, touch point",last_tp,touch_point)
+  */
+}
+function releaseTouch(e){
+  e.preventDefault();
+  //console.log(touching_dom.p,touching_dom.v)
+  touching_dom = null
+  start_tp = null
+  last_tp = null
+  touch_point = null
+  document.documentElement.removeEventListener("mousemove", updateTouch)
+  document.documentElement.removeEventListener("mouseleave", releaseTouch)
+  document.documentElement.removeEventListener("mouseup", releaseTouch)
+  //console.log("[touch end]")
+}
+
+startGravity(document.getElementById("container"))
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-78696465-1', 'auto');
+  ga('send', 'pageview');
+</script>
+</body>
+</html>
