@@ -23,9 +23,11 @@ body{
   color: #060606;
   background-color: #fdfdfd;
   overflow-x: hidden;
+  overflow-y: auto;
   font-size: 16px;
   font-family: "微軟正黑體", sans-serif;
   max-width: 720px;
+  height: 100vh;
 }
 #main {
   padding: 4px 0 6px;
@@ -34,10 +36,10 @@ body{
   background-color: #e6e6e6;
   background-image: linear-gradient(300deg, #f0f0f0 -100%, #d0d0d0 300% );
   height: 48px;
-  position: fixed;
   top: 0;
   z-index: 100;
   max-width: 720px;
+  position: fixed;
 }
 #main label {
   font-size: 13px;
@@ -74,9 +76,9 @@ body{
   padding: 2px 0;
   color: #000;
   background-color: #eee;
+  z-index: 50;
   position: fixed;
   top: 58px;
-  z-index: 50;
 }
 #add.show {
   display: flex;
@@ -111,12 +113,17 @@ body{
   margin: 0 auto;
   width: 100%;
 }
+#list_div {
+  overflow-x: hidden;
+  overflow-y: auto;
+  flex-grow: 1;
+  width: 100%;
+  margin: 58px auto 0;
+}
 #list {
   list-style: none outside;
   padding: 0;
-  margin: 58px auto 0;
-  overflow-x: hidden;
-  overflow-y: auto;
+  margin: 0 auto;
   text-shadow: 0 0 3px #ddd;
   position: relative;
 }
@@ -196,7 +203,43 @@ body{
 .mobile {
   display: none;
 }
+#modal {
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  background-color: #FFF7;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  padding: 0;
+  opacity: 0;
+  tansition: opacity 0.2s ease;
+  pointer-events: none;
+}
+#modal.show {
+  opacity: 1;
+  pointer-events: auto;
+}
 @media only screen and (max-width: 480px) {
+  body {
+    display: flex;
+    flex-direction: column;
+  }
+  #main {
+    position: initial;
+  }
+  #add {
+    position: initial;
+    margin: 0 auto;
+    top: initial;
+  }
+  #list_div {
+    max-height: 100%;
+    margin: 0 auto;
+  }
   .abtn:hover {
     color: inherit;
   }
@@ -227,6 +270,8 @@ body{
   <label><a id="briefBtn" class="abtn" title="切換資料顯示詳細度">精簡顯示</a></label>
   <label><a id="toggle" class="abtn" title="開關新增方劑分頁">新增方劑</a></label>
 </form>
+<!--info-->
+<div id="info"></div>
 <!-- add -->
 <form id="add">
   <label>方名：<input id="name" placeholder="方劑名稱(必要項目)"></label>
@@ -236,7 +281,21 @@ body{
   <label><button id="addBtn">新增方劑</button></label>
 </form>
 <!-- list -->
-<ul id="list"><li>項目載入中...</li></ul>
+<div id="list_div">
+  <ul id="list"><li>項目載入中...</li></ul>
+</div>
+<!--footer-->
+<div id ="footer">
+  <div id="sort"></div>
+  <div id="reset"></div>
+  <div id="menu"></div>
+<div>
+<!--modal-->
+<div id="modal">
+  <div id="login"></div>
+  <div id="add_data"></div>
+  <div id="about"></div>
+</div>
 <script src="https://www.gstatic.com/firebasejs/5.8.6/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.8.6/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.8.6/firebase-database.js"></script>
