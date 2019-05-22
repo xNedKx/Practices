@@ -110,10 +110,10 @@ let RAF_gravity,
     touching_dom = null,
     gravity_factor = 25,
     touch_factor = 100,
-    friction_limit = 2,
+    friction_limit = 10,
     friction = 1,
-    v_limit = 0.5,
-    p_limit = 0.5,
+    v_limit = 1,
+    p_limit = 1,
     p_max = 2,
     v_max = 1,
     border = 1.6
@@ -180,21 +180,19 @@ function gravity(ts){
       fry = -v.y / vv * fr
     }
     let ax = (fx+frx)/m, ay = (fy+fry)/m, vx = v.x + ax * t, vy = v.y + ay * t, px = p.x + vx * t, py = p.y + vy * t
+    if(Math.abs(px-gp.x) < pth){
+      vx -= px-gp.x
+      px = gp.x
+    }
+    if(Math.abs(py-gp.y) < pth){
+      vy -= py-gp.y
+      py = gp.y
+    }
     if(Math.abs(vx) < vth){
       vx = 0
     }
     if(Math.abs(vy) < vth){
       vy = 0
-    }
-    if(Math.abs(px-gp.x) < pth){
-      px = gp.x
-    }
-    if(Math.abs(py-gp.y) < pth){
-      py = gp.y
-    }
-    if(!tp && Math.abs(vx) < vth && Math.abs(vy) < vth && Math.abs(ax) < vth && Math.abs(ay) < vth){
-      px = gp.x
-      py = gp.y
     }
     if( Math.abs(px-gp.x) > p_max * gp.x ){
       px = Math.sign(px-gp.x) * p_max * gp.x + gp.x
@@ -208,9 +206,7 @@ function gravity(ts){
     if( Math.abs(vy) > v_max * gp.y ){
       vy = Math.sign(vy) * v_max * gp.y
     }
-    if(obj.out){
-      
-    }else{
+    if(!obj.out){
       if( Math.sqrt(Math.pow(px-gp.x,2) + Math.pow(py-gp.y,2)) > border * Math.sqrt(Math.pow(gp.x,2) + Math.pow(gp.y,2)) ){
         obj.out = true
       }
