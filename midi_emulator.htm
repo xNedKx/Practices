@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta lang="en">
+<meta lang="zh-hant">
 <meta name="description" content="輸入音符標記與和弦，按下撥放立即試聽。" />
 <meta name="author" content="xNedKx" />
 <meta name="copyright" content="xNedKx" />
@@ -93,6 +93,11 @@ window.addEventListener( "DOMContentLoaded", function(){
     document.getElementById("volume").disabled = false;
   }
   
+  let logFlag = false
+  function log(...args){
+    return logFlag && console.log(...args)
+  }
+  
   function getFrequency(pitch){
     pitch = isFinite(pitch)? pitch : defaultPitch;
     return Math.pow(2, (+pitch - 57) / 12) * 440; // you can use 69 instead of 57 for classic condition
@@ -158,7 +163,7 @@ window.addEventListener( "DOMContentLoaded", function(){
       if(isFinite(note)){
         note = {pitch: +note};
       }else if( typeof note != "object" || !(note.hasOwnProperty("pitch") || note.hasOwnProperty("period") || note.hasOwnProperty("volume")) ){
-        console.log("[error]", "No notes could be added.");
+        log("[error]", "No notes could be added.");
         return;
       }
       
@@ -175,7 +180,7 @@ window.addEventListener( "DOMContentLoaded", function(){
         audioNode: null
       });
       
-      console.log("[add]", playManager.playingQue[playManager.playingQue.length - 1]);
+      log("[add]", playManager.playingQue[playManager.playingQue.length - 1]);
       
     }
     
@@ -220,7 +225,7 @@ window.addEventListener( "DOMContentLoaded", function(){
           playing.audioNode.oscillator.frequency.value = getFrequency();
           playing.audioNode.gainNode.gain.value = 0;
           playing.audioNode.playingNote = null;
-          console.log("[end]", ts);
+          log("[end]", ts);
           
         }else if(playing.status == "prepare" && time >= playing.startTime - tick * 2 && time <= playing.startTime){
         
@@ -230,7 +235,7 @@ window.addEventListener( "DOMContentLoaded", function(){
             osci = oscillators.length - 1;
           }
           oscillators[osci].oscillator.frequency.value = getFrequency(playing.note.pitch);
-          console.log("Frequency:", oscillators[osci].oscillator.frequency.value, "Pitch:", getNote(playing.note.pitch).join(""));
+          log("Frequency:", oscillators[osci].oscillator.frequency.value, "Pitch:", getNote(playing.note.pitch).join(""));
           playing.audioNode = oscillators[osci];
           playing.audioNode.playingNote = playing.note;
           playing.status = "ready";
@@ -245,7 +250,7 @@ window.addEventListener( "DOMContentLoaded", function(){
               osci = oscillators.length - 1;
             }
             oscillators[osci].oscillator.frequency.value = getFrequency(playing.note.pitch);
-            console.log("Frequency:", oscillators[osci].oscillator.frequency.value, "Pitch:", getNote(playing.note.pitch).join(""));
+            log("Frequency:", oscillators[osci].oscillator.frequency.value, "Pitch:", getNote(playing.note.pitch).join(""));
             playing.audioNode = oscillators[osci];
             playing.audioNode.playingNote = playing.note;
             playing.status = "ready";
@@ -256,7 +261,7 @@ window.addEventListener( "DOMContentLoaded", function(){
           
             playing.audioNode.gainNode.gain.value = playing.note.volume || defaultVolume;
             playing.status = "playing";
-            console.log("[playing]", playing.audioNode.id, ts, playing.note.pitch);
+            log("[playing]", playing.audioNode.id, ts, playing.note.pitch);
             
           }
           
@@ -613,9 +618,9 @@ window.addEventListener( "DOMContentLoaded", function(){
         output = output.concat(chordToNotes(chord, -1, chordStart));
         //console.log("add chord", chord, chordToNotes(chord, -1, chordStart));
       }
-      console.log("push last", note);
+      log("push last", note);
     }
-    console.log(output)
+    log(output)
     return output;
   }
   parseText.p = {
@@ -630,17 +635,19 @@ window.addEventListener( "DOMContentLoaded", function(){
   };
   
   function buttonPlay(e){
-    var speed = +document.getElementById("speed").value;
-    var volume = +document.getElementById("volume").value;
-    config({speed: speed, volume: volume / 100});
-    var ta = document.getElementById("input");
-    var raw = ta.value, tidy = textTidy(raw);
-    var parsed = parseText(tidy);
-    var period = batchAdd(parsed) * division * tick;
-    ta.value = tidy;
-    this.disabled = true;
-    console.log(period)
-    setTimeout(function(){document.getElementById("play").disabled = false;}, period + 300);
+    ac.resume().then(()=>{
+      var speed = +document.getElementById("speed").value;
+      var volume = +document.getElementById("volume").value;
+      config({speed: speed, volume: volume / 100});
+      var ta = document.getElementById("input");
+      var raw = ta.value, tidy = textTidy(raw);
+      var parsed = parseText(tidy);
+      var period = batchAdd(parsed) * division * tick;
+      ta.value = tidy;
+      this.disabled = true;
+      log(period)
+      setTimeout(function(){document.getElementById("play").disabled = false;}, period + 300);
+    })
   }
   
   document.getElementById("play").addEventListener("click", buttonPlay);
