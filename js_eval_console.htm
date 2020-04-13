@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="A way to run only js console on mobile chrome." />
+<meta name="author" content="xNedKx" />
+<meta name="copyright" content="xNedKx" />
+<title>JS Eval console</title>
+<style>
+documen, body {
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+main {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+section {
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+#inputs {
+  display: flex;
+  flex-direction: column;
+}
+#ui_stdin {
+  width: 100%;
+  min-height: 20vh;
+  max-height: 70vh;
+  resize: vertical;
+  border: none;
+  margin: 0;
+  background-color: #f1f1f1;
+  transition: ease-in-out 200ms;
+}
+#ui_stdin:focus {
+  outline: none;
+  background-color: #fcfcfc;
+}
+#btns {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  background-color: #efefef;
+  transition: ease-in-out 200ms;
+}
+#btns button{
+  flex-basis: 200px;
+  margin: 1px 10px;
+  border: solid 1px #dcdcdc;
+  border-radius: 2px;
+  background-color: #fcfcfc;
+  color: #666;
+  transition: ease-in-out 100ms;
+}
+#btns button:hover {
+  cursor: pointer;
+  background-color: #efefef;
+}
+#btns:hover {
+  background-color: #fcfcfc;
+}
+#outputs {
+  flex-grow: 1;
+  color: #666;
+}
+#outputs > * {
+  margin: 1px 4px;
+}
+#ui_console, #ui_return {
+  min-height: 2em;
+}
+#ui_console::before {
+  content: ">>[CONSOLE LOG]>>";
+}
+#ui_return::before {
+  content: ">>[RETURN]>>";
+}
+#outputs > ::before {
+  display: block;
+  background-color: #fefefe;
+  color: #333;
+}
+#ui_console.error {
+  color: #d66;
+}
+</style>
+</head>
+<body>
+<main>
+<section id="inputs">
+<textarea id="ui_stdin" placeholder="[JS Eval Console]"></textarea>
+<div id="btns">
+<button id="ui_reset">Reset All</button>
+<button id="ui_run">Execute (Ctrl+Enter)</button>
+<button id="ui_clear">Clear Script</button>
+</div>
+</section>
+<section id="outputs">
+<pre id="ui_return"></pre>
+<pre id="ui_console"></pre>
+</section>
+</main>
+<script>
+const r = {}
+
+function getElms(prefix){
+  if(!prefix){throw RangeError(`${prefix} is invalid. Use non-false value.`)}
+  const p = String(prefix)
+  r[p] = r[p] || {}
+  document.querySelectorAll(`[id*="${p}_"]`).forEach(elm=>{
+    r[p][elm.id.slice(p.length+1)] = elm
+  })
+  return r[p]
+}
+const ui = getElms("ui")
+
+function exec(){
+  r.last = {
+    script: ui.stdin.value,
+    output: undefined,
+    error: false
+  }
+  try{
+    ui.console.classList.remove("error")
+    console["_log"] = console.log
+    console.log = (...v)=>{
+      v.forEach( (t,i)=>{
+        ui.console.innerText += t
+        ui.console.innerText += i==v.length-1? "":", "
+      } )
+      ui.console.innerText += "\n"
+    }
+    ui.console.innerText = ""
+    r.last.output = eval(r.last.script)
+    ui.return.innerText = r.last.output
+    console.log = console["_log"]
+    delete console["_log"]
+    ui.stdin.focus()
+  }catch(er){
+    console.log = console["_log"]||console.log
+    ui.console.classList.add("error")
+    ui.console.innerText = er
+    r.last.error = true
+  }
+}
+
+function clear(){
+  changePH()
+  ui.stdin.select()
+  document.execCommand("delete")
+  ui.console.classList.remove("error")
+  ui.console.innerText = ""
+}
+
+ui.run.addEventListener("click",exec)
+ui.stdin.addEventListener("keydown",e=>{
+  switch(e.key){
+    case "Enter":
+      if(e.ctrlKey){
+        ui.stdin.ctrl_enter = true
+        return e.preventDefault()
+      }
+    break
+    default:
+  }
+})
+ui.stdin.addEventListener("keyup",e=>{
+  switch(e.key){
+    case "Enter":
+      if(ui.stdin.ctrl_enter){
+        ui.stdin.ctrl_enter = false
+        exec()
+      }
+    break
+    default:
+  }
+})
+ui.clear.addEventListener("click",clear)
+ui.reset.addEventListener("click",()=>{confirm("Reload page to reset vars?")&&location.reload()})
+
+const phs = [
+  "[JS Eval Console]",
+  "What scripts do you want to run?",
+  "Hit the Execute button to get the result!",
+  "You might also like: MDN, W3schools, Google Web fundamentals...",
+  "Because chrome has no console to use on Android phone, so I made this.",
+  "type \"while(true){}//to get stuck in an infinte loop\"",
+  "I don't know if the app works well on the phone, no test has been done yet.",
+  "No warranty. Use this at your own risk.",
+  "by [xNedKx].",
+  "You are so lucky to find this hidden message. GJ!",
+  "No daikon were harmed to make this app.",
+  "version: 2020-04-13v0.0000001",
+  "Don't hesitate to donate the cute author.",
+  "Put your scripts here!",
+  "The highlighten and auto suggestion functions will be add in the \"FUTURE\" version."
+]
+let copy = phs.slice(1)
+function changePH(){
+  if(!copy.length){ copy = Array.from(phs) }
+  const ph = copy.splice(Math.floor(Math.random()*copy.length),1)[0]
+  ui.stdin.placeholder = ph
+  return ui.stdin
+}
+</script>
+</body>
+</html>
