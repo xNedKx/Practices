@@ -1,0 +1,2284 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+
+<meta charset="utf-8" />
+
+<!-- lock zoom scale -->
+<meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+<!-- info -->
+<title>線上叫號系統 -DEMO-</title>
+<meta name="description" content="YZC線上叫號系統" />
+<meta name="author" content="YzChen" />
+<meta name="copyright" content="YzChen" />
+
+<!-- fontface -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100;300;500;700;900&display=block" rel="stylesheet">
+
+<!-- base style -->
+<style>
+:root {
+  --width-max: 480px;
+  --side-margin: 0.3px;
+}
+body {
+  overscroll-behavior: contain;
+  margin: 0 auto;
+  padding: 0;
+  width: 100vw;
+  max-width: var(--width-max);
+  overflow-x: hidden;
+  position:relative;
+  color: #101010;
+  background-color: #393939;
+  font-size: calc(var(--width-max)/30);
+  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Segoe UI", sans-serif;
+  font-weight: 500;
+  max-height: 100vh;
+  overflow-y: hidden;
+  user-select: none;
+}
+template {
+  display: none;
+}
+</style>
+
+<!-- media query -->
+<style>
+/* media query */
+/* portrait: old phone, phone, tablet, screen */
+@media screen and (max-aspect-ratio: 2/3) and (max-width: 320px),
+screen and (max-aspect-ratio: 2/3) and (max-width: 600px),
+screen and (max-aspect-ratio: 2/3) and (max-width: 960px),
+(max-aspect-ratio: 2/3) {
+  :root {
+    --width-max: 100vw;
+    --side-margin: 0.625vw;
+  }
+}
+/* landscape: phone, tablet/pc, 2K, 2K+ */
+@media screen and (min-aspect-ratio: 2/3) and (max-width: 900px),
+screen and (min-aspect-ratio: 2/3) and (max-width: 1024px),
+screen and (min-aspect-ratio: 2/3) and (max-width: 2048px),
+(min-aspect-ratio: 2/3) {
+  :root {
+    --width-max: calc(100vh*2/3);
+    --side-margin: calc(0.625vh*2/3);
+  }
+}
+/* too small landscape -> portrait */
+@media screen and (min-aspect-ratio: 2/3) and (max-width: 600px) {
+  :root {
+    --width-max: 100vw;
+    --side-margin: 0.625vw;
+  }
+}
+</style>
+
+<!-- common style -->
+<style>
+/* input styles */
+input, textarea, button {
+  box-sizing: border-box;
+}
+/* remove number input arrows */
+input[type=number] {
+  -moz-appearance: textfield;
+  cursor: default;
+}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+/* make .btn-* look like button */
+.btn, [class*=btn-] {
+  cursor: pointer;
+  display: block;
+  box-sizing: border-box;
+  text-align: center;
+  width: 100%;
+  font-weight: 300;
+  border: 1px solid #ccc;
+  background-color: #fefefe;
+  color: #606060;
+}
+.btn:hover, [class*=btn-]:hover {
+  background-color: #f7f7f7;
+}
+
+/* link */
+.link {
+  cursor: pointer;
+  color: #666;
+  font-size: small;
+  margin: 0 4px;
+}
+.link:hover {
+  color: #aaa;
+}
+
+/* fixed aspect ratio with style */
+[style*="--aspect-ratio"] {
+  position: relative;
+}
+[style*="--aspect-ratio"]::before {
+  content: "";
+  display: block;
+  padding-bottom: calc(100% / (var(--aspect-ratio)));
+}
+[style*="--aspect-ratio"] > :first-child {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+}
+
+/* scrollbar */
+/*
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #0004 #eee;
+}
+*/
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background-color: #ddd;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #0004;
+  border-radius: 2px;
+}
+
+/* flex */
+.flex-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-content: center;
+  position: relative;
+}
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-content: center;
+  position: relative;
+}
+
+.noselect {
+  user-select: none;
+}
+.pr {
+  position: relative;
+}
+.fw {
+  width: 100%;
+}
+.hide {
+  display: none;
+  height: 0;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  user-select: none;
+  pointer-events: none;
+  z-index: 0;
+}
+</style>
+
+<!-- fixed -->
+<style>
+#fixed {
+  width: 100%;
+  position: fixed;
+  z-index: 999;
+  top: 0;
+  left: 0;
+}
+#user, #edit_self, #admin, #header {
+  max-width: var(--width-max);
+  margin-left: auto;
+  margin-right: auto;
+}
+#edit_self, #admin {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - var(--width-max)/18);
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #0004 #eee;
+}
+.placeholder.user {
+  height: 2em;
+}
+.placeholder.header {
+  border: 1px solid transparent;
+}
+</style>
+
+<!-- user -->
+<style>
+#user {
+  background-color: #f0f0f0;
+  overflow: hidden;
+  width: 100%;
+  height: 2em;
+}
+
+#signin_form .l_hide {
+  float: right;
+  height: 2em;
+}
+
+#signin_form input[name=email], #signin_form input[name=password] {
+  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Segoe UI", sans-serif;
+  font-size: 1em;
+  background-color: #fff;
+  width: 9em;
+  height: 2em;
+  padding-left: 0.1em;
+  border: none;
+  border-left: 1px solid #f0f0f0;
+  margin: 0 0.1em;
+  box-sizing: border-box;
+  text-indent: 0.2em;
+}
+#signin_form .submit-signin {
+  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Segoe UI", sans-serif;
+  font-size: 1em;
+  background-color: #fcfcfc;
+  width: 7em;
+  height: 2em;
+  padding: 0;
+  border: 1px solid #f0f0f0;
+  margin: 0 0.1em;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+#signin_info {
+  text-indent: 0.25em;
+  font-size: 0.8em;
+  line-height: 2.4em;
+}
+#signout_btn {
+  float: right;
+}
+</style>
+
+<!-- user form -->
+<style>
+#edit_self {
+  color: #ccc;
+  background-color: #303030;
+  font-size: 0.8em;
+}
+
+.admin-self {
+  border: none;
+  text-align: center;
+  font-size: 2em;
+}
+.admin-self .list-header {
+font-size: 2em;
+  margin: 0.5em auto;
+}
+.admin-self .edit-user {
+  color: #333;
+  margin-top: -0.2em;
+}
+.admin-self input {
+  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Segoe UI", sans-serif;
+  width: 100%;
+  font-weight: 300;
+  font-size: 1.6em;
+  height: 2em;
+  text-align: center;
+}
+.admin-self [class*=btn-] {
+  margin: 0.5em auto;
+  height: 2.5em;
+  line-height: 2.5em;
+  font-weight: 700;
+}
+.admin-self .edit-user-name {
+  width: 60%;
+  margin: 0 auto 2em;
+}
+.admin-self .delete-user {
+  width: 70%;
+  margin: 0 auto;
+}
+
+.admin-self .edit-steps {
+  margin-bottom: 2em;
+}
+.admin-self .list-steps {
+  margin-bottom: 1em;
+}
+.admin-self .step-item::before {
+  content: "+";
+  position: absolute;
+  left: 0.5em;
+}
+.admin-self .step-item {
+  position: relative;
+  width: 60%;
+  height: 1.6em;
+  margin: 0.2em auto;
+  text-align: left;
+  padding: 0 1em;
+  box-sizing: border-box;
+  color: #333;
+  background-color: #e0e0e0;
+}
+.admin-self .btn-del-step {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 1.6em;
+  width: 3em;
+  margin: 0;
+  line-height: initial;
+}
+.admin-self .input-steps {
+  width: 60%;
+  margin: 0 auto;
+}
+</style>
+
+<!-- admin -->
+<style>
+/* font */
+#admin, #admin input, #admin textarea, #admin pre {
+  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Segoe UI", sans-serif;
+}
+
+:root {
+  --room-item-h: 1.6em;
+  --doctor-item-h: 1.6em;
+}
+
+#admin {
+  background-color: #606060;
+}
+
+.admin-panel {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.admin-panel input[type=radio] {
+  display: none;
+}
+.admin-panel input[type=radio]:checked + div[class] {
+  background-color: #ccc;
+  color: #333;
+}
+.admin-panel input[type=radio] + div[class] {
+  background-color: #fff;
+}
+
+.admin-panel .admin-rooms {}
+.admin-panel .list-header {
+  margin: 0.1em auto;
+  text-align: center;
+  color: #f0f0f0;
+}
+.admin-panel .room-list {
+  width:90%;
+  margin: 0 auto;
+  background-color: #f0f0f0;
+}
+.admin-panel .room-item {
+  width: 100%;
+  font-size: 1.6em;
+  height: var(--room-item-h);
+  line-height: var(--room-item-h);
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  background-color: #eee;
+}
+.admin-panel .room-item .room-state {
+  width: 100%;
+  height: 100%;
+  font-size: 0.5em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: left;
+  padding: 0 2ch;
+  box-sizing: border-box;
+}
+.admin-panel .room-item .room-state::before {
+  margin-right: 1ch;
+  color: #111;
+  display: inline-block;
+  width: 1.35em;
+  height: 1.35em;
+  line-height: 1.35em;
+  border: 1px solid #999;
+  border-radius: 100%;
+  text-align: center;
+}
+.admin-panel .room-item .room-state.open::before {
+  content: "開";
+  color: #dfdfdf;
+  background-color: #aaa;
+  border-color: #ccc;
+}
+.admin-panel .room-item .room-state:not(.open)::before {
+  content: "關";
+  background-color: #f0f0f0;
+}
+.admin-panel .btn-del-room {
+  width:90%;
+  height: 2.5em;
+  line-height: 2.5em;
+  margin: 1em auto;
+  color: #333;
+  font-weight: 500;
+}
+
+.admin-panel .input-new-room {
+  margin: 2em auto;
+  width: 60%;
+  position: relative;
+}
+.admin-panel .input-new-room .input-room-name {
+  width: 100%;
+  height: 3em;
+  line-height: 3em;
+  margin: 1em auto;
+  box-sizing: border-box;
+  text-indent: 1ch;
+  font-size: 1em;
+}
+.admin-panel .input-new-room .btn-add-room {
+  width: 100%;
+  height: 4em;
+  line-height: 4em;
+  font-weight: 500;
+  color: #333;
+}
+
+.admin-panel .admin-users {
+  width: 100%;
+  margin: 0.2em auto;
+}
+
+.admin-panel .doctor-list {
+  width: 70%;
+  margin: 0 auto;
+  background-color: #f0f0f0;
+}
+.admin-panel .doctor-item {
+  width: 100%;
+  height: 2em;
+  line-height: 2em;
+}
+.admin-panel .doctor-item .doctor-info {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  text-align: left;
+  text-indent: 2ch;
+}
+.admin-panel .input-new-doctor {
+  width: 70%;
+  margin: 0.75em auto;
+}
+
+.admin-panel .input-new-doctor > input {
+  width: 100%;
+  height: 2em;
+  font-size: 1em;
+  font-weight: 300;
+  text-indent: 1ch;
+  margin: 0.2em auto;
+  box-sizing: border-box;
+}
+.admin-panel .input-new-doctor .btn-add-doctor {
+  height: 3em;
+  line-height: 3em;
+  font-weight: 500;
+  margin: 1em auto 3em;
+  color: #333;
+}
+</style>
+
+<!-- header -->
+<style>
+#header {
+  background-color: #fafafa;
+  border-top: 1px solid #666;
+  border-bottom: 1px solid #f3f3f3;
+  font-weight: 300;
+  text-align: center;
+  font-size: 1.8em;
+}
+
+#header .content .logo {
+  overflow: hidden;
+  height: 36%;
+  font-size: 1.1em;
+  font-weight: 900;
+  line-height: 1.25em;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #e0e0e0;
+}
+#header .content .bar-date, #header .content .bar-dt {
+  overflow: hidden;
+  height: 32%;
+  line-height: 1em;
+}
+.bar-date {
+  color: #111;
+}
+.bar-day {
+  color: #999;
+  font-size: 0.8em;
+  vertical-align: top;
+}
+.bar-time {
+  color: #333;
+}
+
+</style>
+
+<!-- rooms -->
+<style>
+body:not(.manager) #rooms.no-rooms .content::before {
+  content: "現無開診資訊";
+  color: #f0f0f0;
+  padding: 0.3em 0;
+  text-align: center;
+  width: 100%;
+  display: block;
+  font-size: 2em;
+}
+#rooms {
+  background-color: #111;
+}
+
+#rooms .content {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  box-sizing: border-box;
+  padding: var(--side-margin)
+}
+#rooms .loading {
+  color: #ccc;
+  padding: 0.3em 0;
+  text-align: center;
+  width: 100%;
+  display: block;
+  font-size: 2em;
+}
+
+.r2 {
+  position: relative;
+  width: calc(50% - var(--side-margin)*2);
+  height: fit-content;
+  background-color: #f0f0f0;
+  overflow: hidden;
+  margin: var(--side-margin);
+  cursor: pointer;
+  text-align: center;
+}
+.r2 [class*=row-] {
+  position: relative;
+  width: 100%;
+}
+.r2 [class*=card-] {
+  overflow: hidden;
+  display: flex;
+  align-content: center;
+  justify-content: center;
+}
+
+.r2 .room-name {
+  color: #060606;
+  font-weight: 300;
+}
+.r2 .date, .r2 .day, .r2 .time {
+  display: none;
+}
+
+.r2 .doctor::before {
+  content: "看診醫師";
+  display: block;
+  font-size: 0.4em;
+  color: #303030;
+  line-height: 1em;
+}
+.r2 .doctor {
+  font-weight: 100;
+  font-size: 2.4em;
+  line-height: 1em;
+}
+.r2 .number {
+  font-size: 4.55em;
+  line-height: 1em;
+}
+
+.r2 .row-4 {
+  border-top: 1px solid #999;
+}
+.r2 .info {
+  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Segoe UI", sans-serif;
+  font-size: 0.8em;
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+  position: relative;
+  padding-left: 0.25em;
+  box-sizing: border-box;
+  text-align: left;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.r2 .more {
+  position: absolute;
+  width: 100%;
+  height: 0.25em;
+  left: 0;
+  bottom: 0;
+  background-color: #999;
+  border-top: 1px solid #f6f6f6;
+}
+.r2 .more svg {
+  width: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.r2 .more svg .triangle-up {
+  display: none;
+}
+
+.r2 {
+  display: none;
+}
+.r2.open {
+  display: block;
+}
+.r2 .room-closed {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #5559;
+  font-size: 3em;
+  font-weight: 900;
+  color: #f01010;
+  text-shadow: 0 0 0.1em #0009;
+}
+.r2:not(.open) .room-closed {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+</style>
+
+<!-- room focus -->
+<style>
+.focus #rooms .content {
+  overflow: hidden;
+}
+
+.focus .r2:not(.selected) {
+  height: 0;
+  padding: 0;
+  border-width: 0;
+  margin: 0;
+  overflow-y: hidden;
+}
+
+.focus .r2 {
+  width: calc(100% - var(--side-margin)*2);
+  padding-top: 2em;
+}
+.focus .r2 .room-name {
+  font-size: 2em;
+}
+.focus .r2 .doctor {
+  font-size: 4em;
+}
+.focus .r2 .number {
+  font-size: 9em;
+}
+.focus .r2 .row-4 {
+  --aspect-ratio: 72/24 !important;
+}
+.focus .r2.selected .info {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  text-overflow: clip;
+  scrollbar-width: thin;
+  scrollbar-color: #0004 #eee;
+  font-size: 1.2em;
+}
+.focus .r2 .more svg .triangle-down {
+  display: none;
+}
+.focus .r2 .more svg .triangle-up {
+  display: initial;
+}
+.focus .r2 .more {
+  background-color: #bbb;
+  border-top: 1px solid #999;
+}
+.r2, .r2 .room-name, .r2 .doctor, .r2 .number, .r2 .row-4, .r2.selected .info, .r2 .more {
+  transition: all 33ms ease-out;
+}
+
+</style>
+
+<!-- fixed bottom -->
+<style>
+#fixed_bottom {
+  width: 100%;
+  position: fixed;
+  z-index: 500;
+  left: 0;
+  bottom: 0;
+  max-height: 15.9em;
+}
+</style>
+
+<!-- control -->
+<style>
+/* font */
+#control, #control input, #control textarea, #control pre {
+  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Segoe UI", sans-serif;
+}
+
+#control {
+  max-width: var(--width-max);
+  width: calc(100% - var(--side-margin)*2);
+  margin: 0 auto;
+  background-color: #f0f0f0;
+  border-top: 1px solid #3333;
+}
+.manager.signin.focus #control {
+  display: block;
+}
+
+#control .content {
+  overflow-y: auto;
+}
+
+.form {
+  width: 100%;
+  position: relative;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+
+.form fieldset {
+  border: none;
+  border-bottom: 1px solid #bbb;
+  box-sizing: border-box;
+  margin: 0.5ex auto;
+  width: 100%;
+}
+
+.form .room-operation, .form .room-opening, .form .room-opening .doctor-select, .form .room-closing {
+  display: none;
+}
+.open.form .room-operation, :not(.open).form .room-opening, .admin .form .room-opening .doctor-select, .open.form .room-closing {
+  display: block;
+}
+
+.form .btn-next {
+  width: 94%;
+  margin: 0 3% 1ch;
+}
+.form .input-number {
+  margin: 0 auto;
+}
+.form .input-number input {
+  width: 45%;
+  margin: 1px 2% 1px 3%;
+  padding: 1px 1%;
+  text-align: right;
+  font-size: 1.6em;
+}
+.form .input-number .btn-number {
+  width: 45%;
+  margin: 1px 3% 1px 2%;
+}
+.form .input-open, .form .open-btns {
+  width: 46%;
+  margin: 0 auto;
+}
+.form .input-date, .form .input-time {
+  display: none;
+}
+
+.form .input-time > label {
+  width: 30%;
+  margin: 1ch 2.5%;
+}
+.form .input-time input[type=radio] {
+  display: none;
+}
+.form input[type=radio]:checked + .option {
+  color: #333;
+  background-color: #ccc;
+}
+.form input[type=radio] + .option {
+  display: block;
+  background-color: #fff;
+}
+.form .input-doctor {
+  position: relative;
+}
+.form .input-doctor::before {
+  content: "醫師：";
+  position: absolute;
+  left: 2px;
+  top: 0;
+  font-weight: 500;
+  font-size: 0.75em;
+}
+.form .input-doctor input {
+  box-sizing: border-box;
+  text-align: right;
+  padding-left: calc(3em + 1px);
+  padding-right: 0.5ch;
+}
+.form .input-doctor input[readonly] + .doctor-select {
+  display: none;
+}
+.form .input-doctor .doctor-select {
+  height: 8ch;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+#control .content, .form .input-doctor .doctor-select, .form .input-info textarea {
+  scrollbar-width: thin;
+  scrollbar-color: #0004 #eee;
+}
+.form .input-doctor .btn-doctor {
+  margin: 0.5ch auto;
+}
+.form .open-btns .btn-open, .form .open-btns {
+  margin: 0.5ch auto;
+}
+.form .btn-close {
+  width: 60%;
+  margin: 0 20%;
+}
+.form .btn-cont {
+  width: 60%;
+  margin: 1ch 20% 0;
+}
+.form .input-info textarea {
+  resize: none;
+  height: 12em;
+  white-space: nowrap;
+}
+.form .input-info .btn-info {
+  margin-top: 1ch;
+}
+
+#control .disable-control {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #9999;
+}
+#control.disabled .disable-control {
+  display: block;
+}
+</style>
+
+<!-- footer -->
+<style>
+#footer {
+  background-color: #f9f9f9;
+  border-top: 1px solid #f3f3f3;
+  height: 100vh;
+  text-align: center;
+  overflow: hidden;
+  padding-top: 0.1em;
+  font-size: 0.8em;
+}
+</style>
+
+<!-- #manager -->
+<style>
+/* auth bar */
+#user {
+  display: none;
+}
+.manager #user {
+  display: block;
+}
+#signin_info {
+  display: none;
+}
+.signin #signin_form {
+  display: none;
+}
+.signin #signin_info {
+  display: block;
+}
+
+.signin.admin .admin-self .delete-user {
+  display: none;
+}
+
+#toggle_admin {
+  display: none;
+}
+.manager.signin.admin #toggle_admin {
+  display: inline-block;
+}
+.placeholder.user {
+  display: none;
+}
+.manager .placeholder.user {
+  display: block;
+}
+/* user open */
+#edit_self {
+  display: none;
+}
+.manager.signin #edit_self.open {
+  display: block;
+}
+/* admin open */
+#admin {
+  display: none;
+}
+.manager.signin.admin #admin.open {
+  display: block;
+}
+/* rooms */
+.manager.signin .r2 {
+  display: block;
+}
+/* control */
+#control {
+  display: none;
+}
+.manager.signin.focus #control {
+  display: block;
+}
+/* admin doctor list */
+.manager.signin:not(.admin) #control .input-open {
+  display: none;
+}
+</style>
+
+<!-- msg -->
+<style>
+#msg {
+  max-width: 100vw;
+  position: fixed;
+  z-index: 99999;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: auto;
+  line-height: 2em;
+  min-height: 2em;
+  overflow: hidden;
+  color: #fff0;
+  transition: 1s ease-in-out;
+  pointer-events: none;
+  padding: 1px 0.5ch;
+}
+.manager #msg.show {
+  pointer-events: auto;
+  cursor: pointer;
+  color: #666f;
+  background-color: #eeee;
+  border-bottom: 1px solid #ddd;
+}
+</style>
+
+</head>
+<body class="">
+
+<!-- no script -->
+<noscript>您的瀏覽器不支援本網頁所需功能</noscript>
+
+<div id="fixed">
+
+<!-- user -->
+<div id="user">
+  <div class="content">
+    <form id="signin_form" class="pr">
+      <input name="email" placeholder="登入帳號" disabled><input name="password" placeholder="密碼" disabled><input class="submit-signin" type="submit" value="登入" disabled>
+      <a href="#" class="link l_hide">隱藏</a>
+    </form>
+    <div id="signin_info">使用者：<span id="signin_name"></span> <a id="signout_btn" class="link">登出</a> <a id="self_btn" class="link">帳號</a> <a id="toggle_admin" class="link">管理</a></div>
+  </div>
+</div>
+
+<div id="edit_self" class="">
+  <form id="user_form">
+    <div class="admin-self">
+      <div class="list-header">叫號設定</div>
+      <div class="edit-steps">
+        <div class="list-steps"></div>
+        <template id="tmp_step">
+          <div class="step-item">
+            <input type="hidden" name="steps" value="">
+            <div class="step">{{step}}</div>
+            <div class="btn-del-step">刪除</div>
+          </div>
+        </template>
+        <div class="input-steps">
+          <label>
+            <input type="number" min="1" step="1" name="new_step" placeholder="輸入新間隔">
+          </label>
+          <div class="btn-add-step">新增間隔</div>
+          <div class="btn-update-step">更新</div>
+        </div>
+      </div>
+      <div class="list-header">帳號管理</div>
+      <div class="edit-user flex-col">
+        <div class="edit-user-name">
+          <label>
+            <input name="new_doctor_name" placeholder="輸入新稱呼">
+          </label>
+          <div class="btn-change-doctor-name">更新稱呼</div>
+        </div>
+        <div class="delete-user">
+          <label>
+            <input class="confirm-password" name="confirm_password" placeholder="輸入密碼確認">
+          </label>
+          <div class="btn-del-doctor">刪除目前登入帳號</div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- admin -->
+<div id="admin" class="">
+  <form class="admin-panel">
+    <div class="admin-rooms">
+      <div class="list-header">診間管理</div>
+      <div class="room-list"></div>
+      <div class="btn-del-room">刪除選擇診間</div>
+      <div class="input-new-room">
+        <div class="list-header">建立診間</div>
+        <input placeholder="新診間名稱" class="input-room-name" name="new_room_name">
+        <div class="btn-add-room">新增診間</div>
+      </div>
+    </div>
+    <div class="admin-users">
+      <div class="list-header">帳號列表</div>
+      <div class="doctor-list flex-col"></div>
+      <div class="input-new-doctor">
+        <div class="list-header">建立帳號</div>
+        <input class="input-doctor-name" placeholder="醫師" name="doctor_name">
+        <input class="input-doctor-email" placeholder="EMAIL" name="email">
+        <input class="input-doctor-password" placeholder="密碼" name="password">
+        <div class="btn-add-doctor">新增帳號並切換</div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<template id="tmp_room_item">
+  <div class="room-item btn">
+    <label>
+      <input type="radio" name="select_room">
+      <div class="room-state">{{room_name}} {{open}} [{{doctor}}] {{number}} - {{info}}</div>
+    </label>
+  </div>
+</template>
+
+<template id="tmp_doctor_item">
+  <div class="doctor-item btn">
+    <label>
+      <input type="radio" name="select_doctor">
+      <div class="doctor-info">{{name}}({{email}})</div>
+    </label>
+  </div>
+</template>
+
+<!-- header -->
+<div id="header" style="--aspect-ratio: 9/2">
+  <div class="content">
+    <div class="logo">線上叫號系統 -DEMO-</div>
+    <div class="bar-date">{{date}}</div>
+    <div class="bar-dt"><span class="bar-day">{{day}}</span> <span class="bar-time">{{time}}</span></div>
+  </div>
+</div>
+
+</div>
+<!-- fixed end -->
+<div class="placeholder user"></div>
+<div class="placeholder header" style="--aspect-ratio: 9/2;"></div>
+
+<!-- rooms -->
+<div id="rooms" style="--aspect-ratio: 9/11;">
+  <div class="content">
+    <div class="loading">等待連線取得資料...</div>
+  </div>
+</div>
+<template id="tmp_room">
+<div class="r2" prop="open" style="--aspect-ratio: 36/41;">
+  <div>
+    <div class="row-0" style="--aspect-ratio: 36/2;"></div>
+    <div class="row-1" style="--aspect-ratio: 36/4;">
+      <div class="card-top">
+        <div class="room-name fw" prop="room_name">{{room_name}}</div>
+        <div class="date fw" prop="date">{{time}}</div>
+        <div class="day fw" prop="day">{{time}}</div>
+        <div class="time fw" prop="time">{{time}}</div>
+      </div>
+    </div>
+    <div class="row-2" style="--aspect-ratio: 36/9;">
+      <div class="card-mid">
+        <div class="doctor fw" prop="doctor">{{doctor}}</div>
+      </div>
+    </div>
+    <div class="row-3" style="--aspect-ratio: 36/16;">
+      <div class="card-bottom">
+        <div class="number fw" prop="number">{{number}}</div>
+      </div>
+    </div>
+    <div class="row-4" style="--aspect-ratio: 36/10;">
+      <div class="card-info">
+        <pre class="info fw" prop="info">{{info}}</pre>
+      </div>
+    </div>
+    <div class="more">
+      <svg viewBox="0 0 280 6" xmlns="http://www.w3.org/2000/svg">
+        <path class="triangle-down" d="M 140 5 L 142.3 1 H 137.7 L 140 5" fill="#111" />
+        <path class="triangle-up" d="M 140 0 L 141.7 3 H 138.3 L 140 0" fill="#333" />
+      </svg>
+    </div>
+    <div class="room-closed box">請先開診</div>
+  </div>
+</div>
+</template>
+
+<!-- control -->
+<div id="fixed_bottom">
+  <div id="control" style="--aspect-ratio: 9/5;">
+    <div class="content">
+      <form class="form flex-col">
+        <input type="hidden" name="room_id" value="">
+        <input type="hidden" name="room_name" value="">
+        <input type="hidden" name="date" value="">
+        <input type="hidden" name="time" value="">
+        <input type="hidden" name="doctor" value="">
+        <input type="hidden" name="number" value="">
+        <input type="hidden" name="open" value="">
+        <fieldset class="room-operation">
+          <legend>叫號控制</legend>
+          <div class="next-list"></div>
+          <template id="tmp_btn_next">
+            <div class="btn-next" style="--aspect-ratio:9/2;" step="1">
+              <svg viewBox="0 0 396 88" xmlns="http://www.w3.org/2000/svg">
+                <text font-size="48" font-weight="500" x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" p>叫號[+{{step}}] &gt;&gt; {{next_number}}</text>
+              </svg>
+            </div>
+          </template>
+          <div class="input-number flex-row">
+            <input placeholder="No." name="new_number" type="number" required min="0" value="">
+            <div class="btn-number" style="--aspect-ratio:4/1;">
+              <svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg">
+                <text font-size="24" font-weight="500" x="50%" y="55%" dominant-baseline="middle" text-anchor="middle">更新</text>
+              </svg>
+            </div>
+          </div>
+        </fieldset>
+        <fieldset class="room-opening">
+          <legend>開診</legend>
+          <div class="flex-row">
+            <div class="input-open flex-col">
+              <label class="input-date" style="--aspect-ratio:4/1;">
+                <svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg">
+                  <text font-size="16" font-weight="500" x="50%" y="55%" dominant-baseline="middle" text-anchor="middle">{{date_text}}{{day_text}}</text>
+                </svg>
+                <input type="hidden" name="new_date">
+              </label>
+              <div class="input-time flex-row">
+                <label>
+                  <input type="radio" name="new_time" value="早">
+                  <span class="option btn-o" style="--aspect-ratio:3/2;">
+                    <svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
+                      <text font-size="24" font-weight="500" x="50%" y="60%" dominant-baseline="middle" text-anchor="middle">早</text>
+                    </svg>
+                  </span>
+                </label>
+                <label>
+                  <input type="radio" value="午" name="new_time">
+                  <span class="option btn-o" style="--aspect-ratio:3/2;">
+                    <svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
+                      <text font-size="24" font-weight="500" x="50%" y="60%" dominant-baseline="middle" text-anchor="middle">午</text>
+                    </svg>
+                  </span>
+                </label>
+                <label>
+                  <input type="radio" value="晚" name="new_time">
+                  <span class="option btn-o" style="--aspect-ratio:3/2;">
+                    <svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
+                      <text font-size="24" font-weight="500" x="50%" y="60%" dominant-baseline="middle" text-anchor="middle">晚</text>
+                    </svg>
+                  </span>
+                </label>
+              </div>
+              <div class="input-doctor flex-col">
+                <input placeholder="醫師" name="new_doctor" readonly value="">
+                <div class="doctor-select">
+                  <div class="btn-doctor">{{doctor.name}}</div>
+                </div>
+              </div>
+            </div>
+            <div class="open-btns flex-col">
+              <div class="btn-open" style="--aspect-ratio:2/1;">
+                <svg viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
+                  <text font-size="32" font-weight="500" x="50%" y="55%" dominant-baseline="middle" text-anchor="middle">開診</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+        <fieldset class="room-closing flex-col">
+          <legend>關診</legend>
+          <div class="btn-close" style="--aspect-ratio:9/1;">
+            <svg viewBox="0 0 270 30" xmlns="http://www.w3.org/2000/svg">
+              <text font-size="24" font-weight="500" x="50%" y="60%" dominant-baseline="middle" text-anchor="middle">關診</text>
+            </svg>
+          </div>
+        </fieldset>
+        <fieldset class="room-infoedit">
+        <legend>診次訊息</legend>
+        <div class="input-info flex-col">
+          <textarea placeholder="診次訊息" name="info"></textarea>
+          <a class="btn-info" style="--aspect-ratio:12/1;">
+            <svg viewBox="0 0 360 30" xmlns="http://www.w3.org/2000/svg">
+              <text font-size="16" font-weight="500" x="50%" y="60%" dominant-baseline="middle" text-anchor="middle">更新訊息</text>
+            </svg>
+          </a>
+        </div>
+      </fieldset>
+    </form>
+    </div>
+    <div class="disable-control"></div>
+  </div>
+</div>
+
+<!-- footer -->
+<div id="footer">
+  <div class="content">
+    <div> | -DEMO- | </div>
+    <div style="font-weight: 300; color: #999;">&copy; YzChen</div>
+  </div>
+</div>
+
+<!-- msg -->
+<div id="msg"></div>
+
+<!-- script -->
+<!-- init firebase -->
+<script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-analytics.js"></script>
+<script>
+// firebase init
+var firebaseConfig = {
+  apiKey: "AIzaSyBBWeeBeg0yJQubnY9xNRvSnGHgkqnO6jw",
+  authDomain: "playground-89e58.firebaseapp.com",
+  databaseURL: "https://playground-89e58.firebaseio.com",
+  projectId: "playground-89e58",
+  storageBucket: "playground-89e58.appspot.com",
+  messagingSenderId: "915528713378",
+  appId: "1:915528713378:web:9f00df4b60e73e008003fb"
+};
+try {
+  firebase.initializeApp(firebaseConfig);
+  firebase.analytics();
+}catch(er){
+  rooms_div.querySelector(".loading").innerText = "firebase 啟動失敗，請連繫管理員。"
+}
+</script>
+
+<!-- msg -->
+<script>
+const msg_div = document.getElementById("msg")
+function msg( m, op = {t:10000} ){
+  op = Object.assign({},op)
+  if(op.hide){
+    return msg_div.classList.remove("show")
+  }
+  console.log(new Date(),m)
+  msg_div.classList.add("show")
+  if(op.html){
+    msg_div.innerHTML = m
+  }else{
+    msg_div.innerText = m
+  }
+  if(!isNaN(op.t)&&op.t>=0){
+    if(msg.timeout){
+      clearTimeout(msg.timeout)
+      msg.timeout = null
+    }
+    msg.timeout = setTimeout(function(){
+      msg(null,{hide:true})
+    },op.t)
+  }
+}
+msg_div.addEventListener("click",function(e){
+  msg(null,{hide:true})
+})
+</script>
+
+<!-- init database -->
+<script>
+const db = firebase.database()
+const rooms = {}
+
+// init
+db.ref('rooms').orderByChild("room_name").once('value',function(snapshot) {
+  const list = snapshot.val()
+  const rooms_content = rooms_div.querySelector(".content")
+  while(rooms_content.firstChild){rooms_content.removeChild(rooms_content.firstChild)}
+  for( let room_id in list ){
+    const room = list[room_id]
+    if(!room){ continue }
+    
+    rooms[room_id] = {}
+    const elm = createRoom(room_id)
+    
+    // does not listen to room amount change
+    for( let prop in room ){
+      // skip preserve key
+      if(/^_/.test(prop)){ continue }
+      // search template for an element has attr: prop=${prop}
+      const d = elm.getAttribute("prop") == prop? elm : elm.querySelector(`[prop="${prop}"]`)
+      // emit update event while assigning new values if template exists else saves the value only
+      Object.defineProperty( rooms[room_id], prop, {
+        enumerable: true,
+        set: d? function(value){
+            room[prop] = value
+            d.dispatchEvent(new CustomEvent("update",{detail: {room_id,prop,value}, bubbles: true}))
+          }:function(value){
+            room[prop] = value
+          },
+        get() { return room[prop] }
+      })
+      // listen to each property and save them
+      db.ref(`rooms/${room_id}/${prop}`).on('value', function(s) {
+        rooms[room_id][prop] = s.val()
+      })
+      // init value
+      rooms[room_id][prop] = room[prop]
+      
+    }
+    rooms[room_id][Symbol.for("element")] = elm
+    
+    // add item to admin room list
+    addAdminRoomItem(room_id)
+  }
+  
+  // reload when room added / removed
+  db.ref("rooms").on("child_added",function(data){
+    if(!(data.key in rooms)){
+      location.reload()
+    }
+  })
+  db.ref("rooms").on("child_removed",function(data){
+    if(data.key in rooms){
+      location.reload()
+    }
+  })
+},function(er){
+  rooms_div.querySelector(".loading").innerText = "無法取得資料，請稍後再試"
+})
+
+// doctors
+function getDoctors(){
+  return new Promise(r=>{
+    db.ref("doctors").orderByChild("name").once("value",function(s){
+      const doctors = s.val()
+      r(doctors)
+    },function(er){
+      r(null)
+    })
+  })
+}
+function getDoctorInfo(uid){
+  return new Promise(r=>{
+    db.ref(`doctors/${uid}`).once("value",function(s){
+      const doctor = s.val()
+      r(doctor)
+    },function(er){
+      r(null)
+    })
+  })
+}
+
+function updateRoomData(room_id,data,callback){
+  return db.ref(`rooms/${room_id}`).update(data,callback)
+}
+
+function dbAddRoom(room_name,callback=function(er){}){
+  if(!room_name){ return }
+  const user = getAuthUser()
+  if(!user.isAdmin){
+    return msg("權限不足")
+  }
+  const new_room = db.ref("rooms").push()
+  new_room.set({
+    room_name,
+    date: +new Date(),
+    time: "早",
+    doctor: "",
+    number: 0,
+    open: "",
+    info: "",
+    update: +new Date()
+  }, callback)
+  return new_room.key
+}
+function dbDelRoom(room_id,callback=function(er){}){
+  if(!(room_id in rooms)){
+    return msg("診間不存在")
+  }
+  const user = getAuthUser()
+  if(!user.isAdmin){
+    return msg("權限不足")
+  }
+  db.ref(`rooms/${room_id}`).set(null,callback)
+}
+
+function updateUserInfo(user,meta){
+  if(user && user.uid){
+    const data = Object.assign(
+      {name: "", steps: [1].join(";")},
+      user.info,
+      meta,
+      {email: user.email}
+    )
+    return db.ref(`doctors/${user.uid}`).set(data,er=>{
+      if(er){
+        msg("名稱更新失敗")
+        return er
+      }else{
+        user.info = data
+        if(user.doctors){
+          user.doctors[user.uid] = data
+        }
+        refreshUserInfo()
+      }
+    })
+  }
+}
+
+function deleteUserInfo(user){
+  if(user && user.uid){
+    return db.ref(`doctors/${user.uid}`).set(null,er=>{
+      if(er){
+        msg("附加資訊刪除失敗")
+      }
+    })
+  }
+}
+
+</script>
+
+<!-- auth -->
+<script>
+/* signin form UI */
+const signin_form = document.getElementById("signin_form")
+const signout_btn = document.getElementById("signout_btn")
+
+signin_form.addEventListener("submit", function(e){
+  e.preventDefault()
+  const fd = new FormData(e.target)
+  signin(fd.get("email"), fd.get("password"))
+  lock_signin_form()
+})
+signout_btn.addEventListener("click", function(e){
+  signout().catch(er=>{
+    msg("登出失敗")
+  })
+})
+
+function lock_signin_form(){
+  Array.from( signin_form.querySelectorAll("input"), elm => { elm.disabled = true } )
+}
+function unlock_signin_form(){
+  Array.from( signin_form.querySelectorAll("input"), elm => { elm.disabled = false } )
+}
+function clear_signin_form(){
+  Array.from( signin_form.querySelectorAll("input:not([type=submit])"), elm => { elm.value = "" } )
+}
+function update_signin_form(text){
+  document.getElementById("signin_name").innerText = text
+}
+
+function signin(email,password){
+  msg("登入中...",{t:-1})
+  let pr
+  try{
+    pr = firebase.auth().signInWithEmailAndPassword(email,password).catch(function(er){
+      msg(`登入失敗 [${er.code}]`)
+      unlock_signin_form()
+    })
+  }catch(er){
+    msg(`登入失敗 [${er.code}]`)
+    unlock_signin_form()
+  }
+  return pr
+}
+function signout(){
+  msg("登出中...",{t:-1})
+  return firebase.auth().signOut()
+}
+
+/* auth state change - this would trigger once after init */
+firebase.auth().onAuthStateChanged( function(user) {
+  if(user){
+    Promise.all([getDoctorInfo(user.uid),checkAdmin()]).then(([doctor,isAdmin])=>{
+      if(doctor){
+        user.info = doctor
+        msg(`${user.info.name}(${user.email})登入成功`)
+      }else{
+        msg(`${user.email}登入成功`)
+      }
+      if(isAdmin){
+        return getDoctors()
+      }
+    }).then(doctors=>{
+      if(doctors){
+        user.doctors = doctors
+      }
+      refreshUserInfo()
+    })
+  }else{
+    msg(`已登出`)
+    refreshUserInfo()
+  }
+})
+
+function refreshUserInfo(){
+  const user = getAuthUser()
+  if(user){
+    document.body.classList.add("signin")
+    clear_signin_form()
+    if(user.info){
+      update_signin_form(`${user.info.name}(${user.email})`)
+      const steps = (typeof user.info.steps == "string"? user.info.steps : "1").split(";").filter(v=>!isNaN(v)&&v>0)
+      refreshStepBtns(steps)
+    }else{
+      update_signin_form(user.email)
+      refreshStepBtns([1])
+      updateUserInfo(user)
+    }
+    if(user.isAdmin){
+      document.body.classList.add("admin")
+    }else{
+      document.body.classList.remove("admin")
+    }
+    listDoctors()
+    refreshAdminStepBtns()
+  }else{
+    document.body.classList.remove("admin")
+    document.body.classList.remove("signin")
+    update_signin_form("")
+    unlock_signin_form()
+  }
+}
+
+function getAuthUser(){
+  return firebase.auth().currentUser
+}
+function checkAdmin(){
+  return new Promise(r=>{
+    const user = getAuthUser()
+    if(user){
+      db.ref("admin").set(user.uid,function(err){
+        user.isAdmin = !err
+        r(user.isAdmin)
+      })
+    }else{
+      r(false)
+    }
+  })
+}
+function checkRoomPermission(room_id){
+  return new Promise(r=>{
+    const user = getAuthUser()
+    const room = rooms[room_id]
+    if(user && room){
+      db.ref(`rooms/${room_id}/__check`).set(user.uid,er=>r(!er))
+    }
+  })
+}
+
+function signinNewUser(email,password,name){
+  const user = getAuthUser()
+  if(!user.isAdmin){
+    return msg("權限不足")
+  }
+  return firebase.auth().createUserWithEmailAndPassword(email, password).catch(err=>{
+    msg(err.message)
+  }).then(userCred=>{
+    if(userCred){
+      updateUserInfo(userCred.user,{name})
+    }
+  })
+  
+}
+function delThisUser(){
+  const user = getAuthUser()
+  if(user.isAdmin){
+    return msg("無法刪除管理帳號")
+  }
+  return user.reauthenticateWithCredential(
+    firebase.auth.EmailAuthProvider.credential(user.email, admin_form.elements.confirm_password.value)
+  ).then( uc => {
+    deleteUserInfo(user).then(()=>{
+      user.delete().catch(err=>{
+        msg("帳號刪除失敗")}
+      )
+    })
+  }).catch(err=>{
+    msg("密碼錯誤")
+  })
+}
+
+</script>
+
+<!-- route -->
+<script>
+function checkUrl(){
+  const url = new URL(location.href)
+  const q = url.searchParams
+  if(url.hash == "#manager"){
+    document.body.classList.add("manager")
+  }else{
+    document.body.classList.remove("manager")
+  }
+}
+window.addEventListener("hashchange", checkUrl, false)
+checkUrl()
+</script>
+
+<!-- data util function -->
+<script>
+function DateToString(dt){
+  // 先 +8 小時，這樣 UTC 時區就會讀到 +8 時區，其他 get 類函式會讀成瀏覽器的時區而跟伺服器時區不一致
+  const d8 = new Date(+dt+8*60*60*1000)
+  if(isNaN(d8)){
+    return "－－－－"
+  }else{
+    const cs = ["","一","二","三","四","五","六","七","八","九","十"]
+    const ms = "月"
+    const ds = "日"
+    const month = d8.getUTCMonth()+1
+    const date = d8.getUTCDate()
+    let s = ""
+    if(month >= 10){
+      s = cs[10] + cs[month-10] + ms
+    }else{
+      s = cs[month] + ms
+    }
+    if(date >= 30){
+      s += cs[3] + cs[10] + cs[date-30]
+    }else if(date >= 20){
+      s += cs[2] + cs[10] + cs[date-20]
+    }else if(date > 10){
+      s += cs[10] + cs[date-10]
+    }else{
+      s += cs[date] + ds
+    }
+    return s
+  }
+}
+function DateToDay(dt){
+  const d8 = new Date(+dt+8*60*60*1000)
+  if(isNaN(d8)){
+    return "(－－－)"
+  }else{
+    const cd = ["(星期日)","(星期一)","(星期二)","(星期三)","(星期四)","(星期五)","(星期六)"]
+    return cd[d8.getUTCDay()]
+  }
+}
+function toTimeString(dt){
+  const d8 = new Date(+dt+8*60*60*1000)
+  if(isNaN(d8)){
+    return "－"
+  }
+  const h = d8.getUTCHours() + d8.getUTCMinutes()/60
+  if( h >= 17.5 ){
+    return "晚"
+  }else if( h >= 12.5 ){
+    return "午"
+  }else if( h >= 4 ){
+    return "早"
+  }else{
+    return "晚"
+  }
+}
+function timer(fn,op){
+  if(typeof fn != "function"){throw TypeError()}
+  cancelAnimationFrame(timer.id)
+  timer.id = null
+  if(op != "off"){
+    timer.id = requestAnimationFrame((ts)=>{
+      fn(ts)
+      timer(fn)
+    })
+  }
+}
+timer.id = null
+
+</script>
+
+<!-- UI -->
+<script>
+function refreshList( elm, list, callback, cloned ){
+  while(elm.firstChild){elm.removeChild(elm.firstChild)}
+  for( let i in list ){
+    const d = cloned.cloneNode(true)
+    callback.call(d,list[i],i)
+    elm.appendChild(d)
+  }
+}
+
+/* rooms */
+const rooms_div = document.getElementById("rooms")
+const tmp_room = document.getElementById("tmp_room")
+function createRoom(room_id){
+  const r = tmp_room.content.firstElementChild.cloneNode(true);
+  r.id = `room${room_id}`
+  rooms_div.querySelector(".content").appendChild(r)
+  r.addEventListener("update",triggerUpdateRoom)
+  r.addEventListener("click",function(e){
+    selectRoom(room_id)
+  })
+  return r
+}
+function triggerUpdateRoom(e){
+  updateRoom(e.detail.room_id,e.detail.prop,e.detail.value,e.target)
+  updateControl(e.detail.room_id,e.detail.prop,e.detail.value)
+  updateAdminRoomItem(e.detail.room_id)
+  if(Array.from(document.querySelectorAll(".r2.open")).length == 0){
+    rooms_div.classList.add("no-rooms")
+  }else{
+    rooms_div.classList.remove("no-rooms")
+  }
+}
+function setText(dom,text){
+  if(dom instanceof Node){
+    if(typeof dom.innerText == "string"){
+      dom.innerText = text
+    }else if(typeof dom.textContent == "string"){
+      dom.textContent = text
+    }
+  }
+}
+function updateRoom(room_id,prop,v,target){
+  const room = document.getElementById(`room${room_id}`)
+  if(room && target){
+    switch(prop){
+    case "room_name":
+    case "time":
+    case "doctor":
+    case "number":
+      setText(target, v)
+    break
+    case "open":
+      if(v){
+        room.classList.add("open")
+      }else{
+        room.classList.remove("open")
+      }
+    break
+    case "date":
+      setText(target, DateToString(v))
+      setText(room.querySelector("[prop=day]"), DateToDay(v))
+    break
+    case "info":
+      setText(target, v)
+    break
+    }
+  }
+}
+function selectRoom(room_id){
+  Array.from(rooms_div.querySelectorAll(".r2"),room=>{
+    if(room.id == `room${room_id}`){
+      if(room.classList.contains("selected")){
+        room.classList.remove("selected")
+        document.body.classList.remove("focus")
+        setControlRoom()
+      }else{
+        room.classList.add("selected")
+        document.body.classList.add("focus")
+        setControlRoom(room_id)
+      }
+    }else{
+      room.classList.remove("selected")
+    }
+  })
+}
+
+/* control */
+const control_form = document.querySelector("#control form.form")
+
+function setControlRoom(room_id){
+  control_form.closest("#control").classList.add("disabled")
+  const room = rooms[room_id]
+  if(room){
+    control_form.elements.room_id.value = room_id
+    for( let prop in room ){
+      updateControl(room_id,prop,room[prop])
+    }
+  }
+  checkRoomPermission(room_id).then(per=>{
+    if(per){control_form.closest("#control").classList.remove("disabled")}
+  })
+}
+function updateControl(room_id,prop,v){
+  const room = document.getElementById(`room${room_id}`)
+  if(room.classList.contains("selected") && document.body.classList.contains("signin")){
+    const input = control_form.elements[prop]
+    if(input){
+      switch(prop){
+        case "number":
+          control_form.elements.new_number.value = v
+          Array.from(control_form.querySelectorAll(".btn-next[step]"),btn=>{
+            const step = +btn.getAttribute("step")
+            setText(btn.querySelector("svg text"), `叫號[+${step}] >> ${+v+step}`)
+          })
+        break
+        case "date": // for open room only
+          const nd = +new Date()
+          control_form.elements.new_date.value = nd
+          control_form.querySelector(".input-date svg text").textContent = `${DateToString(nd)}${DateToDay(nd)}`
+        break
+        case "time": // for open room only
+          control_form.elements.new_time.value = toTimeString(new Date())
+        break
+        case "doctor": // for open room only
+          const user = getAuthUser()
+          if(user.info){
+            control_form.elements.new_doctor.value = user.info.name
+          }
+          updateDoctorList(user.doctors)
+          if(user.isAdmin){
+            control_form.elements.new_doctor.removeAttribute("readonly")
+          }else{
+            control_form.elements.new_doctor.setAttribute("readonly","")
+          }
+        break
+        case "open":
+          if(v){
+            control_form.classList.add("open")
+          }else{
+            control_form.classList.remove("open")
+          }
+        break
+        case "room_name":
+        case "info":
+      }
+      input.value = v
+    }
+  }
+}
+function updateDoctorList(doctors){
+  refreshList(
+    control_form.querySelector(".doctor-select"),
+    doctors||[],
+    function(doctor,uid){
+      this.className = "btn-doctor"
+      this.innerText = doctor.name
+      this.addEventListener("click", function(e){
+        control_form.elements.new_doctor.value = this.innerText
+      })
+    },
+    document.createElement("div")
+  )
+}
+
+// control inputs: DB related
+// room operation
+const tmp_btn_next = document.getElementById("tmp_btn_next")
+function refreshStepBtns(steps){
+  refreshList(
+    control_form.querySelector(".next-list"),
+    steps,
+    function(step,i){
+      this.setAttribute("step",step)
+      setText(this.querySelector("svg text"), `叫號[+${step}] >> ${+control_form.elements.number.value+step}`)
+      this.addEventListener("click",function(){
+        nextPN(this.getAttribute("step"))
+      })
+    },
+    tmp_btn_next.content.firstElementChild.cloneNode(true)
+  )
+}
+async function nextPN(step=1){
+  if(isNaN(step) || +step < 1){step = 1}
+  const fd = new FormData(control_form)
+  updateRoomData(fd.get("room_id"),{
+    number: +fd.get("number") + Math.floor(step),
+    update: +new Date()
+  }, function(er){
+    if(er){
+      msg("叫號更新失敗")
+    }
+  })
+}
+async function updatePN(){
+  const fd = new FormData(control_form)
+  updateRoomData(fd.get("room_id"),{
+    number: +fd.get("new_number"),
+    update: +new Date()
+  }, function(er){
+    if(er){
+      msg("叫號更新失敗")
+    }
+  })
+}
+control_form.querySelector("[name=new_number]").addEventListener("focus",function(){this.select()})
+control_form.querySelector(".btn-number").addEventListener("click",updatePN)
+// room opening
+async function openRoom(){
+  const fd = new FormData(control_form)
+  if(fd.get("open")){
+    return msg("無法再開診")
+  }
+  updateRoomData(fd.get("room_id"),{
+    date: +fd.get("new_date"),
+    time: fd.get("new_time"),
+    doctor: fd.get("new_doctor"),
+    number: 0,
+    open: getAuthUser().uid,
+    update: +new Date()
+  }, function(er){
+    if(er){
+      msg("開診失敗")
+    }
+  })
+}
+control_form.querySelector(".btn-open").addEventListener("click",openRoom)
+// room closing
+async function closeRoom(){
+  const fd = new FormData(control_form)
+  if(!fd.get("open")){
+    return msg("診間已關閉")
+  }
+  updateRoomData(fd.get("room_id"),{
+    open: "",
+    update: +new Date()
+  }, function(er){
+    if(er){
+      msg("關診失敗")
+    }
+  })
+}
+control_form.querySelector(".btn-close").addEventListener("click",closeRoom)
+
+/* not in use */
+async function nextRoom(){
+  const fd = new FormData(control_form)
+  const t = {"早":"午","午":"晚","晚":"早"}
+  const nt = t[fd.get("time")] || ""
+  const nd = nt == "晚" ? +fd.get("date") + 24*60*60*1000 : +fd.get("date")
+  updateRoomData(fd.get("room_id"),{
+    date: nd,
+    time: nt,
+    doctor: fd.get("doctor"),
+    number: 0,
+    open: getAuthUser().uid,
+    update: +new Date()
+  }, function(er){
+    if(er){
+      msg("接診失敗")
+    }
+  })
+}
+
+// room infoedit
+async function updateRoomInfo(){
+  const fd = new FormData(control_form)
+  updateRoomData(fd.get("room_id"),{
+    info: fd.get("info"),
+    update: +new Date()
+  }, function(er){
+    if(er){
+      msg("診間資訊更新失敗")
+    }
+  })
+}
+control_form.querySelector(".btn-info").addEventListener("click",updateRoomInfo)
+
+/* admin */
+const tmp_room_item = document.getElementById("tmp_room_item")
+const tmp_doctor_item = document.getElementById("tmp_doctor_item")
+const admin_form = document.querySelector("#admin form.admin-panel")
+const room_list_div = admin_form.querySelector(".room-list")
+const doctor_list_div = admin_form.querySelector(".doctor-list")
+
+// admin-room
+function addAdminRoomItem(room_id){
+  const new_room = tmp_room_item.content.firstElementChild.cloneNode(true)
+  new_room.id = `room-item${room_id}`
+  room_list_div.appendChild(new_room)
+  updateAdminRoomItem(room_id)
+}
+function updateAdminRoomItem(room_id){
+  const room_item = room_list_div.querySelector(`#room-item${room_id}`)
+  if(room_item){
+    const room = rooms[room_id]
+    room_item.querySelector("input[name=select_room]").value = room_id
+    const state = room_item.querySelector(".room-state")
+    if(room.open){
+      state.classList.add("open")
+      state.innerText = `[${room.room_name}] ${room.doctor} 醫師 (${room.number}) - ${room.info.replace(/[\n\r]+/gm,"\u21b2")}`
+    }else{
+      state.classList.remove("open")
+      state.innerText = `[${room.room_name}] - ${room.info.replace(/[\n\r]+/gm,"\u21b2")}`
+    }
+  }
+}
+function deleteRoom(room_id){
+  return dbDelRoom(room_id,er=>msg("診間刪除失敗"))
+}
+admin_form.querySelector(".btn-del-room").addEventListener("click",e=>{
+  const fd = new FormData(admin_form)
+  const room_id = fd.get("select_room")
+  if(!room_id){
+      msg("請先選取診間再刪除")
+  }else{
+    const room = rooms[room_id]
+    if(room.open){
+      if( confirm(`[${rooms[room_id].room_name}] 診間開放中，是否刪除診間?`) ){
+        deleteRoom(room_id)
+      }else{
+        msg("取消刪除")
+      }
+    }else{
+      deleteRoom(room_id)
+    }
+  }
+})
+function addRoom(){
+  const input = admin_form.querySelector(".input-room-name")
+  const room_name = input.value
+  if(room_name){
+    return dbAddRoom(room_name,er=>msg("無法建立診間"))
+  }else{
+    msg("請輸入新名稱")
+    input.select()
+  }
+}
+admin_form.querySelector(".btn-add-room").addEventListener("click",addRoom)
+
+// admin-user
+function listDoctors(){
+  const user = getAuthUser()
+  if( user && user.isAdmin ){
+    refreshList( doctor_list_div, user.doctors, function(doctor, uid){
+      this.querySelector("input[name=select_doctor]").value = uid
+      this.querySelector(".doctor-info").innerText = `${doctor.name} (${doctor.email})`
+    }, tmp_doctor_item.content.firstElementChild )
+  }
+}
+function addNewUser(){
+  const user = getAuthUser()
+  if(user && user.isAdmin){
+    const fd = new FormData(admin_form)
+    const email = fd.get("email")
+    const password = fd.get("password")
+    const name = fd.get("doctor_name")
+    if( email && password && name ){
+      return signinNewUser(email,password,name)
+    }else{
+      msg("欄位不得為空")
+    }
+  }
+}
+admin_form.querySelector(".btn-add-doctor").addEventListener("click",addNewUser)
+
+// user
+const user_form = document.getElementById("user_form")
+function renewUser(){
+  const new_name = user_form.elements.new_doctor_name
+  const user = getAuthUser()
+  if(!new_name.value){
+    msg("請輸入新名稱")
+    return new_name.select()
+  }
+  if(user){
+    const old_name = user.info.name
+    updateUserInfo(user,{name: new_name.value}).then(x=>{
+      user.info.name = new_name.value
+      update_signin_form(`${user.info.name}(${user.email})`)
+      if(user.doctors){
+        user.doctors[user.uid].name = user.info.name
+        updateDoctorList(user.doctors)
+      }
+      msg(`醫師名稱已從${old_name}更新為${user.info.name}`)
+    })
+  }
+}
+document.querySelector(".edit-user .btn-change-doctor-name").addEventListener("click",renewUser)
+function deleteCurrentUser(){
+  const user = getAuthUser()
+  if(user){
+    const info = user.info || {name:"",email:user.email}
+    if( user.isAdmin ){
+      return msg("管理員帳號無法刪除")
+    }
+    if( confirm("確認刪除此帳號?\n"+ info.name + `(${info.email})`) ){
+      delThisUser()
+    }
+  }
+}
+document.querySelector(".edit-user .btn-del-doctor").addEventListener("click",deleteCurrentUser)
+
+/* step btns */
+function refreshAdminStepBtns(){
+  const user = getAuthUser()
+  if(!user.info){return}
+  const steps = (typeof user.info.steps == "string"? user.info.steps : "").split(";")
+  refreshList(
+    user_form.querySelector(".list-steps"),
+    steps.filter(v=>!isNaN(v)&&v>0),
+    function(step,i){
+      this.setAttribute("i",i)
+      this.querySelector("input[name=steps]").value = step
+      setText(this.querySelector(".step"),step)
+      this.querySelector(".btn-del-step").addEventListener("click",deleteStep)
+    },
+    document.getElementById("tmp_step").content.firstElementChild
+  )
+}
+function deleteStep(){
+  const user = getAuthUser()
+  const item = this.closest(".step-item")
+  item.parentNode.removeChild(item)
+  if(user.info){
+    let steps = (typeof user.info.steps == "string"? user.info.steps : "").split(";").filter(v=>!isNaN(v)&&v>0)
+    steps.splice(+item.getAttribute("i"),1)
+    user.info.steps = steps.join(";")
+  }
+  refreshAdminStepBtns()
+}
+function addStep(){
+  const user = getAuthUser()
+  if(user.info){
+    const new_step = user_form.elements.new_step
+    let steps = (typeof user.info.steps == "string"? user.info.steps : "").split(";").filter(v=>!isNaN(v)&&v>0)
+    if(new_step.validity && new_step.value > 0){
+      steps.push(+new_step.value)
+      user.info.steps = steps.join(";")
+      new_step.value = ""
+    }else{
+      msg("請輸入大於零的數字")
+      new_step.select()
+    }
+  }
+  refreshAdminStepBtns()
+}
+document.querySelector(".btn-add-step").addEventListener("click", addStep)
+function updateStepBtns(){
+  const user = getAuthUser()
+  if(user.info){
+    let steps = (typeof user.info.steps == "string"? user.info.steps : "").split(";").filter(v=>!isNaN(v)&&v>0)
+    user.info.steps = steps.join(";")
+    updateUserInfo(user,{steps: user.info.steps}).then(er=>{
+      if(!er){
+        msg("叫號間距已更新")
+      }
+    })
+  }
+}
+document.querySelector(".btn-update-step").addEventListener("click", updateStepBtns)
+
+/* toggle */
+function toggleDiv(div,force_open){
+  if(div instanceof HTMLElement){
+    let isOpen = div.classList.contains("open")
+    if(typeof force_open != "undefined"){
+      if(force_open){
+        isOpen = false
+      }else{
+        isOpen = true
+      }
+    }
+    if(isOpen){
+      div.classList.remove("open")
+    }else{
+      div.classList.add("open")
+    }
+    return !isOpen
+  }
+}
+document.getElementById("self_btn").addEventListener("click",e=>{
+  if(toggleDiv(document.getElementById("edit_self"))){
+    toggleDiv(document.getElementById("admin"),false)
+  }
+})
+document.getElementById("toggle_admin").addEventListener("click",e=>{
+  if(toggleDiv(document.getElementById("admin"))){
+    toggleDiv(document.getElementById("edit_self"),false)
+  }
+})
+
+// timer
+const header_div = document.getElementById("header")
+function updateDateTime(ts){
+if( ts - header_div.ts >= 500 ){
+    header_div.ts = ts
+    const dt = new Date()
+    const date = DateToString(dt)
+    const day = DateToDay(dt)
+    const time = toTimeString(dt)
+    const date_div = header_div.querySelector(".bar-date")
+    const day_div = header_div.querySelector(".bar-day")
+    const time_div = header_div.querySelector(".bar-time")
+    if(date_div.innerText != date){
+      setText(date_div, date)
+    }
+    if(day_div.innerText != day){
+      setText(day_div, day)
+    }
+    if(time_div.innerText != time){
+      setText(time_div, time)
+    }
+  }
+}
+header_div.ts = -500
+timer(updateDateTime)
+</script>
+
+</body>
+</html>
