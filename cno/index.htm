@@ -751,6 +751,51 @@ body:not(.manager) #rooms.no-rooms .content::before {
 
 </style>
 
+<!-- room focus operation -->
+<style>
+.signin.focus .r2 {
+  --aspect-ratio: 0 !important;
+  padding-top: 0;
+  padding-bottom: 5.5em;
+}
+.signin.focus .r2 .row-0 {
+  display: none;
+}
+.signin.focus .r2 .row-1, .signin.focus .r2 .row-2, .signin.focus .r2 .row-3 {
+  --aspect-ratio: 0 !important;
+}
+.signin.focus .r2 .row-1 {
+  width: 12%;
+  padding: 0.75em 1.5%;
+  float: left;
+}
+.signin.focus .r2 .row-2 {
+  width: 12%;
+  padding: 0.75em 2%;
+  float: left;
+}
+.signin.focus .r2 .row-3 {
+  width: 12%;
+  padding: 0.75em 1.5%;
+  float: right;
+}
+.signin.focus .r2 .room-name, .signin.focus .r2 .doctor, .signin.focus .r2 .number {
+  font-size: 1em;
+  line-height: 1.5em;
+}
+.signin.focus .r2 .doctor::before {
+  display: none;
+}
+.signin.focus .r2 .row-4 {
+  --aspect-ratio: 0 !important;
+  padding-bottom: 4em;
+  clear: both;
+}
+.signin.focus .r2 .info {
+  font-size: 0.5em;
+}
+</style>
+
 <!-- fixed bottom -->
 <style>
 #fixed_bottom {
@@ -759,7 +804,6 @@ body:not(.manager) #rooms.no-rooms .content::before {
   z-index: 500;
   left: 0;
   bottom: 0;
-  max-height: 15.9em;
 }
 </style>
 
@@ -1184,7 +1228,7 @@ body:not(.manager) #rooms.no-rooms .content::before {
 
 <!-- control -->
 <div id="fixed_bottom">
-  <div id="control" style="--aspect-ratio: 9/5;">
+  <div id="control" style="--aspect-ratio: 9/9;">
     <div class="content">
       <form class="form flex-col">
         <input type="hidden" name="room_id" value="">
@@ -1293,7 +1337,7 @@ body:not(.manager) #rooms.no-rooms .content::before {
 <!-- footer -->
 <div id="footer">
   <div class="content">
-    <div> | -DEMO- | </div>
+    <div> | ~ YZC線上叫號系統 ~ | </div>
     <div style="font-weight: 300; color: #999;">&copy; YzChen</div>
   </div>
 </div>
@@ -1937,13 +1981,13 @@ function refreshStepBtns(steps){
       this.setAttribute("step",step)
       setText(this.querySelector("svg text"), `叫號[+${step}] >> ${+control_form.elements.number.value+step}`)
       this.addEventListener("click",function(){
-        nextPN(this.getAttribute("step"))
+        nextNo(this.getAttribute("step"))
       })
     },
     tmp_btn_next.content.firstElementChild.cloneNode(true)
   )
 }
-async function nextPN(step=1){
+async function nextNo(step=1){
   if(isNaN(step) || +step < 1){step = 1}
   const fd = new FormData(control_form)
   updateRoomData(fd.get("room_id"),{
@@ -1955,7 +1999,7 @@ async function nextPN(step=1){
     }
   })
 }
-async function updatePN(){
+async function updateNo(){
   const fd = new FormData(control_form)
   updateRoomData(fd.get("room_id"),{
     number: +fd.get("new_number"),
@@ -1967,7 +2011,11 @@ async function updatePN(){
   })
 }
 control_form.querySelector("[name=new_number]").addEventListener("focus",function(){this.select()})
-control_form.querySelector(".btn-number").addEventListener("click",updatePN)
+control_form.querySelector(".btn-number").addEventListener("click",updateNo)
+control_form.addEventListener("submit",(e)=>{
+  e.preventDefault()
+  updateNo()
+})
 // room opening
 async function openRoom(){
   const fd = new FormData(control_form)
