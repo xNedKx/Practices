@@ -387,12 +387,23 @@ font-size: 2em;
   background-color: #fff;
 }
 
-.admin-panel .admin-rooms {}
 .admin-panel .list-header {
   margin: 0.1em auto;
   text-align: center;
   color: #f0f0f0;
 }
+.admin-panel .admin-logs {}
+.admin-panel .btn-log-dl,
+.admin-panel .btn-log-clear {
+  width: 75%;
+  height: 2.5em;
+  line-height: 2.5em;
+  margin: 1em auto;
+  color: #333;
+  font-weight: 500;
+}
+
+.admin-panel .admin-rooms {}
 .admin-panel .room-list {
   width:90%;
   margin: 0 auto;
@@ -770,7 +781,7 @@ body:not(.manager) #rooms.no-rooms .content::before {
   float: left;
 }
 .signin.focus .r2 .row-2 {
-  width: 12%;
+  width: 15%;
   padding: 0.75em 2%;
   float: left;
 }
@@ -1126,6 +1137,11 @@ body:not(.manager) #rooms.no-rooms .content::before {
 <!-- admin -->
 <div id="admin" class="">
   <form class="admin-panel">
+    <div class="admin-logs">
+      <div class="list-header">紀錄管理</div>
+      <div class="btn-log-dl">下載紀錄</div>
+      <div class="btn-log-clear">清除紀錄</div>
+    </div>
     <div class="admin-rooms">
       <div class="list-header">診間管理</div>
       <div class="room-list"></div>
@@ -1149,6 +1165,11 @@ body:not(.manager) #rooms.no-rooms .content::before {
     </div>
   </form>
 </div>
+
+<template id="tmp_log_item">
+  <div class="log-item">
+  </div>
+</template>
 
 <template id="tmp_room_item">
   <div class="room-item btn">
@@ -1254,8 +1275,8 @@ body:not(.manager) #rooms.no-rooms .content::before {
               <svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg">
                 <text font-size="24" font-weight="500" x="50%" y="55%" dominant-baseline="middle" text-anchor="middle">更新</text>
               </svg>
-              <input type="submit" style="display:none;">
             </div>
+            <input type="submit" style="display:none;">
           </div>
         </fieldset>
         <fieldset class="room-opening">
@@ -1347,12 +1368,14 @@ body:not(.manager) #rooms.no-rooms .content::before {
 <div id="msg"></div>
 
 <!-- script -->
+<script src="./csvUtil.js"></script>
 <!-- init firebase -->
 <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-analytics.js"></script>
 <script>
+const rooms_div = document.getElementById("rooms")
 // firebase init
 var firebaseConfig = {
   apiKey: "AIzaSyBBWeeBeg0yJQubnY9xNRvSnGHgkqnO6jw",
@@ -1365,9 +1388,10 @@ var firebaseConfig = {
 };
 try {
   firebase.initializeApp(firebaseConfig);
-  firebase.analytics();
+  //firebase.analytics();
 }catch(er){
-  rooms_div.querySelector(".loading").innerText = "firebase 啟動失敗，請連繫管理員。"
+  console.log(er)
+  rooms_div.querySelector(".loading").innerText = "firebase 啟動發生錯誤，請連繫管理員。"
 }
 </script>
 
@@ -1487,6 +1511,9 @@ function getDoctorInfo(uid){
 }
 
 function updateRoomData(room_id,data,callback){
+  const info = Object.assign({},data)
+  delete info.update
+  dblog.add("update",room_id,info)
   return db.ref(`rooms/${room_id}`).update(data,callback)
 }
 
@@ -1817,7 +1844,6 @@ function refreshList( elm, list, callback, cloned ){
 }
 
 /* rooms */
-const rooms_div = document.getElementById("rooms")
 const tmp_room = document.getElementById("tmp_room")
 function createRoom(room_id){
   const r = tmp_room.content.firstElementChild.cloneNode(true);
@@ -2095,6 +2121,24 @@ const admin_form = document.querySelector("#admin form.admin-panel")
 const room_list_div = admin_form.querySelector(".room-list")
 const doctor_list_div = admin_form.querySelector(".doctor-list")
 
+// admin-log
+admin_form.querySelector(".btn-log-dl").addEventListener("click",(e)=>{
+  msg("紀錄下載中...")
+  dblog.download().then(rows=>{
+    if(rows.length){
+      setText(admin_form.querySelector(".btn-log-clear"),`清除紀錄 (${rows[0]["月"]}/${rows[0]["日"]} 起有 ${rows.length} 條)`)
+    }
+    msg(`${rows.length} 條紀錄下載完成`)
+  })
+})
+admin_form.querySelector(".btn-log-clear").addEventListener("click",(e)=>{
+  msg("紀錄清除中...")
+  dblog.clear().then(removed=>{
+    setText(admin_form.querySelector(".btn-log-clear"),"清除紀錄")
+    msg("紀錄已清除")
+  })
+})
+
 // admin-room
 function addAdminRoomItem(room_id){
   const new_room = tmp_room_item.content.firstElementChild.cloneNode(true)
@@ -2327,6 +2371,174 @@ if( ts - header_div.ts >= 500 ){
 }
 header_div.ts = -500
 timer(updateDateTime)
+</script>
+
+<!-- logs -->
+<script>
+var dblog = {
+  add(action,room_id=null,info=null){
+    const room = rooms[room_id]
+    const user = getAuthUser()
+    const uid = user ? user.uid : null
+    const time = +new Date()
+    if(dblog.active){
+      db.ref(`logs`).push().set({
+        t: time,
+        u: uid,
+        a: action,
+        r: room_id,
+        i: info
+      }, (er)=>{
+        if(er){
+          dblog.active = false
+        }
+      })
+    }
+  },
+  read(cond){
+    return new Promise((s)=>{
+      const user = getAuthUser()
+      if(user){
+        cond = Object.assign({},cond)
+        const act = cond.act || cond.a
+        const room_id = cond.room_id || cond.room || cond.r
+        const uid = cond.uid || cond.u
+        const before = cond.before
+        const after = cond.after || cond.time || cond.t
+        let ref = db.ref("logs")
+        if(after){
+          ref = ref.orderByChild("t").startAt(after)
+        }else if(before){
+          ref = ref.orderByChild("t").endAt(before)
+        }else{
+          ref = ref.orderByChild("t")
+        }
+        ref.once("value",(logref)=>{
+          let rows = Object.values(logref.val())
+          if(act){
+            rows = rows.filter(({t,u,a,r,i})=>a==act)
+          }
+          if(room_id){
+            rows = rows.filter(({t,u,a,r,i})=>r==room_id)
+          }
+          if(uid){
+            rows = rows.filter(({t,u,a,r,i})=>u==uid)
+          }
+          rows.sort(({t:at},{t:bt})=>at-bt)
+          s(rows)
+        }, (er)=>{
+          msg("無法讀取記錄")
+          s([])
+        })
+      }else{
+        msg("無法讀取記錄")
+        s([])
+      }
+    })
+  },
+  clear(cond = {before:+new Date()}){
+    const user = getAuthUser()
+    if(user){
+      cond = Object.assign({},cond)
+      const act = cond.act || cond.a
+      const room_id = cond.room_id || cond.room || cond.r
+      const uid = cond.uid || cond.u
+      const before = cond.before
+      const after = cond.after || cond.time || cond.t
+      let ref = db.ref("logs")
+      if(after){
+        ref = ref.orderByChild("t").startAt(after)
+      }else if(before){
+        ref = ref.orderByChild("t").endAt(before)
+      }else{
+        ref = ref.orderByChild("t")
+      }
+      return new Promise((s)=>{
+        ref.once("value",(logref)=>{
+          let p = []
+          logref.forEach(log=>{
+          if((!act || log.a == act)&&(!room_id || log.r == room_id)&&(!uid || log.u == uid)){
+            p.push(db.ref(`logs/${log.key}`).remove())
+          }
+          })
+          s(Promise.all(p))
+        })
+      })
+    }
+  },
+  get(room_id){
+    const room = rooms[room_id]
+    if(room){
+      return dblog.read({room_id})
+    }
+  },
+  find(act){
+    return dblog.read({act})
+  },
+  remove(room_id){
+    return dblog.clear({room_id})
+  },
+  active: true
+}
+
+dblog.add("瀏覽")
+
+dblog.download = function(param = {}, a = document.createElement("a")){
+  const user = getAuthUser()
+  if(user){
+    return dblog.read(param).then(data=>{
+      const rows = []
+      for(let key in data){
+        const raw = data[key]
+        const row = {}
+        const date = new Date(raw.t)
+        row["年"] = date.getFullYear()
+        row["月"] = date.getMonth()+1
+        row["日"] = date.getDate()
+        row["星期"] = date.getDay()
+        row["時間"] = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
+        row["操作"] = raw.a
+        row["使用者"] = raw.u ? user.doctors[raw.u].name : ""
+        row["診間"] = raw.r in rooms ? rooms[raw.r].room_name : raw.r
+        if(typeof raw.i == "string"){
+          row["資訊"] = raw.i
+        }else if(raw.i){
+          if(raw.a == "update"){
+            row["操作"] = "更新"
+            if("open" in raw.i){
+              if(raw.i.open){
+                row["操作"] = "開診"
+              }else{
+                row["操作"] = "關診"
+              }
+            }else if("number" in raw.i){
+              row["操作"] = "叫號"
+              row["資訊"] = raw.i.number
+            }else if("info" in raw.i){
+              row["操作"] = "更新訊息"
+              row["資訊"] = raw.i.info
+            }else{
+              row["資訊"] = JSON.stringyfy(raw.i).replace(",","|").replace(/\s/gm,"")
+            }
+          }
+        }
+        rows.push(row)
+      }
+      const dt = new Date()
+      let blob = csvUtil.makeBlob(rows,true,",",true)
+      if(dblog.download.useBOM){
+        blob = new Blob([dblog.download.BOM,blob])
+      }
+      a.href = URL.createObjectURL(blob)
+      a.download = `${document.title}-log-${dt.getMonth()+1}-${dt.getDate()}${Object.entries(param).reduce((r,[k,v],i)=>`${r}[${k}-${v}]`,"")}.csv`
+      a.click()
+      return rows
+    })
+  }
+}
+dblog.download.useBOM = false
+dblog.download.BOM = "\ufeff"
+
 </script>
 
 </body>
