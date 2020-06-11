@@ -14,7 +14,6 @@
 <meta name="copyright" content="YzChen" />
 
 <!-- fontface -->
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100;300;500;700;900&display=block" rel="stylesheet">
 
 <!-- base style -->
 <style>
@@ -33,7 +32,7 @@ body {
   color: #101010;
   background-color: #393939;
   font-size: calc(var(--width-max)/30);
-  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Segoe UI", sans-serif;
+  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Microsoft YaHei", "Segoe UI", sans-serif;
   font-weight: 500;
   max-height: 100vh;
   overflow-y: hidden;
@@ -238,7 +237,7 @@ input::-webkit-inner-spin-button {
 }
 
 #signin_form input[name=email], #signin_form input[name=password] {
-  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Segoe UI", sans-serif;
+  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Microsoft YaHei", "Segoe UI", sans-serif;
   font-size: 1em;
   background-color: #fff;
   width: 9em;
@@ -251,7 +250,7 @@ input::-webkit-inner-spin-button {
   text-indent: 0.2em;
 }
 #signin_form .submit-signin {
-  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Segoe UI", sans-serif;
+  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Microsoft YaHei", "Segoe UI", sans-serif;
   font-size: 1em;
   background-color: #fcfcfc;
   width: 7em;
@@ -295,7 +294,7 @@ font-size: 2em;
   margin-top: -0.2em;
 }
 .admin-self input {
-  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Segoe UI", sans-serif;
+  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Microsoft YaHei", "Segoe UI", sans-serif;
   width: 100%;
   font-weight: 300;
   font-size: 1.6em;
@@ -358,7 +357,7 @@ font-size: 2em;
 <style>
 /* font */
 #admin, #admin input, #admin textarea, #admin pre {
-  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Segoe UI", sans-serif;
+  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Microsoft YaHei", "Segoe UI", sans-serif;
 }
 
 :root {
@@ -649,7 +648,7 @@ body:not(.manager) #rooms.no-rooms .content::before {
   border-top: 1px solid #999;
 }
 .r2 .info {
-  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Segoe UI", sans-serif;
+  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Microsoft YaHei", "Segoe UI", sans-serif;
   font-size: 0.8em;
   width: 100%;
   height: 100%;
@@ -799,7 +798,7 @@ body:not(.manager) #rooms.no-rooms .content::before {
 }
 .signin.focus .r2 .row-4 {
   --aspect-ratio: 0 !important;
-  padding-bottom: 4em;
+  padding-bottom: 3.75em;
   clear: both;
 }
 .signin.focus .r2 .info {
@@ -822,7 +821,7 @@ body:not(.manager) #rooms.no-rooms .content::before {
 <style>
 /* font */
 #control, #control input, #control textarea, #control pre {
-  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Segoe UI", sans-serif;
+  font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Microsoft YaHei", "Segoe UI", sans-serif;
 }
 
 #control {
@@ -2376,7 +2375,7 @@ timer(updateDateTime)
 <!-- logs -->
 <script>
 var dblog = {
-  add(action,room_id=null,info=null){
+  async add(action,room_id=null,info=null){
     const room = rooms[room_id]
     const user = getAuthUser()
     const uid = user ? user.uid : null
@@ -2387,7 +2386,13 @@ var dblog = {
         u: uid,
         a: action,
         r: room_id,
-        i: info
+        i: info,
+        s: await dblog.sid
+      },function(er){
+        if(er){
+          console.log("[Off] fail to add log.",er)
+          dblog.active = false
+        }
       })
     }
   },
@@ -2474,8 +2479,20 @@ var dblog = {
   remove(room_id){
     return dblog.clear({room_id})
   },
-  active: true
+  active: true,
+  async hash(key,storage){
+    let s = storage.getItem("s")
+    if(!s){
+      const buffer = new Uint8Array(20)
+      crypto.getRandomValues(buffer)
+      const td = new TextDecoder()
+      s = btoa(String.fromCharCode.apply(null,new Uint8Array( await crypto.subtle.digest("SHA-1",buffer)) ))
+    }
+    storage.setItem("s",s)
+    return dblog[key] = s
+  }
 }
+dblog.sid = dblog.hash("sid",localStorage)
 
 dblog.add("瀏覽")
 
@@ -2493,9 +2510,9 @@ dblog.download = function(param = {}, a = document.createElement("a")){
         row["日"] = date.getDate()
         row["星期"] = date.getDay()
         row["時間"] = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
-        row["操作"] = raw.a
-        row["使用者"] = raw.u ? user.doctors[raw.u].name : ""
         row["診間"] = raw.r in rooms ? rooms[raw.r].room_name : raw.r
+        row["使用者"] = raw.u ? user.doctors[raw.u].name : ""
+        row["操作"] = raw.a
         if(typeof raw.i == "string"){
           row["資訊"] = raw.i
         }else if(raw.i){
@@ -2517,7 +2534,10 @@ dblog.download = function(param = {}, a = document.createElement("a")){
               row["資訊"] = JSON.stringyfy(raw.i).replace(",","|").replace(/\s/gm,"")
             }
           }
+        }else{
+          row["資訊"] = null
         }
+        row["瀏覽代號"] = raw.s
         rows.push(row)
       }
       const dt = new Date()
