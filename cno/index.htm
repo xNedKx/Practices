@@ -2480,21 +2480,19 @@ var dblog = {
     return dblog.clear({room_id})
   },
   active: true,
-  async hash(key,storage){
-    let s = storage.getItem("s")
+  async session(){
+    let s = localStorage.getItem("s")
     if(!s){
       const buffer = new Uint8Array(20)
       crypto.getRandomValues(buffer)
       const td = new TextDecoder()
       s = btoa(String.fromCharCode.apply(null,new Uint8Array( await crypto.subtle.digest("SHA-1",buffer)) ))
+      localStorage.setItem("s",s)
     }
-    storage.setItem("s",s)
-    return dblog[key] = s
+    return dblog.sid = s
   }
 }
-dblog.sid = dblog.hash("sid",localStorage)
-
-dblog.add("瀏覽")
+dblog.sid = dblog.session()
 
 dblog.download = function(param = {}, a = document.createElement("a")){
   const user = getAuthUser()
@@ -2555,6 +2553,12 @@ dblog.download = function(param = {}, a = document.createElement("a")){
 dblog.download.useBOM = false
 dblog.download.BOM = "\ufeff"
 
+</script>
+
+<!-- begin view -->
+<script>
+dblog.add("瀏覽")
+setTimeout(()=>{location.reload()},24*60*60*1000)
 </script>
 
 </body>
