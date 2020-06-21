@@ -191,16 +191,70 @@ input::-webkit-inner-spin-button {
 }
 </style>
 
+<!-- header -->
+<style>
+.fix-header {
+  width: 100%;
+  position: fixed;
+  z-index: 100;
+  top: 0;
+  left: 0;
+}
+#header {
+  max-width: var(--width-max);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#header .content {
+  background-color: #fafafa;
+  border-top: 1px solid #666;
+  border-bottom: 1px solid #f3f3f3;
+  font-weight: 300;
+  text-align: center;
+  font-size: 1.8em;
+}
+
+#header .content .logo {
+  overflow: hidden;
+  height: 36%;
+  font-size: 1.1em;
+  font-weight: 900;
+  line-height: 1.25em;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #e0e0e0;
+}
+#header .content .bar-date, #header .content .bar-dt {
+  overflow: hidden;
+  height: 32%;
+  line-height: 1em;
+}
+.bar-date {
+  color: #111;
+}
+.bar-day {
+  color: #999;
+  font-size: 0.8em;
+  vertical-align: top;
+}
+.bar-time {
+  color: #333;
+}
+.placeholder.header {
+  border: 1px solid transparent;
+}
+</style>
+
 <!-- fixed -->
 <style>
 #fixed {
   width: 100%;
   position: fixed;
-  z-index: 999;
+  z-index: 5000;
   top: 0;
   left: 0;
 }
-#user, #edit_self, #admin, #header {
+#user, #edit_self, #admin {
   max-width: var(--width-max);
   margin-left: auto;
   margin-right: auto;
@@ -216,9 +270,6 @@ input::-webkit-inner-spin-button {
 }
 .placeholder.user {
   height: 2em;
-}
-.placeholder.header {
-  border: 1px solid transparent;
 }
 </style>
 
@@ -526,45 +577,6 @@ font-size: 2em;
 }
 </style>
 
-<!-- header -->
-<style>
-#header {
-  background-color: #fafafa;
-  border-top: 1px solid #666;
-  border-bottom: 1px solid #f3f3f3;
-  font-weight: 300;
-  text-align: center;
-  font-size: 1.8em;
-}
-
-#header .content .logo {
-  overflow: hidden;
-  height: 36%;
-  font-size: 1.1em;
-  font-weight: 900;
-  line-height: 1.25em;
-  background-color: #f9f9f9;
-  border-bottom: 1px solid #e0e0e0;
-}
-#header .content .bar-date, #header .content .bar-dt {
-  overflow: hidden;
-  height: 32%;
-  line-height: 1em;
-}
-.bar-date {
-  color: #111;
-}
-.bar-day {
-  color: #999;
-  font-size: 0.8em;
-  vertical-align: top;
-}
-.bar-time {
-  color: #333;
-}
-
-</style>
-
 <!-- rooms -->
 <style>
 body:not(.manager) #rooms.no-rooms .content::before {
@@ -763,43 +775,82 @@ body:not(.manager) #rooms.no-rooms .content::before {
 
 <!-- room focus operation -->
 <style>
+.signin.focus #header {
+  --aspect-ratio: 50/2 !important;
+}
+.signin.focus .placeholder.header {
+  --aspect-ratio: 50/2 !important;
+}
+.signin.focus #header .content {
+  font-size: 0.8em;
+  display: flex;
+  padding-top: calc(2em / 0.8);
+}
+.signin.focus #header .logo, .signin.focus #header .bar-date, .signin.focus #header .bar-dt {
+  line-height: initial;
+  height: initial;
+}
+.signin.focus #header .logo {
+  padding: 0 1ex;
+}
+.signin.focus #header .bar-dt .bar-day {
+  vertical-align: initial;
+}
+
 .signin.focus .r2 {
   --aspect-ratio: 0 !important;
   padding-top: 0;
-  padding-bottom: 5.5em;
+  padding-bottom: 11em;
+}
+.signin.focus .r2 .container {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  padding-bottom: 0.25em;
+  box-sizing: border-box;
 }
 .signin.focus .r2 .row-0 {
   display: none;
 }
-.signin.focus .r2 .row-1, .signin.focus .r2 .row-2, .signin.focus .r2 .row-3 {
+.signin.focus .r2 .row-1, .signin.focus .r2 .row-2, .signin.focus .r2 .row-3, .signin.focus .r2 .row-4 {
   --aspect-ratio: 0 !important;
 }
 .signin.focus .r2 .row-1 {
-  width: 12%;
-  padding: 0.75em 1.5%;
-  float: left;
+  width: 1.2em;
+  height: 100%;
+  flex-grow: 3;
+  writing-mode: vertical-lr;
+  border-right: 1px solid #ddd;
+  box-sizing: border-box;
 }
 .signin.focus .r2 .row-2 {
-  width: 15%;
-  padding: 0.75em 2%;
-  float: left;
+  width: calc(100% - 1.2em);
+  flex-grow: 1;
+  padding-bottom: 1.25em;
+  border-bottom: 1px solid #ddd;
+  box-sizing: border-box;
 }
 .signin.focus .r2 .row-3 {
-  width: 12%;
-  padding: 0.75em 1.5%;
-  float: right;
+  width: calc(100% - 1.2em);
+  flex-grow: 1;
+  padding-bottom: 6em;
+  margin: auto;
 }
-.signin.focus .r2 .room-name, .signin.focus .r2 .doctor, .signin.focus .r2 .number {
+.signin.focus .r2 .row-4 {
+  width: calc(100% - 1.2em);
+  flex-grow: 1;
+  padding-bottom: 3.25em;
+}
+.signin.focus .r2 .room-name, .signin.focus .r2 .doctor {
   font-size: 1em;
-  line-height: 1.5em;
+  line-height: 1em;
 }
 .signin.focus .r2 .doctor::before {
   display: none;
 }
-.signin.focus .r2 .row-4 {
-  --aspect-ratio: 0 !important;
-  padding-bottom: 3.75em;
-  clear: both;
+.signin.focus .r2 .number {
+  font-size: 5em;
+  line-height: 1.2em;
 }
 .signin.focus .r2 .info {
   font-size: 0.5em;
@@ -983,6 +1034,10 @@ body:not(.manager) #rooms.no-rooms .content::before {
 
 <!-- #manager -->
 <style>
+.manager #header .content {
+  padding-top: calc(2em / 1.8);
+}
+
 /* auth bar */
 #user {
   display: none;
@@ -1080,6 +1135,19 @@ body:not(.manager) #rooms.no-rooms .content::before {
 <!-- no script -->
 <noscript>您的瀏覽器不支援本網頁所需功能</noscript>
 
+<!-- header -->
+<div class="fix-header">
+  <div id="header" style="--aspect-ratio: 9/2">
+    <div class="content">
+      <div class="logo">線上叫號系統 -DEMO-</div>
+      <div class="bar-date">{{date}}</div>
+      <div class="bar-dt"><span class="bar-day">{{day}}</span> <span class="bar-time">{{time}}</span></div>
+    </div>
+  </div>
+</div>
+<div class="placeholder header" style="--aspect-ratio: 9/2;"></div>
+
+<!-- fixed top -->
 <div id="fixed">
 
 <!-- user -->
@@ -1188,19 +1256,9 @@ body:not(.manager) #rooms.no-rooms .content::before {
   </div>
 </template>
 
-<!-- header -->
-<div id="header" style="--aspect-ratio: 9/2">
-  <div class="content">
-    <div class="logo">線上叫號系統 -DEMO-</div>
-    <div class="bar-date">{{date}}</div>
-    <div class="bar-dt"><span class="bar-day">{{day}}</span> <span class="bar-time">{{time}}</span></div>
-  </div>
-</div>
-
 </div>
 <!-- fixed end -->
 <div class="placeholder user"></div>
-<div class="placeholder header" style="--aspect-ratio: 9/2;"></div>
 
 <!-- rooms -->
 <div id="rooms" style="--aspect-ratio: 9/11;">
@@ -1210,7 +1268,7 @@ body:not(.manager) #rooms.no-rooms .content::before {
 </div>
 <template id="tmp_room">
 <div class="r2" prop="open" style="--aspect-ratio: 36/41;">
-  <div>
+  <div class="container">
     <div class="row-0" style="--aspect-ratio: 36/2;"></div>
     <div class="row-1" style="--aspect-ratio: 36/4;">
       <div class="card-top">
@@ -1259,12 +1317,12 @@ body:not(.manager) #rooms.no-rooms .content::before {
         <input type="hidden" name="number" value="">
         <input type="hidden" name="open" value="">
         <fieldset class="room-operation">
-          <legend>叫號控制</legend>
+          <legend>叫號</legend>
           <div class="next-list"></div>
           <template id="tmp_btn_next">
             <div class="btn-next" style="--aspect-ratio:9/2;" step="1">
               <svg viewBox="0 0 396 88" xmlns="http://www.w3.org/2000/svg">
-                <text font-size="48" font-weight="500" x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" p>叫號[+{{step}}] &gt;&gt; {{next_number}}</text>
+                <text font-size="48" font-weight="500" x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" p>[+{{step}}] &gt;&gt; {{next_number}}</text>
               </svg>
             </div>
           </template>
@@ -1944,7 +2002,7 @@ function updateControl(room_id,prop,v){
           control_form.elements.new_number.value = v
           Array.from(control_form.querySelectorAll(".btn-next[step]"),btn=>{
             const step = +btn.getAttribute("step")
-            setText(btn.querySelector("svg text"), `叫號[+${step}] >> ${+v+step}`)
+            setText(btn.querySelector("svg text"), `[+${step}] >> ${+v+step}`)
           })
         break
         case "date": // for open room only
@@ -2005,7 +2063,7 @@ function refreshStepBtns(steps){
     steps,
     function(step,i){
       this.setAttribute("step",step)
-      setText(this.querySelector("svg text"), `叫號[+${step}] >> ${+control_form.elements.number.value+step}`)
+      setText(this.querySelector("svg text"), `[+${step}] >> ${+control_form.elements.number.value+step}`)
       this.addEventListener("click",function(){
         nextNo(this.getAttribute("step"))
       })
