@@ -800,7 +800,7 @@ body:not(.manager) #rooms.no-rooms .content::before {
 .signin.focus .r2 {
   --aspect-ratio: 0 !important;
   padding-top: 0;
-  padding-bottom: 10em;
+  padding-bottom: 10.5em;
 }
 .signin.focus .r2 .container {
   display: flex;
@@ -833,13 +833,14 @@ body:not(.manager) #rooms.no-rooms .content::before {
 .signin.focus .r2 .row-3 {
   width: calc(100% - 1.2em);
   flex-grow: 1;
-  padding-bottom: 5em;
+  padding-bottom: 6em;
   margin: auto;
 }
 .signin.focus .r2 .row-4 {
   width: calc(100% - 1.2em);
   flex-grow: 1;
-  padding-bottom: 3.25em;
+  padding-bottom: 2.75em;
+  margin-bottom: auto;
 }
 .signin.focus .r2 .room-name, .signin.focus .r2 .doctor {
   font-size: 1em;
@@ -850,7 +851,7 @@ body:not(.manager) #rooms.no-rooms .content::before {
 }
 .signin.focus .r2 .number {
   font-size: 5em;
-  line-height: 1em;
+  line-height: 1.2em;
 }
 .signin.focus .r2 .info {
   font-size: 0.5em;
@@ -1154,7 +1155,7 @@ body:not(.manager) #rooms.no-rooms .content::before {
 <div id="user">
   <div class="content">
     <form id="signin_form" class="pr">
-      <input name="email" type="email" placeholder="登入帳號" disabled><input name="password" type="password" placeholder="密碼" disabled><input class="submit-signin" type="submit" value="登入" disabled>
+      <input name="email" type="email" placeholder="登入帳號" disabled><input name="password" placeholder="密碼" disabled><input class="submit-signin" type="submit" value="登入" disabled>
       <a href="#" class="link l_hide">隱藏</a>
     </form>
     <div id="signin_info">使用者：<span id="signin_name"></span> <a id="signout_btn" class="link">登出</a> <a id="self_btn" class="link">帳號</a> <a id="toggle_admin" class="link">管理</a></div>
