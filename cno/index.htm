@@ -35,6 +35,7 @@ body {
   font-family: 'Noto Sans TC', "San Francisco", "Helvetica Neue", "Roboto", "Droid Serif", "Microsoft YaHei", "Segoe UI", sans-serif;
   font-weight: 500;
   max-height: 100vh;
+  max-height: -webkit-fill-available;
   overflow-y: hidden;
   user-select: none;
 }
@@ -818,28 +819,29 @@ body:not(.signin) #rooms.no-rooms .content::before {
 .signin.focus .r2 .row-1 {
   width: 1.2em;
   height: 100%;
-  flex-grow: 3;
+  flex-grow: 2;
   writing-mode: vertical-lr;
   border-right: 1px solid #ddd;
   box-sizing: border-box;
 }
 .signin.focus .r2 .row-2 {
-  width: calc(100% - 1.2em);
-  flex-grow: 1;
-  padding-bottom: 1.25em;
-  border-bottom: 1px solid #ddd;
+  width: 1.2em;
+  height: 100%;
+  flex-grow: 2;
+  writing-mode: vertical-lr;
+  border-right: 1px solid #ddd;
   box-sizing: border-box;
 }
 .signin.focus .r2 .row-3 {
-  width: calc(100% - 1.2em);
+  width: calc(100% - 2.4em);
   flex-grow: 1;
-  padding-bottom: 6em;
+  padding-bottom: 6.5em;
   margin: auto;
 }
 .signin.focus .r2 .row-4 {
-  width: calc(100% - 1.2em);
+  width: calc(100% - 2.4em);
   flex-grow: 1;
-  padding-bottom: 2.75em;
+  padding-bottom: 3.5em;
   margin-bottom: auto;
 }
 .signin.focus .r2 .room-name, .signin.focus .r2 .doctor {
@@ -851,7 +853,7 @@ body:not(.signin) #rooms.no-rooms .content::before {
 }
 .signin.focus .r2 .number {
   font-size: 5em;
-  line-height: 1.2em;
+  line-height: 1.25em;
 }
 .signin.focus .r2 .info {
   font-size: 0.5em;
@@ -1000,7 +1002,7 @@ body:not(.signin) #rooms.no-rooms .content::before {
 .form .input-info textarea {
   resize: none;
   height: 12em;
-  white-space: nowrap;
+  white-space: pre;
 }
 .form .input-info .btn-info {
   margin-top: 1ch;
@@ -2033,8 +2035,10 @@ function updateControl(room_id,prop,v){
             control_form.classList.remove("open")
           }
         break
-        case "room_name":
         case "info":
+          v = v.replace(/\n\r?/g,"\n")
+        break
+        case "room_name":
       }
       input.value = v
     }
@@ -2586,7 +2590,7 @@ dblog.download = function(param = {}, a = document.createElement("a")){
               row["資訊"] = raw.i.number
             }else if("info" in raw.i){
               row["操作"] = "更新訊息"
-              row["資訊"] = raw.i.info
+              row["資訊"] = raw.i.info.replace(/\n/g,"\u21B3").replace(/\r/g,"")
             }else{
               row["資訊"] = JSON.stringyfy(raw.i).replace(",","|").replace(/\s/gm,"")
             }
