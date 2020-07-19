@@ -2503,6 +2503,7 @@ var dblog = {
   clear(cond = {before:+new Date()}){
     const user = getAuthUser()
     if(user){
+      let c = ""
       cond = Object.assign({},cond)
       const act = cond.act || cond.a
       const room_id = cond.room_id || cond.room || cond.r
@@ -2512,20 +2513,26 @@ var dblog = {
       let ref = db.ref("logs")
       if(after){
         ref = ref.orderByChild("t").startAt(after)
+        c = `${new Date(after).toLocaleString().replace(/\s/g,"")}後的紀錄`
       }else if(before){
         ref = ref.orderByChild("t").endAt(before)
+        c = `${new Date(before).toLocaleString().replace(/\s/g,"")}前的紀錄`
       }else{
         ref = ref.orderByChild("t")
+        c = `所有可清除的紀錄`
       }
       return new Promise((s)=>{
         ref.once("value",(logref)=>{
-          let p = []
+          let p = [], begin, end
           logref.forEach(log=>{
-          if((!act || log.a == act)&&(!room_id || log.r == room_id)&&(!uid || log.u == uid)){
+          let v = log.val()
+          if(!begin){begin = v.t}
+          end = v.t
+          if((!act || v.a == act)&&(!room_id || v.r == room_id)&&(!uid || v.u == uid)){
             p.push(db.ref(`logs/${log.key}`).remove())
           }
           })
-          s(Promise.all(p))
+          s(Promise.all(p).then(()=>dblog.add("清除",null,`${p.length} 筆 (${new Date(begin).toLocaleString()}~${new Date(end).toLocaleString()}) [${c}]`)))
         })
       })
     }
@@ -2610,6 +2617,7 @@ dblog.download = function(param = {}, a = document.createElement("a")){
       a.href = URL.createObjectURL(blob)
       a.download = `${document.title}-log-${dt.getMonth()+1}-${dt.getDate()}${Object.entries(param).reduce((r,[k,v],i)=>`${r}[${k}-${v}]`,"")}.csv`
       a.click()
+      dblog.add("下載",null,`${rows.length} 筆紀錄 (${rows[0]["年"].toString().padStart(4,"0")}${rows[0]["月"].toString().padStart(2,"0")}${rows[0]["日"].toString().padStart(2,"0")}-${rows[0]["時間"]}~${rows[rows.length-1]["年"].toString().padStart(4,"0")}${rows[rows.length-1]["月"].toString().padStart(2,"0")}${rows[rows.length-1]["日"].toString().padStart(2,"0")}-${rows[rows.length-1]["時間"]})`)
       return rows
     })
   }
