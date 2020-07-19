@@ -2582,6 +2582,7 @@ dblog.download = function(param = {}, a = document.createElement("a")){
             if("open" in raw.i){
               if(raw.i.open){
                 row["操作"] = "開診"
+                row["資訊"] = raw.i.doctor
               }else{
                 row["操作"] = "關診"
               }
