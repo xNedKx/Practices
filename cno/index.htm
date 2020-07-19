@@ -776,47 +776,47 @@ body:not(.signin) #rooms.no-rooms .content::before {
 
 <!-- room focus operation -->
 <style>
-.signin.focus #header {
+.manager.signin.focus #header {
   --aspect-ratio: 50/2 !important;
 }
-.signin.focus .placeholder.header {
+.manager.signin.focus .placeholder.header {
   --aspect-ratio: 50/2 !important;
 }
-.signin.focus #header .content {
+.manager.signin.focus #header .content {
   font-size: 0.8em;
   display: flex;
   padding-top: calc(2em / 0.8);
 }
-.signin.focus #header .logo, .signin.focus #header .bar-date, .signin.focus #header .bar-dt {
+.manager.signin.focus #header .logo, .manager.signin.focus #header .bar-date, .manager.signin.focus #header .bar-dt {
   line-height: initial;
   height: initial;
 }
-.signin.focus #header .logo {
+.manager.signin.focus #header .logo {
   padding: 0 1ex;
 }
-.signin.focus #header .bar-dt .bar-day {
+.manager.signin.focus #header .bar-dt .bar-day {
   vertical-align: initial;
 }
 
-.signin.focus .r2 {
+.manager.signin.focus .r2 {
   --aspect-ratio: 0 !important;
   padding-top: 0;
   padding-bottom: 10.5em;
 }
-.signin.focus .r2 .container {
+.manager.signin.focus .r2 .container {
   display: flex;
   flex-wrap: wrap;
   flex-direction: column;
   padding-bottom: 0.25em;
   box-sizing: border-box;
 }
-.signin.focus .r2 .row-0 {
+.manager.signin.focus .r2 .row-0 {
   display: none;
 }
-.signin.focus .r2 .row-1, .signin.focus .r2 .row-2, .signin.focus .r2 .row-3, .signin.focus .r2 .row-4 {
+.manager.signin.focus .r2 .row-1, .manager.signin.focus .r2 .row-2, .manager.signin.focus .r2 .row-3, .manager.signin.focus .r2 .row-4 {
   --aspect-ratio: 0 !important;
 }
-.signin.focus .r2 .row-1 {
+.manager.signin.focus .r2 .row-1 {
   width: 1.2em;
   height: 100%;
   flex-grow: 2;
@@ -824,7 +824,7 @@ body:not(.signin) #rooms.no-rooms .content::before {
   border-right: 1px solid #ddd;
   box-sizing: border-box;
 }
-.signin.focus .r2 .row-2 {
+.manager.signin.focus .r2 .row-2 {
   width: 1.2em;
   height: 100%;
   flex-grow: 2;
@@ -832,30 +832,30 @@ body:not(.signin) #rooms.no-rooms .content::before {
   border-right: 1px solid #ddd;
   box-sizing: border-box;
 }
-.signin.focus .r2 .row-3 {
+.manager.signin.focus .r2 .row-3 {
   width: calc(100% - 2.4em);
   flex-grow: 1;
   padding-bottom: 6.5em;
   margin: auto;
 }
-.signin.focus .r2 .row-4 {
+.manager.signin.focus .r2 .row-4 {
   width: calc(100% - 2.4em);
   flex-grow: 1;
   padding-bottom: 3.5em;
   margin-bottom: auto;
 }
-.signin.focus .r2 .room-name, .signin.focus .r2 .doctor {
+.manager.signin.focus .r2 .room-name, .manager.signin.focus .r2 .doctor {
   font-size: 1em;
   line-height: 1em;
 }
-.signin.focus .r2 .doctor::before {
+.manager.signin.focus .r2 .doctor::before {
   display: none;
 }
-.signin.focus .r2 .number {
+.manager.signin.focus .r2 .number {
   font-size: 5em;
   line-height: 1.25em;
 }
-.signin.focus .r2 .info {
+.manager.signin.focus .r2 .info {
   font-size: 0.5em;
 }
 </style>
@@ -1435,6 +1435,9 @@ body:not(.signin) #rooms.no-rooms .content::before {
 <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-analytics.js"></script>
 <script>
+if(location.protocol == "http:"){
+  location.protocol = "https:"
+}
 const rooms_div = document.getElementById("rooms")
 // firebase init
 var firebaseConfig = {
