@@ -915,6 +915,12 @@ body:not(.signin) #rooms.no-rooms .content::before {
   display: block;
 }
 
+.form .room-operation .timer {
+  font-size: 0.8em;
+  padding-left: 0.25em;
+  color: #555;
+}
+
 .form .btn-next {
   width: 94%;
   margin: 0 3% 1ch;
@@ -1880,18 +1886,24 @@ function toTimeString(dt){
     return "晚"
   }
 }
-function timer(fn,op){
-  if(typeof fn != "function"){throw TypeError()}
-  cancelAnimationFrame(timer.id)
-  timer.id = null
-  if(op != "off"){
-    timer.id = requestAnimationFrame((ts)=>{
-      fn(ts)
-      timer(fn)
+class Timer {
+  constructor(fn){
+    this.id = null
+    this.fn = fn
+  }
+  run(){
+    if(typeof this.fn != "function"){throw TypeError()}
+    cancelAnimationFrame(this.id)
+    this.id = null
+    this.id = requestAnimationFrame((ts)=>{
+      this.fn(ts)
+      this.run()
     })
   }
+  stop(){
+    cancelAnimationFrame(this.id)
+  }
 }
-timer.id = null
 
 </script>
 
@@ -2042,6 +2054,7 @@ function updateControl(room_id,prop,v){
           v = v.replace(/\n\r?/g,"\n")
         break
         case "room_name":
+        break
       }
       input.value = v
     }
@@ -2061,6 +2074,23 @@ function updateDoctorList(doctors){
     document.createElement("div")
   )
 }
+function createUpdateTimer(){
+  let timer = control_form.querySelector(".timer")
+  if(!timer){
+    timer = document.createElement("span")
+    timer.className = "timer"
+    control_form.querySelector(".room-operation > legend").appendChild(timer)
+    timer.timer = new Timer(()=>{
+      const focused = rooms_div.querySelector(".r2.selected")
+      if(focused){
+        const t = new Date(new Date() - rooms[focused.id.slice(4)].update)
+        timer.innerText = "(" + (t.getUTCHours()*60+t.getUTCMinutes()).toString().padStart(2,"0") + ":" + t.getUTCSeconds().toString().padStart(2,"0") + ")"
+      }
+    })
+  }
+  return timer
+}
+createUpdateTimer().timer.run()
 
 // control inputs: DB related
 // room operation
@@ -2435,7 +2465,8 @@ if( ts - header_div.ts >= 500 ){
   }
 }
 header_div.ts = -500
-timer(updateDateTime)
+header_div.timer = new Timer(updateDateTime)
+header_div.timer.run()
 </script>
 
 <!-- logs -->
