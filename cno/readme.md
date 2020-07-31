@@ -1,4 +1,4 @@
-# YZC線上叫號系統軟體 v1.1 說明
+# YZC線上叫號系統軟體 v1.2 說明
 
 ### 簡介
 
@@ -45,7 +45,8 @@
 
 ##### 相依項目：
 
-* csvUtil.js CSV 表格函式庫(xNedKx授權)
+* csvUtil.js CSV 表格函式庫
+* sc.js 認證套件庫
 
 ------
 ### 需求
@@ -142,4 +143,4 @@ Chrome 49 / Firefox 52 / Edge 79 / Opera 42 / Safari 11.1 / Android Chorme 81 / 
 本軟體授權為一次性有限永久授權，限定於該版本在設定與維修的變更內。使用者僅可依其設計功能使用，不可進行其他但不限如重製、轉散發等行為。未經授權不得使用，其他授權不得違背本授權之限制。授權需經雙方同意始生效。
 
 ------
-v1.11 | 2020/06/10 | Copyright | YzChen | <yellow.zinc.com&commat;gmail.com>
+v1.2 | 2020/07/31 | Copyright | YzChen | <yellow.zinc.com&commat;gmail.com>
