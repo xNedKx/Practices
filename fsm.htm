@@ -14,7 +14,6 @@
 <div>
 <label>Select Image:<input id="file" type="file"></label>
 <input type="button" id="run" value="///(Go)///" title="Run">
-<input type="button" id="re" value="Reset">
 </div>
 <div style="margin: 0.5em auto;">
 <canvas id="can" style="max-width:90vw;max-height:90vh;"></canvas>
@@ -23,8 +22,6 @@
 const a4w = 210, a4h = 297, pxs = 7, twn = 63, r = 3/5
 const can = document.getElementById("can")
 const run = document.getElementById("run")
-const re = document.getElementById("re")
-re.addEventListener("click",reset)
 
 const file = document.getElementById("file")
 let f
