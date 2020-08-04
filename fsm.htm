@@ -1,0 +1,144 @@
+<html>
+<head>
+<meta charset="utf-8" />
+<!-- lock zoom scale -->
+<meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="description" content="Convert images into slashes without typing it out." />
+<meta name="author" content="xNedKx" />
+<meta name="copyright" content="xNedKx" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100;200;300;400;500;600;700;800;900&display=block" rel="stylesheet">
+<title>Forward Slash Maker</title>
+</head>
+<body>
+<div><h3>Forward Slash Maker</h3></div>
+<div>
+<label>Select Image:<input id="file" type="file"></label>
+<input type="button" id="run" value="///(Go)///" title="Run">
+<input type="button" id="re" value="Reset">
+</div>
+<div style="margin: 0.5em auto;">
+<canvas id="can" style="max-width:90vw;max-height:90vh;"></canvas>
+</div>
+<script>
+const a4w = 210, a4h = 297, pxs = 7, twn = 63, r = 3/5
+const can = document.getElementById("can")
+const run = document.getElementById("run")
+const re = document.getElementById("re")
+re.addEventListener("click",reset)
+
+const file = document.getElementById("file")
+let f
+function upload(){
+  if(file.files.length){
+    f = new Image()
+    f.addEventListener( "load", img_load, false )
+    f.src = URL.createObjectURL( file.files[0] )
+  }
+}
+let td
+function img_load(){
+  reset(can)
+  const c = can.getContext("2d")
+  const w = f.naturalWidth, h = f.naturalHeight, l = w/h > can.width/can.height
+  let nw, nh
+  if(l){
+    nw = can.width
+    nh = h/w*can.width
+    can.height = nh
+  }else{
+    nh = can.height
+    nw = w/h*can.height
+    can.width = nw
+  }
+  c.drawImage(f,0,0,nw,nh)
+  td = c.getImageData(0,0,can.width,can.height)
+  URL.revokeObjectURL( f.src )
+}
+file.addEventListener("change", upload, false)
+
+function reset(canvas){
+  canvas.width = a4w * pxs
+  canvas.height = a4h * pxs
+  const c = canvas.getContext("2d")
+  c.fillStyle = "#fff"
+  c.fillRect(0,0,canvas.width,canvas.height)
+  file.value = null
+}
+reset(can)
+
+function mononize(canvas){
+  const c = canvas.getContext("2d")
+  const d = c.getImageData(0,0,canvas.width,canvas.height)
+  for(let i = 0; i < d.width*d.height; i++){
+    let s = Math.round((d.data[i*4] + d.data[i*4+1] + d.data[i*4+2])/3)
+    d.data[i*4] = s
+    d.data[i*4+1] = s
+    d.data[i*4+2] = s
+  }
+  c.putImageData(d,0,0)
+}
+function copy(canvas){
+  const c = canvas.getContext("2d")
+  const n = document.createElement("canvas")
+  n.width = canvas.width
+  n.height = canvas.height
+  const v = n.getContext("2d")
+  v.putImageData(c.getImageData(0,0,canvas.width,canvas.height),0,0)
+  return n
+}
+function resize(canvas,w,h){
+  const ow = canvas.width, oh = canvas.height, l = ow*h > oh*w
+  const c = canvas.getContext("2d")
+  const t = copy(canvas)
+  canvas.width = Math.round(w)
+  canvas.height = Math.round(h)
+  let nw, nh
+  if(l){
+    nw = canvas.width
+    nh = Math.round(oh*nw/ow)
+  }else{
+    nh = canvas.height
+    nw = Math.round(ow*nh/oh)
+  }
+  c.drawImage(t,(canvas.width-nw)/2,(canvas.height-nh)/2,nw,nh)
+}
+function shrink(canvas,w,h){
+  const c = canvas.getContext("2d")
+  const t = copy(canvas)
+  canvas.width = Math.round(w)
+  canvas.height = Math.round(h)
+  c.drawImage(t,0,0,w,h)
+}
+function getIM(canvas,bw,bh){
+  let nw = Math.ceil(canvas.width/bw), nh = Math.ceil(canvas.height/bh)
+  const cp = copy(canvas)
+  mononize(cp)
+  shrink(cp,nw,nh)
+  const c = cp.getContext("2d")
+  return c.getImageData(0,0,cp.width,cp.height)
+}
+
+function forwardSlash(canvas){
+  const cp = copy(canvas)
+  const bw = canvas.width/twn, bh = bw/r
+  const im = getIM(canvas,bw,bh)
+  const c = canvas.getContext("2d")
+  c.fillStyle = "#fff"
+  c.fillRect(0,0,can.width,can.height)
+  for(let j = 0; j < im.height; j++){
+    for(let i = 0; i < im.width; i++){
+      const p = (j*im.width+i)*4
+      let x = Math.round(i*canvas.width/im.width), y = Math.round(j*canvas.height/im.height), s = im.data[p], a = im.data[p+3]
+      //console.log(p,j,i,y,x,s)
+      c.font = `${(s/0xff) < 0.66 ? "bold" : "normal"} ${bh*(2+Math.random()*(1-s/0xff)/3)}px Noto Sans`
+      c.fillStyle = `rgba(${s},${s},${s},${a})`
+      c.fillText("/",x,y+bh)
+    }
+  }
+}
+run.addEventListener("click",e=>forwardSlash(can))
+
+</script>
+
+</body>
+</html>
