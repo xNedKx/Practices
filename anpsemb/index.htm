@@ -105,6 +105,7 @@ SC.keyFn.PBKDF2.setSalt(salt)
 async function createKeys(){
   if(!createKeys.running && !current_keys || confirm("Discard current keys?")){
     console.log("generating keys...")
+    inputs.i_ckey_list.innerText = "generating keys..."
     createKeys.running = true
     const sv = await SC.keyFn.createKey("RSA-PSS")
     const ed = await SC.keyFn.createKey("RSA-OAEP")
@@ -115,6 +116,7 @@ async function createKeys(){
     createKeys.running = false
     current_keys = {kid, sv, ed, hash}
     console.log("keys generated")
+    inputs.i_ckey_list.innerText = "keys generated"
     renderKeyList()
     return current_keys
   }else{
