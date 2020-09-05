@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>ANPSEMB - A Non-Professionally Safe Encryption Message Board (using Web Crypto API)</title>
+<meta name="description" content="ANPSEMB - A Non-Professionally Safe Encryption Message Board (using Web Crypto API)" />
+<meta name="author" content="xNedKx" />
+<meta name="copyright" content="xNedKx" />
+<script src="sc.js"></script>
+<style>
+.btn {
+  cursor: pointer;
+}
+.btn.disabled {
+  color: #ccc;
+  cursor: default;
+}
+.hide message-item:not(.decode) {
+  display: none;
+}
+</style>
+</head>
+<body>
+<div>
+  <a href="javascript:void(0);" inputs-id="create" class="btn">[Create new key pack]</a>
+  <a href="javascript:void(0);" inputs-id="load" class="btn">[Load key pack]</a>
+  <a href="javascript:void(0);" inputs-id="save" class="btn">[Save key pack]</a>
+  <a href="javascript:void(0);" inputs-id="pass_pk" class="btn disabled">[Share public keys]</a>
+</div>
+<hr>
+<div>
+  <div>Messages <pre inputs-id="toggle_message" class="btn" style="color: #999; display: inline-block;">[-]hide unknown messages</pre></div>
+  <div inputs-id="message_list">
+  </div>
+</div>
+<hr>
+<div>
+  <div>New Message</div>
+  <form>
+    <fieldset>
+      <div>
+        <select inputs-id="to" style="width: 100%; margin: 0.3em 0; padding: 0 0.2em; box-sizing: border-box;">
+          <option> - - To - - </option>
+        </select>
+      </div>
+      <div><textarea inputs-id="content" style="width: 100%; box-sizing: border-box; min-height: 4.2em; margin: 0.3em 0;" placeholder="Things you want to send to..."></textarea></div>
+      <div style="text-align: center;">
+        <input type="button" inputs-id="post" value="POST" style="width: 20em;">
+        <label style="cursor: pointer;">Send copy to self:<input inputs-id="copy" type="checkbox"></label>
+      </div>
+    </fieldset>
+  </form>
+</div>
+<hr>
+<div>
+  <div>Current key pack</div>
+  <div inputs-id="ckey_list"><pre>None</pre></div>
+  <div>Shared public keys</div>
+  <div inputs-id="pub_keys"><pre>None</pre></div>
+</div>
+<hr>
+<div>
+<pre style="width: 100%; overflow: hidden; white-space: pre-wrap;">ANPSEMB - A Non-Professionally Safe Encryption Message Board (using Web Crypto API + Firebase)
+
+Instruction:
+1. Create a pack of keys. you will be prompted to enter an id for the key pack.
+2. Share the public keys. This saves the public keys on the server that others could contact you with. Others require your key in the key pool to decrypt messages from you and sending messages to you.
+3. Select one of the ids that you want to message with. Write something in the textarea then click the post button. 
+4. The message will be saved on the server. Only the user who has the private key can revert the transform of the message to see it. You can't see what you send except you send message to yourself. Or you can toggle the checkbox on the right of the post button, it makes you send a copy for yourself. Click on the copy will hint you the related message if it exists.
+5. Messages will be recognized automatically when you load a new key pack.
+6. Shared key packs and messages are updated immediately, but there is a cooldown between every post. If update successes, the textarea will be cleared.
+7. You can save the created key pack to a file with passwords. You have to enter the same password per key pack to load the key pack.
+8. Out-of-date messages and public keys are removed automatically.
+
+#    All messages are encrypted and signed before upload.
+##   All keys are extractable and inputs are not secured, they can be manipulated by scripts.
+###  You can update the timestamp of your shared public keys, there is a cooldown to update again.
+#### ANPSEMB is not tested nor proofed to be professionally safe. It is just a demo of an encrypted communication practice.
+
+.xNedKx.
+
+
+Current setting:
+alive: <span inputs-id="alive">?</span>
+rest: <span inputs-id="rest">?</span>
+key_life: <span inputs-id="key_life">?</span>
+
+</pre>
+</div>
+
+<script>
+if(location.protocol == "http:"){
+  location.protocol = "https:"
+}
+
+var current_keys
+var public_keys = {}
+
+var salt = "BA0878F86E93BD77C049BAF5365D394BCC32751EC6B90F2A05BBFBA048970AF10B78F0F33517BB98EB94C12F9E312BADBFBE3D374B8EEF819E02DA69EB72AFCB"
+var iv = "81F472F4E450198B34F9453825BCF108"
+SC.keyFn.AESGCM.setIV(iv)
+SC.keyFn.PBKDF2.setSalt(salt)
+
+async function createKeys(){
+  if(!createKeys.running && !current_keys || confirm("Discard current keys?")){
+    console.log("generating keys...")
+    createKeys.running = true
+    const sv = await SC.keyFn.createKey("RSA-PSS")
+    const ed = await SC.keyFn.createKey("RSA-OAEP")
+    let ehash = await SC.keyFn.keyHash(ed.publicKey,"spki","SHA-1")
+    let vhash = await SC.keyFn.keyHash(sv.publicKey,"spki","SHA-1")
+    let kid = (prompt("Please input a name for the keys:") || ("_" + await SC.keyFn.keyHash(sv.publicKey,"spki","SHA-1"))).replace(/[\]\[\|]/g,"_")
+    let hash = await SC.hash([kid,ehash,vhash].join("|"))
+    createKeys.running = false
+    current_keys = {kid, sv, ed, hash}
+    console.log("keys generated")
+    renderKeyList()
+    return current_keys
+  }else{
+    return null
+  }
+}
+createKeys.running = false
+
+async function downloadKeysWithPassword(click = true){
+  if(current_keys){
+    let str = await SC.keyFn.protectKeys([
+      current_keys.sv.privateKey,
+      current_keys.sv.publicKey,
+      current_keys.ed.privateKey,
+      current_keys.ed.publicKey
+    ],current_keys.kid)
+    if(str){
+      return SC.fns.download(new Blob([str], {type: "application/octet-stream"}), `${current_keys.kid}_${current_keys.hash}_keys`, click)
+    }
+  }
+}
+
+async function uploadKeysWithPassword(files){
+  if(files[0]){
+    let ks = await SC.keyFn.unprotectKeys(await files[0].text())
+    if(ks){
+      let svr,svp,edr,edp,svid,edid
+      for(let key of ks){
+        if(key.algorithm.name == "RSA-OAEP"){
+          edid = key.id
+          if(key.type == "private"){
+            edr = key
+          }else if( key.type == "public"){
+            edp = key
+          }
+        }else if(key.algorithm.name == "RSA-PSS"){
+          svid = key.id
+          if(key.type == "private"){
+            svr = key
+          }else if( key.type == "public"){
+            svp = key
+          }
+        }
+        if(svr && svp && edr && edp){break}
+      }
+      if(svr && svp && edr && edp && svid == edid){
+        let ehash = await SC.keyFn.keyHash(edp,"spki","SHA-1")
+        let vhash = await SC.keyFn.keyHash(svp,"spki","SHA-1")
+        let hash = await SC.hash([svid,ehash,vhash].join("|"),"SHA-1")
+        let ks =  {sv:{privateKey:svr,publicKey:svp},ed:{privateKey:edr,publicKey:edp},kid:svid,hash}
+        if(ks){
+          current_keys = ks
+          renderKeyList()
+          render_messages()
+          return current_keys
+        }
+      }
+    }
+  }
+  return null
+}
+
+async function preparePublicKeys(){
+  if(!current_keys){return}
+  let key = current_keys.hash
+  let ekd = await SC.keyFn.saveKey(current_keys.ed.publicKey,"spki")
+  let vkd = await SC.keyFn.saveKey(current_keys.sv.publicKey,"spki")
+  let raw = [current_keys.kid, await SC.fns.b2h(ekd), await SC.fns.b2h(vkd)].join("|")
+  return {key,raw}
+}
+
+async function receivePublicKeys(raw,hash){
+  let [kid,ekd,vkd] = raw.split("|")
+  try{
+    let ekey = await SC.keyFn.loadKey("RSA-OAEP",SC.fns.h2b(ekd),true,"spki")
+    let vkey = await SC.keyFn.loadKey("RSA-PSS",SC.fns.h2b(vkd),true,"spki")
+    let ehash = await SC.keyFn.keyHash(ekey,"spki","SHA-1")
+    let vhash = await SC.keyFn.keyHash(vkey,"spki","SHA-1")
+    let key = await SC.hash([kid,ehash,vhash].join("|"),"SHA-1")
+    //console.log(kid,ekd,vkd,ekey,vkey,key,hash)
+    if(key == hash){
+      ekey.id = kid
+      vkey.id = kid
+      return public_keys[hash] = {encrypt: ekey, verify: vkey, kid}
+    }
+  }catch(er){
+    console.log(er)
+  }
+}
+
+
+async function ES(data,ekey){
+  if(!current_keys){return}
+  return await SC.signAndEncrypt(data,current_keys.sv.privateKey,ekey)
+}
+
+async function autoDV(data,hash){
+  if(!current_keys){return null}
+  const dkey = current_keys.ed.privateKey
+  let vkeys = []
+  if(public_keys[hash]){
+    vkeys = [ [hash, public_keys[hash].verify] ]
+  }else{
+    vkeys = Object.entries(public_keys).map(([h,ks])=>([h,ks.verify])).concat([[current_keys.hash,current_keys.sv.publicKey]])
+  }
+  let [signed,encrypted] = data.split("|")
+  let decrypted = await SC.decrypt(dkey,encrypted).catch(er=>null)
+  //console.log(decrypted)
+  if(decrypted){
+    let match
+    for(let [h,vkey] of vkeys){
+      if(await SC.verify(vkey,signed,decrypted)){
+        match = h
+        break
+      }
+    }
+    //console.log(match)
+    if(match){
+      return {from: match, to: current_keys.hash, data: decrypted, toSelf: match == current_keys.hash}
+    }
+  }
+  return null
+}
+
+
+
+var inputs = {}
+document.querySelectorAll("[inputs-id]").forEach(d=>inputs[`i_${d.getAttribute("inputs-id")}`]=d)
+
+async function renderKeyList(){
+  if(!current_keys){return console.log("no keys")}
+  while(inputs.i_ckey_list.firstChild){
+    inputs.i_ckey_list.removeChild(inputs.i_ckey_list.firstChild)
+  }
+  let ks = [ current_keys.sv.privateKey,
+    current_keys.sv.publicKey,
+    current_keys.ed.privateKey,
+    current_keys.ed.publicKey
+  ]
+  let h = document.createElement("pre")
+  h.innerText = `[${current_keys.kid}] - ${current_keys.hash} `
+  inputs.i_ckey_list.appendChild(h)
+  for(let k of ks){
+    let d = document.createElement("pre")
+    let id = current_keys.kid
+    let type = `${k.algorithm.name}[${k.type}]:${k.usages.join(",")}`
+    let hash = await SC.keyFn.keyHash(k, k.type == "private" ? "pkcs8" : "spki", "SHA-1")
+    d.innerText = `${id} - ${type} - ${hash}`
+    inputs.i_ckey_list.appendChild(d)
+  }
+  inputs.i_pass_pk.classList.remove("disabled")
+}
+async function renderPubKeyList(){
+  if(!Object.keys(public_keys)){return}
+  inputs.i_to.querySelectorAll("option[value]").forEach(d=>d.remove())
+  while(inputs.i_pub_keys.firstChild){
+    inputs.i_pub_keys.firstChild.remove()
+  }
+  for(let hash in public_keys){
+    let ks = public_keys[hash]
+    let id = ks.kid
+    let ekey = ks.encrypt
+    let h = document.createElement("pre")
+    h.innerText = `[${id}] - ${hash} (${new Date(ks.ts).toLocaleString()})`
+    inputs.i_pub_keys.appendChild(h)
+    let ed = document.createElement("pre")
+    ed.innerText = `${id} - ${ekey.algorithm.name}[${ekey.type}]:${ekey.usages.join(",")} - ${await SC.keyFn.keyHash(ekey, "spki", "SHA-1")}`
+    inputs.i_pub_keys.appendChild(ed)
+    let vkey = ks.verify
+    let vd = document.createElement("pre")
+    vd.innerText = `${id} - ${vkey.algorithm.name}[${vkey.type}]:${vkey.usages.join(",")} - ${await SC.keyFn.keyHash(vkey, "spki", "SHA-1")}`
+    inputs.i_pub_keys.appendChild(vd)
+    let o = document.createElement("option")
+    o.innerText = `[${id}] ${hash}`
+    o.value = hash
+    inputs.i_to.appendChild(o)
+  }
+}
+
+SC.fns.bindUpload(inputs.i_load,uploadKeysWithPassword)
+inputs.i_create.addEventListener("click",createKeys)
+inputs.i_save.addEventListener("click",downloadKeysWithPassword)
+inputs.i_pass_pk.addEventListener("click",function(e){
+  if(!this.classList.contains("disabled")){
+    upload_kp()
+    this.classList.add("disabled")
+    setTimeout(()=>{
+      if(current_keys){
+        this.classList.remove("disabled")
+      }
+    },30*1000)
+  }
+})
+inputs.i_toggle_message.addEventListener("click",(e)=>{
+  if(inputs.i_message_list.classList.contains("hide")){
+    inputs.i_message_list.classList.remove("hide")
+    inputs.i_toggle_message.innerText = "[-]hide unknown messages"
+  }else{
+    inputs.i_message_list.classList.add("hide")
+    inputs.i_toggle_message.innerText = "[+]show all messages"
+  }
+})
+</script>
+
+<template id="tmp_message_item">
+  <style>
+  * {
+    filter: blur(0.16em) opacity(80%);
+    cursor: default;
+  }
+  .msg-ts {
+    padding-top: 0.25em;
+    color: #999;
+    font-size: 0.8em;
+  }
+  .msg-id {
+    color: #666;
+  }
+  .msg-id, .msg-raw {
+    font-size: 0.8em;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 100%;
+  }
+  .msg-from-id, .msg-to-id {
+    font-size: 0.8em;
+    color: #666;
+  }
+  .msg-content {
+    width: 100%;
+    overflow: hidden;
+    white-space: pre-wrap;
+    cursor: initial;
+  }
+  :host(.decode) *, *:hover {
+    filter: none;
+  }
+  :host(.decode) .msg-raw {
+    display: none;
+  }
+  :host(.decode) .msg-from-id::before {
+    content: "From: ";
+  }
+  :host(.decode) .msg-to-id::before {
+    content: "To: ";
+  }.msg-ts::before {
+    content: "*";
+    color: #666;
+  }
+  :host(.self) .msg-ts::before {
+    content: "";
+  }
+  :host([class*="relate-"]) .msg-id::before {
+    content: "=";
+  }
+  :host(.hint) *{
+    animation-duration: 10s;
+    animation-name: related;
+    animation-iteration-count: 1;
+  }
+  @keyframes related {
+    from {
+      filter: blur(0em);
+      color: #faa;
+    }
+    20% {
+      filter: blur(0em);
+      color: #d99;
+    }
+    to {
+      filter: blur(0.16em);
+      color: #999;
+    }
+  }
+  </style>
+  <div class="msg-ts"></div>
+  <div class="msg-id"></div>
+  <div class="msg-raw"></div>
+  <div class="msg-decoded">
+    <div class="msg-from-id"></div>
+    <div class="msg-to-id"></div>
+    <div class="msg-content"></div>
+  </div>
+</template>
+<script>
+class Message{
+  constructor(content,params){
+    this.raw = content ?? null
+    this.id = params?.id ?? null
+    this.from = params?.from ?? null
+    this.to = params?.to ?? null
+    this.hash = null
+    this.encrypted = null
+    this.copy = null
+    this.copyHash = null
+    this.toSelf = null
+    this.decrypted = null
+    this.ts = params?.ts ?? null
+    this.isUnavailable = null
+    this.related = null
+    this.relatedKey = null
+    Object.seal(this)
+  }
+  async signAndEncrypt(hash){
+    let ekey = public_keys[hash].encrypt
+    let kid = public_keys[hash].kid
+    this.ts = +new Date()
+    return await ES(`${this.ts}|${this.raw}`,ekey).then((async function(encrypted){
+      this.from = `[${current_keys.kid}] ${current_keys.hash}`
+      this.to = `[${kid}] ${hash}`
+      this.encrypted = encrypted
+      this.hash = await SC.hash(encrypted,"SHA-1")
+      this.copy = await ES(`${this.ts}|${this.hash}\nTo: ${this.to}\n${this.raw}`,current_keys.ed.publicKey)
+      this.copyHash = await SC.hash(this.copy,"SHA-1")
+      Object.freeze(this)
+      return this.encrypted
+    }).bind(this))
+  }
+  async autoDecryptAndVerify(kid){
+    return await autoDV(this.raw,kid).then(async(decrypted)=>{
+      //console.log(this,decrypted)
+      if(!decrypted){
+        this.isUnavailable = true
+        return
+      }
+      this.from = `[${public_keys[decrypted.from].kid}] ${decrypted.from}`
+      this.to = `[${current_keys.kid}] ${current_keys.hash}`
+      this.isUnavailable = null
+      let mts = decrypted.data.match(/^(?<ts>\d+)\|/)
+      if(mts){
+        this.ts = +mts.groups.ts
+        this.decrypted = decrypted.data.replace(mts[0],"")
+      }else{
+        this.decrypted = decrypted.data
+      }
+      if(decrypted.toSelf){
+        this.toSelf = true
+        let rs = this.decrypted.split("\n")
+        if(rs.length >= 2){
+          let related = /^[0-9A-F]{40}$/.test(rs[0]) ? rs[0] : null
+          let relatedKey = rs[1].match(/^To: \[.*?\] (?<k>[0-9A-F]{40})$/)
+          if(related && relatedKey){
+            this.related = related
+            this.relatedKey = relatedKey.groups.k
+          }
+        }
+      }
+      this.hash = await SC.hash(this.raw,"SHA-1")
+      Object.freeze(this)
+      return this.decrypted
+    }).catch((er)=>{
+      //console.log(er)
+      this.isUnavailable = true
+    })
+  }
+  get isEncoded(){return !!this.encrypted}
+  get isDecoded(){return !!this.decrypted}
+  upload(){}
+  remove(){}
+}
+
+class MessageItem extends HTMLElement {
+  constructor(msg){
+    super()
+    const template = document.getElementById('tmp_message_item').content
+    const shadowRoot = this.attachShadow({mode: 'open'}).appendChild(template.cloneNode(true))
+    this.message = msg ?? null
+    this.render()
+    this.addEventListener("click",()=>{
+      if(this.message?.related){
+        inputs.i_message_list.querySelectorAll("message-item").forEach(mi=>{
+          if(mi.message.id == this.message.related){
+            mi.classList.add(`relate-${this.message.related}`)
+            mi.classList.add(`hint`)
+          }
+        })
+      }
+    })
+    this.shadowRoot.querySelector(".msg-id").addEventListener("animationend",()=>{
+      this.classList.remove("hint")
+    })
+  }
+  setMessage(msg){
+    this.message = msg
+  }
+  async decode(kid){
+    if(this.message && !this.message.isDecoded){
+      if(await this.message.autoDecryptAndVerify(kid)){
+        clearInterval(this.interval)
+        delete this.interval
+        this.render()
+      }
+    }
+  }
+  render(){
+    if(this.message){
+      let shadow = this.shadowRoot
+      shadow.querySelector(".msg-id").innerText = `> ${this.message.id} <`
+      shadow.querySelector(".msg-raw").innerText = this.message.raw
+      this.classList.remove("unavailable")
+      this.classList.remove("edit")
+      this.classList.remove("decode")
+      shadow.querySelector(".msg-ts").innerText = `(${new Date(this.message.ts).toLocaleString()})`
+      if(this.message.isDecoded){
+        shadow.querySelector(".msg-from-id").innerText = this.message.from
+        shadow.querySelector(".msg-to-id").innerText = this.message.to
+        shadow.querySelector(".msg-content").innerText = this.message.decrypted
+        if(this.message.toSelf){
+          this.classList.add("self")
+        }else{
+          this.classList.remove("self")
+        }
+        this.classList.add("decode")
+      }else if(this.message.isEncoded){
+        this.classList.add("edit")
+      }else{
+        this.classList.add("unavailable")
+      }
+    }
+  }
+}
+MessageItem.prototype = new Proxy(MessageItem.prototype,{
+  get(target,prop,ref){
+    return target[prop]
+  },
+  set(target,prop,value,ref){
+    if(prop == "message"){
+      if(value instanceof Message){
+        target[prop] = value
+        this.render()
+      }
+    }else{
+      target[prop] = value
+    }
+    return true
+  }
+})
+customElements.define('message-item', MessageItem)
+
+
+
+var messages = []
+
+function render_messages(){
+  let old_msgs = new Map()
+  inputs.i_message_list.querySelectorAll("message-item").forEach(mi=>{
+    old_msgs.set(mi.message,mi)
+  })
+  let new_msgs = []
+  for(let msg of messages){
+    let mi = old_msgs.get(msg)
+    old_msgs.delete(msg)
+    if(!mi){
+      mi = new MessageItem(msg)
+    }
+    new_msgs.push(mi)
+    mi.decode()
+  }
+  old_msgs.forEach(dm=>dm.remove())
+  new_msgs.forEach(mi=>{
+    inputs.i_message_list.appendChild(mi)
+  })
+}
+
+function dv_messages(){
+  inputs.i_message_list.querySelectorAll("message-item").forEach(mi=>mi.decode())
+}
+
+async function add_message(include_to=false){
+  let str = inputs.i_content.value
+  let hash = inputs.i_to.value
+  if(!hash){return}
+  let ekey = public_keys[hash].encrypt
+  //console.log(str,ekey)
+  if(str && ekey){
+    let msg = new Message()
+    msg.raw = str
+    msg.to = `${public_keys[hash].kid}(${hash})`
+    msg.ts = +new Date()
+    await msg.signAndEncrypt(hash)
+    return msg
+  }
+}
+</script>
+
+
+<script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.14.1/firebase-database.js"></script>
+
+<script>
+// init
+var firebaseConfig = {
+  apiKey: "AIzaSyBBWeeBeg0yJQubnY9xNRvSnGHgkqnO6jw",
+  authDomain: "playground-89e58.firebaseapp.com",
+  databaseURL: "https://playground-89e58.firebaseio.com",
+  projectId: "playground-89e58",
+  storageBucket: "playground-89e58.appspot.com",
+  messagingSenderId: "915528713378",
+  appId: "1:915528713378:web:9f00df4b60e73e008003fb"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+// db
+let db = firebase.database()
+let alive = 7*24*60*60*1000
+let rest = 150
+let key_life = 12*60*60*1000
+db.ref("test/setting").once("value",ref=>{
+  let r = ref.val()
+  alive = r.alive ?? alive
+  rest = r.rest ?? rest
+  key_life = r.key_life ?? key_life
+  inputs.i_alive.innerText = `${Math.floor(alive/86400000)}:${Math.floor(alive%86400000/3600000).toString().padStart(2,"0")}:${Math.floor(alive%3600000/60000).toString().padStart(2,"0")}:${Math.floor(alive%60000/1000).toString().padStart(2,"0")}.${(alive%1000).toString().padStart(3,"0")}`
+  inputs.i_rest.innerText = `${Math.floor(rest/60000).toString().padStart(2,"0")}:${Math.floor(rest%60000/1000).toString().padStart(2,"0")}.${(rest%1000).toString().padStart(3,"0")}`
+  inputs.i_key_life.innerText = `${Math.floor(key_life/86400000)}:${Math.floor(key_life%86400000/3600000).toString().padStart(2,"0")}:${Math.floor(key_life%3600000/60000).toString().padStart(2,"0")}:${Math.floor(key_life%60000/1000).toString().padStart(2,"0")}.${(key_life%1000).toString().padStart(3,"0")}`
+  setInterval(clearOld,alive)
+})
+
+// pkeys change -> load -> update collection -> render
+let render_pk = null
+db.ref("test/pks").orderByChild("ts").on("child_added",async function(ref){
+  //console.log("pks",ref.key,ref.val())
+  const key = ref.key
+  const ts = ref.child("ts").val()
+  if(key == "_last"){return}
+  if(ts < +new Date() - key_life){
+    return await remove_pk(key)
+  }
+  const raw = ref.child("raw").val()
+  let pk = await receivePublicKeys(raw,key)
+  pk.ts = ts
+  //console.log(pk)
+  if(render_pk){
+    clearTimeout(render_pk)
+  }
+  render_pk = setTimeout(renderPubKeyList,200)
+})
+db.ref("test/pks").orderByChild("ts").on("child_changed",async function(ref){
+  //console.log("pks",ref.key,ref.val())
+  if(!ref.val()){return}
+  const key = ref.key
+  if(key == "_last"){return}
+  const ts = ref.child("ts").val()
+  if(ts < +new Date() - key_life){
+    return await remove_pk(key)
+  }
+  const raw = ref.child("raw").val()
+  let pk = await receivePublicKeys(raw,key)
+  pk.ts = ts
+  //console.log(pk)
+  if(render_pk){
+    clearTimeout(render_pk)
+  }
+  render_pk = setTimeout(renderPubKeyList,200)
+})
+
+// msgs change -> load -> update collection -> decode -> render
+let rendering = null
+db.ref("test/msgs").orderByChild("ts").on("child_added",async function(ref){
+  //console.log("msg",ref.val())
+  const id = ref.key
+  const ts = ref.child("ts").val()
+  if(id == "_last"){return}
+  if(ts < +new Date() - alive){
+    return await remove_msg_by_key(id)
+  }
+  const raw = ref.child("raw").val()
+  messages.push( new Message(raw,{id,ts}) )
+  if(rendering){
+    clearTimeout(rendering)
+  }
+  rendering = setTimeout(render_messages,200)
+})
+db.ref("test/msgs").orderByChild("ts").on("child_removed",function(ref){
+  const id = ref.key
+  let i = messages.findIndex(msg=>msg.id == id)
+  if(i != -1){
+    messages.splice(i,1)
+  }
+  if(rendering){
+    clearTimeout(rendering)
+  }
+  rendering = setTimeout(render_messages,200)
+})
+
+// new key -> create/load -> render -> upload
+async function upload_kp(){
+  let ts = firebase.database.ServerValue.TIMESTAMP
+  let {key,raw} = await preparePublicKeys()
+  let update = {"_last":{ts,key}, [key]:{ts,raw}}
+  //console.log("kps up",update)
+  return await db.ref("test/pks").update(update)
+}
+
+// new msg -> encode -> upload
+async function new_msg(){
+  let ts = firebase.database.ServerValue.TIMESTAMP
+  let msg = await add_message()
+  if(msg){
+    let key = msg.hash
+    let update = {"_last":{ts,key}, [key]:{ts,raw: msg.encrypted}}
+    if(inputs.i_copy.checked && msg.to != msg.from){
+      Object.assign(update,{[msg.copyHash]:{ts,raw: msg.copy}})
+    }
+    //console.log("msg up",update)
+    return await db.ref("test/msgs").update(update)
+  }
+}
+
+async function remove_msg_by_key(key){
+  let ts = firebase.database.ServerValue.TIMESTAMP
+  let update = {"_last":{ts,key}, [key]:null}
+  return await db.ref("test/msgs").update(update)
+}
+async function remove_msg(msg){
+  return await remove_msg_by_key(msg.hash)
+}
+async function remove_pk(key){
+  let ts = firebase.database.ServerValue.TIMESTAMP
+  let update = {"_last":{ts,key}, [key]:null}
+  return await db.ref("test/pks").update(update)
+}
+
+inputs.i_post.addEventListener("click",async function(e){
+  inputs.i_content.readonly = true
+  try{
+    await new_msg()
+    inputs.i_content.value = ""
+    inputs.i_content.readonly = false
+  }catch(er){}
+})
+
+// auto clear: remove old pks and msgs
+function clearOld(){
+  db.ref("test/msgs").orderByChild("ts").once("value",function(refs){
+    let cd = 0
+    refs.forEach(ref=>{
+      if(ref.key != "_last" && ref.child("ts").val() < +new Date() - alive){
+        setTimeout(()=>remove_msg_by_key(ref.key),cd)
+        cd += rest*2
+      }
+    })
+  })
+  db.ref("test/pks").orderByChild("ts").once("value",function(refs){
+    let ts = firebase.database.ServerValue.TIMESTAMP
+    let cd = 0
+    refs.forEach(ref=>{
+      let key = ref.key
+      if(key != "_last" && ref.child("ts").val() < +new Date() - key_life){
+         setTimeout(()=>db.ref("test/pks").update({"_last":{ts,key}, [key]:null}),cd)
+         cd += rest*2
+      }
+    })
+  })
+}
+
+/*
+
+db:
+  setting:
+    rest: number
+    alive: number
+    key_life: number
+  pks:
+    _last: ts, key
+    [key]: raw, ts
+  msgs:
+    _last: ts, key
+    [key]: raw, ts
+
+
+".read": true
+
+"msgs":
+  ".write": "(!data.child(newData.child('_last/key').val()).exists() && newData.child(newData.child('_last/key').val()).exists() && newData.child(newData.child('_last/key').val()).child('ts').val() - data.parent().child('setting/rest').val() <= now)||(!newData.child(newData.child('_last/key').val()).exists() && data.child(newData.child('_last/key').val()).exists() && data.child(newData.child('_last/key').val()).child('ts').val() < now - data.parent().child('setting/alive').val())"
+  "$msgKey":
+    ".indexOn": ["ts"]
+  "_last":
+    ".validate": "newData.child('ts').val() > data.child('ts').val() && newData.child('ts').val() < now + data.parent().parent().child('setting/rest').val() && now > data.child('ts').val() + data.parent().parent().child('setting/rest').val()"
+
+"pks":
+  ".write": "(!data.child(newData.child('_last/key').val()).exists() && newData.child(newData.child('_last/key').val()).exists() && newData.child(newData.child('_last/key').val()).child('ts').val() - data.parent().child('setting/rest').val() <= now)||(!newData.child(newData.child('_last/key').val()).exists() && data.child(newData.child('_last/key').val()).exists() && data.child(newData.child('_last/key').val()).child('ts').val() < now - data.parent().child('setting/key_life').val())||(newData.child(newData.child('_last/key').val()).child('raw').val() == data.child(newData.child('_last/key').val()).child('raw').val() && newData.child(newData.child('_last/key').val()).child('ts').val() > data.child(newData.child('_last/key').val()).child('ts').val() && newData.child(newData.child('_last/key').val()).child('ts').val() - data.parent().child('setting/rest').val() <= now)"
+  "$pkKey":
+    ".indexOn": ["ts"]
+  "_last":
+    ".validate": "newData.child('ts').val() > data.child('ts').val() && newData.child('ts').val() < now + data.parent().parent().child('setting/rest').val() && now > data.child('ts').val() + data.parent().parent().child('setting/rest').val()"
+
+*/
+
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-78696465-1', 'auto');
+  ga('send', 'pageview');
+</script>
+</body>
+</html>
