@@ -112,7 +112,7 @@ async function createKeys(){
     let ehash = await SC.keyFn.keyHash(ed.publicKey,"spki","SHA-1")
     let vhash = await SC.keyFn.keyHash(sv.publicKey,"spki","SHA-1")
     let kid = (prompt("Please input a name for the keys:") || ("_" + await SC.keyFn.keyHash(sv.publicKey,"spki","SHA-1"))).replace(/[\]\[\|]/g,"_")
-    let hash = await SC.hash([kid,ehash,vhash].join("|"))
+    let hash = await SC.hash([kid,ehash,vhash].join("|"),"SHA-1")
     createKeys.running = false
     current_keys = {kid, sv, ed, hash}
     console.log("keys generated")
@@ -202,6 +202,7 @@ async function receivePublicKeys(raw,hash){
       vkey.id = kid
       return public_keys[hash] = {encrypt: ekey, verify: vkey, kid}
     }
+    throw Error(`${key} != ${hash}`)
   }catch(er){
     console.log(er)
   }
@@ -649,7 +650,9 @@ db.ref("test/pks").orderByChild("ts").on("child_added",async function(ref){
   }
   const raw = ref.child("raw").val()
   let pk = await receivePublicKeys(raw,key)
-  pk.ts = ts
+  if(pk){
+    pk.ts = ts
+  }
   //console.log(pk)
   if(render_pk){
     clearTimeout(render_pk)
@@ -667,7 +670,9 @@ db.ref("test/pks").orderByChild("ts").on("child_changed",async function(ref){
   }
   const raw = ref.child("raw").val()
   let pk = await receivePublicKeys(raw,key)
-  pk.ts = ts
+  if(pk){
+    pk.ts = ts
+  }
   //console.log(pk)
   if(render_pk){
     clearTimeout(render_pk)
