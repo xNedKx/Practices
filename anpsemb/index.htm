@@ -134,7 +134,7 @@ async function downloadKeysWithPassword(click = true){
       current_keys.ed.publicKey
     ],current_keys.kid)
     if(str){
-      return SC.fns.download(new Blob([str], {type: "application/octet-stream"}), `${current_keys.kid}_${current_keys.hash}_keys`, click)
+      return SC.fns.download(new Blob([str], {type: "application/octet-stream"}), `KEY_${current_keys.kid}_${current_keys.hash}`, click)
     }
   }
 }
