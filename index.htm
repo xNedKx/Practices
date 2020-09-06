@@ -1,9 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-hant">
 <head>
+<meta charset="utf-8" />
 <meta http-equiv="content-type" content="text/html; charset=utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>xNedKx | Project Practices</title>
+<meta name="description" content="xNedKx | Project Practices" />
+<meta name="author" content="xNedKx" />
+<meta name="copyright" content="xNedKx" />
 <link href='https://fonts.googleapis.com/css?family=Averia+Sans+Libre' rel='stylesheet' type='text/css'>
 <style>
 html, body{
@@ -34,8 +38,10 @@ ul li.title{
     font-size: 1.2em;
     padding: 0.2em 0;
 }
-a.disabled{
+a[href="javascript:void(0);"]:link{
     color: #AAA;
+}
+.disabled {
     text-decoration: line-through;
 }
 .gray{
@@ -47,54 +53,60 @@ a.disabled{
 <div class="header">Project Archive</div>
 <div>
 <ul>
-<li class="title">Utilites</li>
-<li><a href='./gdvb.htm'>Google Doc Viewer Bookmarklet [ENG]</a><br> - js bookmark (not for mobile)</li>
-<li><a href='./EAN13.htm'>EAN13 generator [TC]</a><br> - vanilla js</li>
-<li><a href='./code39.htm'>CODE39 generator [TC]</a><br> - D3.js + canvg</li>
-<li><a href='../color/'>Color Class for JS [TC]</a><br> - vanilla js</li>
-<li><a href="../color/cc_css.htm">CSS Class Auto Coloring [ENG]</a><br> - vanilla js</li>
-<li><a href="./countdowntimer.htm">Countdown Timer [ENG]</a><br> - vanilla js</li>
-<li><a href="./roc.htm">Simple ROC Curve [ENG]</a><br> - vanilla js</li>
-<li><a href="./js_eval_console.htm">JS Eval Console [ENG]</a><br> - vanilla js</li>
-<li><a href="./anpsemb/">ANPSEMB - A Non-Professionally Safe Encryption Message Board [ENG]</a><br> - Web Crypto API + Firebase</li>
+<li class="title">Utilities</li>
+<li>2014/06<br><a href='./EAN13.htm'>EAN13 generator [TC]</a><br> - vanilla js </li>
+<li>2014/06<br><a href='./code39.htm'>CODE39 generator [TC]</a><br> - D3.js + canvg </li>
+<li>2015/12<br><a href='../color/'>Color Class for JS [TC]</a><br> - vanilla js </li>
+<li>2016/04<br><a href="../color/cc_css.htm">CSS Class Auto Coloring [ENG]</a><br> - vanilla js </li>
+<li>2016/09<br><a href='./todo/'>Todo Recorder [ENG]</a><br> - React.js </li>
+<li>2017/02<br><a href='javascript:void(0);'>Artist personal gallery</a><br> - dropbox </li>
+<li>2017/03<br><a href='javascript:void(0);'>(Under Developement) Artist personal gallery+</a><br> - firebase + dropbox </li>
+<li>2017/05<br><a href='javascript:void(0);'>(Under Developement) Data_analysis</a><br> - vanilla js </li>
+<li>2018/12<br><a href="./roc.htm">Simple ROC Curve [ENG]</a><br> - vanilla js </li>
+<li>2019/03<br><a href='javascript:void(0);'>Eshop item list grabber [TC]</a><br> - userscript => electron </li>
+<li>2019/05<br><a href='javascript:void(0);'>Art project collaboration</a><br> - electron + websocket</li>
+<li>2019/07<br><a href='javascript:void(0);'>Slider - Fullscreen image gallery</a><br> - vanilla js </li>
+<li>2020/01<br><a href="./js_eval_console.htm">JS Eval Console [ENG]</a><br> - vanilla js </li>
+<li>2020/05<br><a href='/cno/'> YZC number call queue system [TC]</a><br> - firebase </li>
+<li>2020/09<br><a href="./anpsemb/">ANPSEMB - A Non-Professionally Safe Encryption Message Board [ENG]</a><br> - Web Crypto API + Firebase </li>
 <li class="title">Traditional Chinese Medicine</li>
-<li><a href="./chimed/cd_test.htm">Category Exam [TC]</a><br> - vanilla js</li>
-<li><a href="./chimed/cd_test2.htm">Ingredient Exam [TC]</a><br> - vanilla js</li>
-<li><a href="./chimed/cd_test2-2.htm">Combination Exam [TC]</a><br> - vanilla js</li>
-<li><a href="../qs/">Question Bank [TC]</a><br> - vanilla js</li>
-<li><a href="./tcm-med-db.htm">TCM Medicine Database [TC]</a><br> - firebase</li>
-<li class="title">Games</li>
-<li><a href="../A_game_frame/project1/">A Game Frame Demo [TC]</a><br> - vanilla js</li>
-<li><a href='./2048/2048.htm'>Game 2048 [ENG]</a><br> - vanilla js</li>
-<li><a href='./p5g.htm'>Game Gomoku [TC]</a><br> - vanilla js</li>
-<li><a href='https://www.boardgamearena.com/#!gamepanel?game=fourcolorcards/'>Four Color Cards [i18n]</a><br> - BGA Studio - PHP + dojo @BGA</li>
-<li class="title">Game Helpers</li>
-<li><a href="./poker/poker.htm">Poker Probability [ENG]</a><br> - vanilla js (not for mobile)</li>
-<li><a href='./hanabi_probability.htm'>Hanabi Probability Calculator [TC]</a><br> - vanilla js</li>
-<li><a href='./mj-check/'>Mahjong Hand Check [TC]</a><br> - vanilla js</li>
-<li><a href='./cantstopprob.htm'>CAN'T STOP Statistics [ENG]</a><br> - Vue.js</li>
+<li>2014/09<br><a href="./chimed/cd_test.htm">Category Exam [TC]</a><br> - vanilla js </li>
+<li>2014/09<br><a href="./chimed/cd_test2.htm">Ingredient Exam [TC]</a><br> - vanilla js </li>
+<li>2014/09<br><a href="./chimed/cd_test2-2.htm">Combination Exam [TC]</a><br> - vanilla js </li>
+<li>2016/12<br><a href="../qs/">Question Bank [TC]</a><br> - vanilla js </li>
+<li>2019/05<br><a href="./tcm-med-db.htm">TCM Medicine Database [TC]</a><br> - firebase </li>
+<li class="title">Games &amp; Helpers</li>
+<li>2014/07<br><a href="../A_game_frame/project1/">A Game Frame Demo [TC]</a><br> - vanilla js </li>
+<li>2014/09<br><a href="./poker/poker.htm">Poker Probability [ENG]</a><br> - vanilla js (not for mobile) </li>
+<li>2015/06<br><a href='./2048/2048.htm'>Game 2048 [ENG]</a><br> - vanilla js </li>
+<li>2015/11<br><a href='./p5g.htm'>Game Gomoku [TC]</a><br> - vanilla js </li>
+<li>2016/01<br><a href='./hanabi_probability.htm'>Hanabi Probability Calculator [TC]</a><br> - vanilla js </li>
+<li>2016/03<br><a href='./mj-check/'>Mahjong Hand Check [TC]</a><br> - vanilla js </li>
+<li>2016/05<br><a href='https://zh.boardgamearena.com/gamepanel?game=fourcolorcards'>Four Color Cards [i18n]</a><br> - BGA Studio|PHP + dojo @BGA </li>
+<li>2016/11<br><a href='./sundayeat.htm'>Sundayeat (without google map api) [TC]</a><br> - vanilla js </li>
+<li>2018/08<br><a href="./countdowntimer.htm">Countdown Timer [ENG]</a><br> - vanilla js </li>
+<li>2019/02<br><a href='./cantstopprob.htm'>CAN'T STOP Statistics [ENG]</a><br> - Vue.js </li>
 <li class="title">Multimedia</li>
-<li><a href='./dot.htm'>Text Dotize [TC]</a><br> - vanilla js</li>
-<li><a href='./rainbow/rainbow_worker.htm'>Rainbowizer (with worker) [TC]</a><br> - vanilla js (not for mobile)</li>
-<li><a href='./scene.htm'>A Fake 3D Scene</a><br> - vanilla js</li>
-<li><a href='./box.htm'>A Clickable Box</a><br> - three.js</li>
-<li><a href='./camera.htm'>Open Camera [ENG]</a><br> - vanilla js</li>
-<li><a href='./midi_emulator.htm'>MIDI Emulator [TC]</a><br> - vanilla js</li>
-<li><a href='./mvvp.htm'>Multiview Video Player</a><br> - vanilla js (better performance in chrome)</li>
-<li><a href='./elastic.htm'>Elastic Block</a><br> - vanilla js</li>
-<li><a href='./fsm.htm'>Forward Slash Maker</a><br> - vanilla js</li>
-<li class="title">MVC/Framework</li>
-<li><a href='./w2z.htm'>alphabet to bopomofo converter [TC]</a><br> - backbone + (underscore) + jquery</li>
-<li><a href='./phone_local.htm'>Taiwan phone number local filter [TC]</a><br> - ember + handlebar + jquery</li>
-<li><a href='./todo/'>Todo Recorder [ENG]</a><br> - React.js</li>
-<li><a href='https://chatroom-beta.herokuapp.com/'>chatroom demo [ENG]</a><br> - Django - python @heroku</li>
-<li class="title">APIs</li>
-<li><a href='./sundayeat_v2.htm'>Sundayeat(A decision making helper) [TC]</a><br> - google map api</li>
-<li><a href='./geo.htm'>Your Location [ENG]</a><br> - google map api</li>
+<li>2015/06<br><a href='./rainbow/rainbow_worker.htm'>Rainbowizer (with worker) [TC]</a><br> - vanilla js (not for mobile) </li>
+<li>2016/10<br><a href='./box.htm'>A Clickable Box</a><br> - three.js </li>
+<li>2016/10<br><a href='./camera.htm'>Open Camera [ENG]</a><br> - vanilla js </li>
+<li>2016/10<br><a href='./midi_emulator.htm'>MIDI Emulator [TC]</a><br> - vanilla js </li>
+<li>2016/11<br><a href='./scene.htm'>A Fake 3D Scene</a><br> - vanilla js </li>
+<li>2018/06<br><a href='./dot.htm'>Text Dotize [TC]</a><br> - vanilla js </li>
+<li>2019/01<br><a href='./mvvp.htm'>Multiview Video Player</a><br> - vanilla js </li>
+<li>2019/05<br><a href='./elastic.htm'>Elastic Block</a><br> - vanilla js </li>
+<li>2020/08<br><a href='./fsm.htm'>Forward Slash Maker</a><br> - vanilla js </li>
+<li class="title">MVC/Framework &amp; Non-Web APIs</li>
+<li>2014/07<br><a href='./w2z.htm'>alphabet to bopomofo converter [TC]</a><br> - backbone + (underscore) + jquery </li>
+<li>2015/01<br><a href='./phone_local.htm'>Taiwan phone number local filter [TC]</a><br> - ember + handlebar + jquery </li>
+<li>2015/02<br><a href='javascript:void(0);' class="disabled">(Substituted) Museum web site CMS + reservation system [TC/ENG]</a><br> - Django|python + PHP + AngularJS + Nginx @CentOS|vBox </li>
+<li>2015/03<br><a href='javascript:void(0);' class="disabled">(Heroku server end of life) chatroom demo [ENG]</a><br> - Django|python @heroku </li>
+<li>2016/11<br><a href='./geo.htm'>Your Location [ENG]</a><br> - google map api </li>
+<li>2016/12<br><a href='./sundayeat_v2.htm'>Sundayeat(A decision making helper) [TC]</a><br> - google map api </li>
 <li class="title">Others</li>
-<li><a href='./sundayeat.htm'>Sundayeat (without google map api) [TC]</a><br> - vanilla js</li>
-<li><a href='./rainbow/rainbow.htm'>Rainbowizer (without worker) [TC]</a><br> - vanilla js (not for mobile)</li>
-<li><a href='#' class="disabled">(Constructing) Personal Gallery Website</a><br><span class="gray"> - Firebase + Github Pages</span></li>
+<li>2015/01<br><a href='./gdvb.htm' class="disabled">Google Doc Viewer Bookmarklet [ENG]</a><br> - js bookmark (not for mobile)</li>
+<li>2015/06<br><a href='./rainbow/rainbow.htm'>Rainbowizer (without worker) [TC]</a><br> - vanilla js (not for mobile) </li>
+<li>2017/03<br><a href='javascript:void(0);'>codefinder - Auto-compelte data search from input csv [TC|Big5]</a><br> - vanilla js </li>
 </ul>
 </div>
 <div class="footer">Copyright reserved | xNedKx</div>
