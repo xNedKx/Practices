@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>QR Code Generator</title>
+<meta name="description" content="A QR code Generator." />
+<meta name="author" content="xNedKx" />
+<meta name="copyright" content="xNedKx" />
+<script src="qrcode.js"></script>
+<style>
+document,body {
+  margin: 0;
+  text-align: center;
+  font-family: monospace;
+  background-color: #eeeeee;
+  color: #151515;
+  overflow-x: hidden;
+}
+
+#title {
+  font-size: min(3em,10vw);;
+  font-weight: bold;
+  color: #030303;
+}
+.gray {
+  color: #999;
+}
+
+label {
+  cursor: pointer;
+}
+input, select, textarea {
+  border: none;
+  background-color: #fefefe;
+  box-sizing: border-box;
+  vertical-align: middle;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+}
+
+#data {
+  width: calc(100% - 1em);
+  max-width: 531px;
+  resize: vertical;
+  min-height: 5.5em;
+  max-height: 24em;
+  margin: 1em 0.5em;
+  padding: 0.25em;
+  box-shadow: 0 0 1em #0006;
+  scrollbar-width: thin;
+}
+
+#code {
+  position: relative;
+  margin: 1.5em auto;
+  max-width: min(531px, calc(100vw - 1em));
+}
+#img {
+  box-shadow: 0 0 1em #0006;
+  width: 100%;
+  height: auto;
+  cursor: pointer;
+  transition: all 100ms ease-in-out;
+  background-color: #fefefe;
+}
+#code::before {
+  display: block;
+  height: 100%;
+  width: 100%;
+  text-align: center;
+  position: absolute;
+  padding-top: calc(50% - 1em);
+  padding-bottom: calc(50% - 1em);
+  font-size: 2em;
+  box-sizing: border-box;
+}
+.invalid-version #code::before {
+  content: "Data size exceeded current capacity. Try higher version or lower EC level.";
+}
+.null-data #code::before {
+  content: "No data to encode.";
+}
+
+#footer {
+  color: #030303;
+}
+</style>
+</head>
+<body class="auto-version">
+<div id="header">
+  <div id="title">QR Code Generator</div>
+  <div class="gray">Type in the contents you want to turn into a QR code below.</div>
+</div>
+<hr>
+<div id="input">
+  <form id="params">
+    <div>
+      <label title="Type Number [modules x modules]">Version: <select id="type_number" name="typeNumber"></select></label>
+      <label title="Error Correction Level (tolerance)">EC: <select id="EC_level" name="ECLevel"></select></label>
+      <input id="mode" name="mode" type="hidden" value="Byte"/>
+      <label title="Check to encode non-URL characters.">isURL:<input id="uriencode" name="uriencode" type="checkbox"/></label>
+    </div>
+    <textarea id="data" name="data" autofocus></textarea>
+  </form>
+</div>
+<hr>
+<div id="output">
+  <div id="code">
+    <canvas id="img" width="58" height="58" title="Click to change image size. (not resolution)"></canvas>
+  </div>
+</div>
+<hr>
+<div id="footer">
+  <div class="gray">Unicode charcters are undecodable in many decoders. You can escape it with isURL option.</div>
+  <div>This service uses <a href="https://github.com/kazuhikoarase/qrcode-generator" target="_blank" title="qrcode-generator (open in github)">qrcode-generator (MIT License)</a> to provide the core functions.</div>
+  <div>UI designed by xNedKx.</div>
+  <div></div>
+</div>
+
+<script>
+function log(...args){
+  if(log.on){
+    return console.log(...args)
+  }
+}
+log.on = !true
+
+var typeNumbers = {}
+var EC_levels = {
+  "L": {value:"L",text:"L ( 7%)"},
+  "M": {value:"M",text:"M (15%)"},
+  "Q": {value:"Q",text:"Q (25%)"},
+  "H": {value:"H",text:"H (30%)"}
+}
+var modes = {
+  'Numeric': {value:'Numeric',text:'Numeric'},
+  'Alphanumeric': {value:'Alphanumeric',text:'Alphanumeric'},
+  'Byte': {value:'Byte',text:'Byte(default)'},
+  'Kanji': {value:'Kanji',text:'Kanji'}
+}
+var margin = 4
+var maximum = {
+  "L": {'Numeric': 7089, 'Alphanumeric': 4296, 'Byte': 2953, 'Kanji': 1817},
+  "M": {'Numeric': 5596, 'Alphanumeric': 3391, 'Byte': 2331, 'Kanji': 1435},
+  "Q": {'Numeric': 3993, 'Alphanumeric': 2420, 'Byte': 1663, 'Kanji': 1024},
+  "H": {'Numeric': 3057, 'Alphanumeric': 1852, 'Byte': 1273, 'Kanji': 784},
+}
+function setupOptions(){
+  for(let i = 0; i <= 40; i++){
+    typeNumbers[i] = {value: i, text: i? `${i}` : `Auto`}
+    let o = document.createElement("option")
+    o.value = typeNumbers[i].value
+    o.innerText = typeNumbers[i].text
+    if(i){
+      o.innerText += ` [${i*4+17}x${i*4+17}]`
+    }
+    document.getElementById("type_number").appendChild(o)
+  }
+  for(let l in EC_levels){
+    let o = document.createElement("option")
+    o.value = EC_levels[l].value
+    o.innerText = EC_levels[l].text
+    document.getElementById("EC_level").appendChild(o)
+  }
+}
+setupOptions()
+
+function collectData(){
+  let f = document.getElementById("params")
+  let tn = f.elements.typeNumber.value
+  let ec = f.elements.EC_level.value
+  let mode = f.elements.mode.value
+  let data = f.elements.data.value
+  let uriencode = f.elements.uriencode.checked
+  return {tn,ec,mode,data,uriencode}
+}
+
+var auto = true
+var old_length = 0
+function createQR(change_tn = true){
+  let {tn,ec,mode,data,uriencode} = collectData()
+  document.getElementById("data").title = data
+  if(!data){
+    if(auto){
+      document.getElementById("type_number").value = 0
+    }
+    document.body.classList.add("null-data")
+    return null
+  }
+  document.body.classList.remove("null-data")
+  let encoded_data = uriencode ? encodeURI(data).replace(/%5B/g, '[').replace(/%5D/g, ']') : data
+  if(old_length > data.length && auto){
+    tn = 0
+  }
+  old_length = data.length
+  if(encoded_data.length > maximum[ec][mode]){
+    document.body.classList.add("invalid-version")
+    return null
+  }
+  let qrc = qrcode(tn, ec)
+  qrc.addData(encoded_data,mode)
+  try{
+    log(`Trying to generate QR code:\n[Version]: ${typeNumbers[tn].text}\n[EC Level]: ${EC_levels[ec].text}`)
+    qrc.make()
+    let rtn = tn
+    if(change_tn){
+      rtn = (qrc.getModuleCount() - 17) / 4
+      document.getElementById("type_number").value = rtn
+    }
+    log(`QR code generated.\n[Version]: ${rtn}\n[EC Level]: ${EC_levels[ec].text}\n[Data]: ${encoded_data}\n[QR code]:\n${qrc.createASCII()}`)
+    document.body.classList.remove("invalid-version")
+    document.getElementById("data").title = encoded_data
+    return qrc
+  }catch(er){
+    if(auto && tn > 0 && tn < 40){
+      document.getElementById("type_number").value = 0
+      return createQR(change_tn)
+    }
+    document.body.classList.add("invalid-version")
+    log(er)
+    return null
+  }
+}
+
+function updateImg(qrc){
+  let output = document.getElementById("img")
+  if(!qrc){
+    output.getContext("2d").fillStyle = "#FFFF"
+    output.getContext("2d").fillRect(0,0,output.width,output.height)
+    output.style.width = ""
+  }else{
+    let cv = document.createElement("canvas")
+    cv.width = qrc.getModuleCount() * 2
+    cv.height = qrc.getModuleCount() * 2
+    let canvas = cv.getContext("2d")
+    qrc.renderTo2dContext(canvas)
+    output.width = (qrc.getModuleCount() + 2 * margin) * 2
+    output.height = (qrc.getModuleCount() + 2 * margin) * 2
+    output.getContext("2d").drawImage(cv,margin * 2,margin * 2)
+    output.style.width = ""
+    output.title = "Maxmized (Click to change the view size.)"
+    return output
+  }
+}
+
+let wait
+document.getElementById("data").addEventListener("keyup",(e)=>{
+  clearTimeout(wait)
+  wait = setTimeout(()=>{updateImg(createQR())},200)
+})
+document.getElementById("type_number").addEventListener("change",function(e){
+  if(this.value == 0){
+    auto = true
+    document.body.classList.add("auto-version")
+  }else{
+    auto = false
+    document.body.classList.remove("auto-version")
+  }
+  updateImg(createQR())
+  document.getElementById("data").focus()
+})
+document.getElementById("EC_level").addEventListener("change",(e)=>{
+  updateImg(createQR())
+  document.getElementById("data").focus()
+})
+document.getElementById("uriencode").addEventListener("change",(e)=>{
+  updateImg(createQR())
+  document.getElementById("data").focus()
+})
+document.getElementById("img").addEventListener("click",function(e){
+  let maxWidth = Math.min(531, screen.width)
+  let currentWidth = this.offsetWidth
+  if(currentWidth >= maxWidth){
+      this.style.width = `${this.width}px`
+      this.title = "Original Size"
+  }else if(currentWidth >= this.width * 5){
+    this.style.width = ""
+    this.title = "Maximized"
+  }else if(currentWidth >= this.width * 3){
+    if(this.width*5 < maxWidth){
+      this.style.width = `${this.width*5}px`
+      this.title = "5x"
+    }else{
+      this.style.width = ""
+      this.title = "Maximized"
+    }
+  }else if(currentWidth >= this.width * 2){
+    if(this.width*3 < maxWidth){
+      this.style.width = `${this.width*3}px`
+      this.title = "3x"
+    }else{
+      this.style.width = ""
+      this.title = "Maximized"
+    }
+  }else if(currentWidth >= this.width * 1.5){
+    if(this.width*2 < maxWidth){
+      this.style.width = `${this.width*2}px`
+      this.title = "2x"
+    }else{
+      this.style.width = ""
+      this.title = "Maximized"
+    }
+  }else{
+    if(this.width*1.5 < maxWidth){
+      this.style.width = `${this.width*1.5}px`
+      this.title = "1.5x"
+    }else{
+      this.style.width = ""
+      this.title = "Maximized"
+    }
+  }
+})
+
+</script>
+</body>
+</html>
