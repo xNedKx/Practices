@@ -262,10 +262,16 @@ document.getElementById("type_number").addEventListener("change",function(e){
   document.getElementById("data").focus()
 })
 document.getElementById("EC_level").addEventListener("change",(e)=>{
+  if(auto){
+    document.getElementById("type_number").value = 0
+  }
   updateImg(createQR())
   document.getElementById("data").focus()
 })
 document.getElementById("uriencode").addEventListener("change",(e)=>{
+  if(auto && !this.checked){
+    document.getElementById("type_number").value = 0
+  }
   updateImg(createQR())
   document.getElementById("data").focus()
 })
