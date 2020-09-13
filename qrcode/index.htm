@@ -246,6 +246,7 @@ function updateImg(qrc){
   }
 }
 
+let maxMobileWidth = 480
 let wait
 document.getElementById("data").addEventListener("keyup",(e)=>{
   clearTimeout(wait)
@@ -263,24 +264,31 @@ document.getElementById("type_number").addEventListener("change",function(e){
     document.body.classList.remove("auto-version")
   }
   updateImg(createQR())
-  document.getElementById("data").focus()
+  if(screen.width > maxMobileWidth){
+    document.getElementById("data").focus()
+  }
 })
 document.getElementById("EC_level").addEventListener("change",(e)=>{
   if(auto){
     document.getElementById("type_number").value = 0
   }
   updateImg(createQR())
-  document.getElementById("data").focus()
+  if(screen.width > maxMobileWidth){
+    document.getElementById("data").focus()
+  }
 })
 document.getElementById("uriencode").addEventListener("change",(e)=>{
   if(auto && !this.checked){
     document.getElementById("type_number").value = 0
   }
   updateImg(createQR())
-  document.getElementById("data").focus()
+  if(screen.width > maxMobileWidth){
+    document.getElementById("data").focus()
+  }
 })
 document.getElementById("img").addEventListener("click",function(e){
-  let maxWidth = Math.min(531, screen.width)
+  let c = getComputedStyle(document.getElementById("code"))
+  let maxWidth = Math.min(531, +c.maxWidth.replace("px",""))
   let currentWidth = this.offsetWidth
   if(currentWidth >= maxWidth){
       this.style.width = `${this.width}px`
