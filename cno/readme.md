@@ -1,4 +1,4 @@
-# YZC線上叫號系統軟體 v1.2 說明
+# 速成線上叫號系統軟體 v1.3 說明
 
 ### 簡介
 
@@ -53,29 +53,25 @@
 
 ##### 安裝需求：
 
-1. 提供靜態檔案之伺服
-
-2. Firebase(google) 服務
-
-3. google font 開放字型
+1. Firebase(google 帳戶) 服務
 
 ##### 瀏覽需求：
 
 Chrome 49 / Firefox 52 / Edge 79 / Opera 42 / Safari 11.1 / Android Chorme 81 / Android Browser 81 / iOS safari 11.3
-(此為理論規格，以實際為主)
+(此為參考規格，實際支援可能存在差異。)
 
 ------
 ### 安裝
 
-1. 建立網頁伺服主機，租用伺服器，或是使用代管服務。
+1. 註冊 google 帳號，啟用 firebase 服務。
 
-2. 註冊 google 帳號，啟用 firebase 服務。
+2. 建立 email 認證之管理員帳號，密碼不需與原 email 相同。
 
-3. 建立 email 認證之管理員帳號，密碼不需與原 email 相同。
+3. 設定 firebase authentication 與 realtime database ，資料庫權限設定需寫入管理員 uid。
 
-4. 設定 firebase authentication 與 realtime database ，資料庫權限設定需寫入管理員 uid。
+4. 修改 index.htm 之 google firebase api token 以及外觀客製化。
 
-5. 修改 index.htm 之 google api token 以及外觀客製化部分。
+5. 建立網頁伺服主機，租用伺服器，或是使用代管服務(如 firebase hosting)，並上傳檔案。
 
 ------
 ### 操作
@@ -143,4 +139,4 @@ Chrome 49 / Firefox 52 / Edge 79 / Opera 42 / Safari 11.1 / Android Chorme 81 / 
 本軟體授權為一次性有限永久授權，限定於該版本在設定與維修的變更內。使用者僅可依其設計功能使用，不可進行其他但不限如重製、轉散發等行為。未經授權不得使用，其他授權不得違背本授權之限制。授權需經雙方同意始生效。
 
 ------
-v1.2 | 2020/07/31 | Copyright | YzChen | <yellow.zinc.com&commat;gmail.com>
+v1.3 | 2020/09/13 | Copyright | YzChen | <yellow.zinc.com&commat;gmail.com>
