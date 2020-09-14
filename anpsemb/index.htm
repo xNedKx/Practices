@@ -320,6 +320,7 @@ inputs.i_toggle_message.addEventListener("click",(e)=>{
     inputs.i_toggle_message.innerText = "[+]show all messages"
   }
 })
+inputs.i_content.maxLength = SC.algs["RSA-OAEP"].maxEncryptBytes / 2 - (+new Date()).toString().length - 1
 </script>
 
 <template id="tmp_message_item">
@@ -430,8 +431,11 @@ class Message{
       this.to = `[${kid}] ${hash}`
       this.encrypted = encrypted
       this.hash = await SC.hash(encrypted,"SHA-1")
-      this.copy = await ES(`${this.ts}|${this.hash}\nTo: ${this.to}\n${this.raw}`,current_keys.ed.publicKey)
-      this.copyHash = await SC.hash(this.copy,"SHA-1")
+      let cpRaw = `${this.ts}|${this.hash}\nTo: ${this.to}\n${this.raw}`
+      if(cpRaw.length <= SC.algs["RSA-OAEP"].maxEncryptBytes/2 ){
+        this.copy = await ES(cpRaw,current_keys.ed.publicKey)
+        this.copyHash = await SC.hash(this.copy,"SHA-1")
+      }
       Object.freeze(this)
       return this.encrypted
     }).bind(this))
@@ -725,8 +729,14 @@ async function new_msg(){
   if(msg){
     let key = msg.hash
     let update = {"_last":{ts,key}, [key]:{ts,raw: msg.encrypted}}
-    if(inputs.i_copy.checked && msg.to != msg.from){
-      Object.assign(update,{[msg.copyHash]:{ts,raw: msg.copy}})
+    if(inputs.i_copy.checked){
+      if(!msg.copy){
+        let over = Math.ceil(`${msg.ts}|${msg.hash}\nTo: ${msg.to}\n${msg.raw}`.length - SC.algs["RSA-OAEP"].maxEncryptBytes/2)
+        alert(`You have to reduce ${over} characters if you want to send copy to yourself. Or you can copy the contents then send it to yourself by yourself.`)
+        throw Error()
+      }else if(msg.to != msg.from){
+        Object.assign(update,{[msg.copyHash]:{ts,raw: msg.copy}})
+      }
     }
     //console.log("msg up",update)
     return await db.ref("test/msgs").update(update)
@@ -798,14 +808,14 @@ db:
 ".read": true
 
 "msgs":
-  ".write": "(!data.child(newData.child('_last/key').val()).exists() && newData.child(newData.child('_last/key').val()).exists() && newData.child(newData.child('_last/key').val()).child('ts').val() - data.parent().child('setting/rest').val() <= now)||(!newData.child(newData.child('_last/key').val()).exists() && data.child(newData.child('_last/key').val()).exists() && data.child(newData.child('_last/key').val()).child('ts').val() < now - data.parent().child('setting/alive').val())"
+  ".write": "(!data.child(newData.child('_last/key').val()).exists() && newData.child(newData.child('_last/key').val()).exists() && newData.child(newData.child('_last/key').val()).child('raw').val().matches(/[0-9A-F]{1024}\\|[0-9A-F]{1024}/) && newData.child(newData.child('_last/key').val()).child('ts').val() - data.parent().child('setting/rest').val() <= now)||(!newData.child(newData.child('_last/key').val()).exists() && data.child(newData.child('_last/key').val()).exists() && data.child(newData.child('_last/key').val()).child('ts').val() < now - data.parent().child('setting/alive').val())"
   "$msgKey":
     ".indexOn": ["ts"]
   "_last":
     ".validate": "newData.child('ts').val() > data.child('ts').val() && newData.child('ts').val() < now + data.parent().parent().child('setting/rest').val() && now > data.child('ts').val() + data.parent().parent().child('setting/rest').val()"
 
 "pks":
-  ".write": "(!data.child(newData.child('_last/key').val()).exists() && newData.child(newData.child('_last/key').val()).exists() && newData.child(newData.child('_last/key').val()).child('ts').val() - data.parent().child('setting/rest').val() <= now)||(!newData.child(newData.child('_last/key').val()).exists() && data.child(newData.child('_last/key').val()).exists() && data.child(newData.child('_last/key').val()).child('ts').val() < now - data.parent().child('setting/key_life').val())||(newData.child(newData.child('_last/key').val()).child('raw').val() == data.child(newData.child('_last/key').val()).child('raw').val() && newData.child(newData.child('_last/key').val()).child('ts').val() > data.child(newData.child('_last/key').val()).child('ts').val() && newData.child(newData.child('_last/key').val()).child('ts').val() - data.parent().child('setting/rest').val() <= now)"
+  ".write": "(!data.child(newData.child('_last/key').val()).exists() && newData.child(newData.child('_last/key').val()).exists() && newData.child(newData.child('_last/key').val()).child('raw').val().matches(/.*?\\|[0-9A-F]{1100}\\|[0-9A-F]{1100}/) && newData.child(newData.child('_last/key').val()).child('ts').val() - data.parent().child('setting/rest').val() <= now)||(!newData.child(newData.child('_last/key').val()).exists() && data.child(newData.child('_last/key').val()).exists() && data.child(newData.child('_last/key').val()).child('ts').val() < now - data.parent().child('setting/key_life').val())||(newData.child(newData.child('_last/key').val()).child('raw').val() == data.child(newData.child('_last/key').val()).child('raw').val() && newData.child(newData.child('_last/key').val()).child('ts').val() > data.child(newData.child('_last/key').val()).child('ts').val() && newData.child(newData.child('_last/key').val()).child('ts').val() - data.parent().child('setting/rest').val() <= now)"
   "$pkKey":
     ".indexOn": ["ts"]
   "_last":

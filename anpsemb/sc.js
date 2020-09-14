@@ -60,28 +60,39 @@ if(!SC){throw Error("Unable to initiate SC.")}
 
 // configs
 
+let defaultExt = true
+
 const hash_type = "SHA-512" // "SHA-1", "SHA-256", "SHA-384", "SHA-512"
+const hash_length = {
+  "SHA-1": 160,
+  "SHA-256": 256,
+  "SHA-384": 384,
+  "SHA-512": 512,
+}
 const port_type = "jwk" // "raw", "pkcs8", "spki", "jwk"
 
 const RSApublicExponent = new Uint8Array([1, 0, 1])
 const RSAmodulusLength = 4096
 const RSAsaltLength = 64
 const RSAport = "jwk" //public: spki //private: pkcs8 //all: jwk
+const RSAmaxEncryptBytes = Math.ceil(RSAmodulusLength / 8) - 2 * hash_length[hash_type]/8 - 2
 
 const AESlength = 256 // 128, 192, 256
 const AESport = "raw" //raw, jwk
-let AESCTRcounter = new Uint8Array(16)
-let AESCTRlength = 128
-let AESCBCiv = crypto.getRandomValues(new Uint8Array(16))
-let AESGCMiv = crypto.getRandomValues(new Uint8Array(16))
-
-let defaultExt = true
+const AESblockLength = 128
+const AESCTRlength = AESblockLength
+const AESCTRcounter = new Uint8Array(AESCTRlength/8)
+const AESCBCiv = crypto.getRandomValues(new Uint8Array(AESblockLength/8))
+const AESGCMiv = crypto.getRandomValues(new Uint8Array(AESblockLength/8))
 
 const ECcurve = "P-521" // "P-256", "P-384", "P-512"
 const ECport = "jwk" //public: raw, spki //private: pkcs8 //all: jwk
 
-const HKDFsalt = crypto.getRandomValues( new Uint8Array(512/8) )
-const PBKDF2salt = crypto.getRandomValues( new Uint8Array(512/8) )
+const HKDFsalt = crypto.getRandomValues( new Uint8Array(hash_length[hash_type]/8) )
+const HKDFinfo = new Uint8Array()
+const PBKDF2salt = crypto.getRandomValues( new Uint8Array(hash_length[hash_type]/8) )
+const PBKDF2iteration = 8192
+const KDFport = "raw"
 
 // mixed param objects: import/generate/useful settings/[sign/verify/encrypt/decrypt/derive/wrap/unwrap] params
 
@@ -111,7 +122,7 @@ const RSAPSS = {
   
   port: RSAport, //public: spki //private: pkcs8 //all: jwk
   
-  saltLength: Math.max(Math.min(RSAsaltLength, Math.ceil(RSAmodulusLength/8) - +hash_type.match(/\d+$/)[0]/8 - 2),0),
+  saltLength: Math.max(Math.min(RSAsaltLength, Math.ceil(RSAmodulusLength/8) - Math.ceil(hash_length[hash_type]/8) - 2),0),
 }
 const RSAOAEP = {
   name: "RSA-OAEP",
@@ -127,7 +138,10 @@ const RSAOAEP = {
   port: RSAport,  //public: spki //private: pkcs8 //all: jwk
   
   //label: new Uint8Array([/*label*/]),
+  
+  maxEncryptBytes: RSAmaxEncryptBytes,
 }
+
 const AESGCM = {
   name: "AES-GCM",
   
@@ -174,6 +188,16 @@ const AESKW = {
   port: AESport, //raw, jwk
 }
 
+const HMAC = {
+  name: "HMAC",
+  hash: hash_type,
+  //length: <digest function determined>
+  
+  usages: ["sign","verify"],
+  
+  port: AESport, //raw, jwk
+}
+
 const ECDSA = {
   name: "ECDSA",
   namedCurve: ECcurve, // "P-256", "P-384", "P-512"
@@ -198,36 +222,28 @@ const ECDH = {
   
   //public: <publicKey>,
 }
-const HMAC = {
-  name: "HMAC",
-  hash: hash_type,
-  //length: <digest function determined>
-  
-  usages: ["sign","verify"],
-  
-  port: "raw", //raw, jwk
-}
+
 const HKDF = {
   name: "HKDF",
   
   usages: ["deriveBits","deriveKey"],
   
-  port: "raw",
+  port: KDFport,
   
   hash: hash_type,
   salt: HKDFsalt,
-  info: new Uint8Array(),
+  info: HKDFinfo,
 }
 const PBKDF2 = {
   name: "PBKDF2",
   
   usages: ["deriveBits","deriveKey"],
   
-  port: "raw",
+  port: KDFport,
   
   hash: hash_type,
   salt: PBKDF2salt,
-  iterations: 8192,
+  iterations: PBKDF2iteration,
 }
 
 // algorithms collection
@@ -586,9 +602,14 @@ async function randomHex(len){
 }
 
 async function signAndEncrypt(data,skey,ekey,iv_ctr){
-  let signature =  await sign(skey,data)
-  let encrypted = await encrypt(ekey,data,iv_ctr)
-  return [signature,encrypted].join("|")
+  let signature, encrypted
+  try {
+    signature =  await sign(skey,data)
+  }catch(er){console.log(er)}
+  try {
+    encrypted = await encrypt(ekey,data,iv_ctr)
+  }catch(er){console.log(er)}
+  return signature && encrypted ? [signature,encrypted].join("|") : null
 }
 
 async function decryptAndVerify(data,dkey,vkey,iv_ctr){
