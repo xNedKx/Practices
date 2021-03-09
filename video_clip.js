@@ -115,9 +115,9 @@
                         console.log(elms[i])
                         return
                     }else{
-                        elms[i].id = 'xvid'
-                        xvid = 'xvid'
-                        console.log(`target video element has no id and set to 'xvid'`)
+                        elms[i].id = `xvid_${seed}`
+                        xvid = `xvid_${seed}`
+                        console.log(`target video element has no id and set to 'xvid_${seed}'`)
                         console.log(elms[i])
                         return
                     }
