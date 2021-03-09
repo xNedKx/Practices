@@ -106,7 +106,7 @@
         if(document.body.classList.contains(`${xid}_detect`)){
             e.preventDefault()
             let elms = document.elementsFromPoint(e.screenX,e.screenY)
-            console.log(e.screenX,e.screenY,elms)
+            //console.log(e.screenX,e.screenY,elms)
             for(let i = 0; i < elms.length; i++){
                 if(elms[i].tagName == "VIDEO"){
                     if(elms[i].id){
