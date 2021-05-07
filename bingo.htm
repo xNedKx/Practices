@@ -293,6 +293,7 @@ function reset(){
 reset()
 
 function click(e){
+  e.preventDefault()
   for(let i = 0; i<5; i++){
     for(let j =0; j<5; j++){
       let x = margin + (bsize+pad)*i,
