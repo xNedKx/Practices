@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>BINGO</title>
+<style>
+body {
+  margin: 0;
+  text-align: center;
+  cursor: default;
+}
+#header {
+  margin: 0.1em;
+  padding: 0.25em 0.1em;
+  background: #f0f0f0;
+  font-size: 2.5em;
+  font-weight: bold;
+  color: #111;
+}
+#main {
+  margin: 0.25em auto;
+  cursor: pointer;
+}
+#dl {
+  margin: 0.1em auto;
+  max-width: 600px;
+  padding: 0.25em;
+  background: #f0f0f0;
+  cursor: pointer;
+  color: #333;
+}
+#dl:hover{
+  background: #ddffdd;
+  font-weight: bold;
+}
+#ch {
+  margin: 1.5em 0.1em 0.1em;
+  font-sweight: bold;
+  color: #777;
+}
+#con {
+  max-height: 2.7em;
+  overflow-y: scroll;
+  overflow-wrap: break-word;
+}
+#link {
+  font-size: 0.8em;
+}
+</style>
+<body>
+<div id='header'>BINGO</div>
+<canvas id='main' width='600' height='600'></canvas>
+<div id='dl'>儲存圖片</div>
+<div id='ch'>分享連結</div>
+<div id='con'>
+<a id='link' href=''></a>
+</div>
+</body>
+<script>
+var title = 'BINGO'
+var items = Array(25)
+var sep = '|'
+var selected = Array(25)
+var canvas = document.getElementById('main')
+var cc = canvas.getContext('2d')
+let width = 600,
+  height = 600,
+  margin = 10,
+  bsize = 108,
+  pad = (width - margin*2 - bsize*5)/4,
+  radius = 4,
+  bgs = ['#ff9999','#9999dd'],
+  colors = ['#333','#333'],
+  lw = bsize/3,
+  lc = '#66dd6655'
+
+function updateTitle(){
+  document.title = title
+  document.getElementById('header').innerText = title
+}
+
+function arcbox(x,y,w,h,r){
+  let path = new Path2D()
+  let rr = Math.min(Math.min(w,h)/2,r)
+  path.moveTo(x,y+r)
+  path.lineTo(x,y+h-r)
+  path.arcTo(x,y+h,x+r,y+h,r*Math.PI/2)
+  path.lineTo(x+w-r,y+h)
+  path.arcTo(x+w,y+h,x+w,y+h-r,r*Math.PI/2)
+  path.lineTo(x+w,y+r)
+  path.arcTo(x+w,y,x+w-r,y,r*Math.PI/2)
+  path.lineTo(x+r,y)
+  path.arcTo(x,y,x,y+r,r*Math.PI/2)
+  path.closePath()
+  return path
+}
+function drawBox(box){
+  let b = arcbox(box.x,box.y,box.w,box.h,box.r)
+  let size = box.h / 4
+  cc.fillStyle = box.bg
+  cc.fill(arcbox(box.x,box.y,box.w,box.h,box.r),"evenodd")
+}
+function drawText(box){
+  let size = box.h / 4 - 2
+  cc.fillStyle = box.color
+  cc.font = `bold ${size}px Sans-Serif`
+  cc.textAlign = "center"
+  cc.textBaseline = "middle"
+  let t = box.txt.split(/\n+/), ty
+  if(t.length == 1){
+    ty = box.y+size*2+8
+  }else if(t.length == 2){
+    ty = box.y+size*1.5+8
+  }else if(t.length == 3){
+    ty = box.y+size+8
+  }else if(t.length == 4){
+    ty = box.y+size/2+8
+  }else{
+    throw RangeError('too many rows')
+  }
+  t.forEach((t,i)=>{
+    cc.fillText(t,box.x+box.w/2,ty+i*size,box.w-2)
+  })
+}
+function drawLine(n1,n2){
+  let x1 = margin + (bsize+pad)*(n1%5),
+    y1 = margin + (bsize+pad)*((n1/5)>>0),
+    x2 = margin + (bsize+pad)*(n2%5),
+    y2 = margin + (bsize+pad)*((n2/5)>>0)
+  if(x1 == x2){
+    x1 += bsize/2
+    x2 += bsize/2
+  }else if(x1 > x2){
+    x1 += bsize
+  }else{
+    x2 += bsize
+  }
+  if(y1 == y2){
+    y1 += bsize/2
+    y2 += bsize/2
+  }else if(y1 > y2){
+    y1 += bsize
+  }else{
+    y2 += bsize
+  }
+  cc.beginPath()
+  cc.moveTo(x1,y1)
+  cc.lineTo(x2,y2)
+  cc.lineWidth = lw
+  cc.lineCap = 'round'
+  cc.strokeStyle = lc
+  cc.stroke()
+}
+function checkBingo(){
+  let bingos = [
+    [0,5,10,15,20],
+    [1,6,11,16,21],
+    [2,7,12,17,22],
+    [3,8,13,18,23],
+    [4,9,14,19,24],
+    [0,1,2,3,4],
+    [5,6,7,8,9],
+    [10,11,12,13,14],
+    [15,16,17,18,19],
+    [20,21,22,23,24],
+    [0,6,12,18,24],
+    [4,8,12,16,20]
+  ]
+  let lines = []
+  bingos.forEach(b=>{
+    if(b.reduce((s,n)=>s+(selected[n]?1:0),0) == 5){
+      lines.push([b[0],b[4]])
+    }
+  })
+  return lines
+}
+function drawAll(){
+  let boxs = []
+  for(let i = 0; i<5; i++){
+    for(let j =0; j<5; j++){
+      boxs.push({
+        x: margin + (bsize+pad)*i,
+        y: margin + (bsize+pad)*j,
+        w: bsize,
+        h: bsize,
+        r: radius,
+        txt: items[i+j*5],
+        bg: bgs[selected[i+j*5]?1:0],
+        color: colors[selected[i+j*5]?1:0]
+      })
+    }
+  }
+  boxs.forEach(b=>drawBox(b))
+  checkBingo().forEach(l=>drawLine(...l))
+  boxs.forEach(b=>drawText(b))
+}
+function refresh(){
+  cc.clearRect(0,0,width,height)
+  drawAll()
+}
+
+function shuffle(ar){
+  for(let i = ar.length-1; i > 0; i--){
+    let j = Math.floor(Math.random()*(i+1));
+    [ar[i], ar[j]] = [ar[j], ar[i]]
+  }
+  return ar
+}
+function shuffleItems(){
+  let x = []
+  for(let i = 0; i < 25; i++){
+    x[i] = i
+  }
+  shuffle(x)
+  let n = [], m = []
+  x.forEach(i=>{
+    n[i] = items[i]
+    m[i] = selected[i]
+  })
+  items = n
+  selected = m
+  refresh()
+}
+
+function parseQuery(){
+  let u = new URL(location.href)
+  title = u.searchParams.get('t')||title
+  let ts = u.searchParams.get('i')
+  if(ts){
+    ts = ts.split(sep)
+    for(let i in ts){
+      ts[i] = ts[i].trim()
+    }
+    if(ts.length < 25){
+      let l = shuffle(ts.slice()).slice(0,25%ts.length)
+      for(let n = 0; n < 25/ts.length; n++){
+        ts = ts.concat(ts)
+      }
+      ts = ts.concat(l)
+    }
+    items = shuffle(ts).slice(0,25)
+  }
+  bgs[0] = u.searchParams.get('b')||bgs[0]
+  bgs[1] = u.searchParams.get('s')||bgs[1]
+  colors[0] = u.searchParams.get('c')||colors[0]
+  colors[1] = u.searchParams.get('d')||colors[1]
+  lc = u.searchParams.get('l')||lc
+}
+function updateLink(){
+  let l = document.getElementById('link'), h
+  if(location.search){
+    let u = new URL(location.href)
+    let b = u.searchParams.get('b')
+    let s = u.searchParams.get('s')
+    let c = u.searchParams.get('c')
+    let d = u.searchParams.get('d')
+    let l = u.searchParams.get('l')
+    u.search = '?t='+encodeURIComponent(title)+'&i='+encodeURIComponent(items.join(sep))
+    if(b){
+      u.search += '&b='+b
+    }
+    if(s){
+      u.search += '&s='+s
+    }
+    if(c){
+      u.search += '&c='+c
+    }
+    if(d){
+      u.search += '&d='+d
+    }
+    if(l){
+      u.search += '&l='+l
+    }
+    h = u.href
+  }else{
+    h = location.href
+  }
+  l.innerText = h
+  l.href = h
+}
+function reset(){
+  title = 'BINGO'
+  items = Array(25)
+  selected = Array(25)
+  for(let i = 0; i < 25; i++){
+    items[i] = String(i+1)
+  }
+  shuffle(items)
+  parseQuery()
+  updateTitle()
+  updateLink()
+  refresh()
+}
+
+reset()
+
+function click(e){
+  for(let i = 0; i<5; i++){
+    for(let j =0; j<5; j++){
+      let x = margin + (bsize+pad)*i,
+        y = margin + (bsize+pad)*j
+      if(e.offsetX >= x && e.offsetX <= x+bsize && e.offsetY >= y && e.offsetY <= y+bsize){
+        selected[i+j*5] = !selected[i+j*5]
+        refresh()
+      }
+    }
+  }
+}
+canvas.addEventListener('click',click)
+function dl(e){
+  let a = document.createElement('a')
+  a.href = canvas.toDataURL()
+  a.download = 'bingo.jpg'
+  a.click()
+}
+document.getElementById('dl').addEventListener('click',dl)
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-78696465-1', 'auto');
+  ga('send', 'pageview');
+</script>
+</html>
