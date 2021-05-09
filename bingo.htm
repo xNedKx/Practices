@@ -531,6 +531,10 @@ function resetItemsInfo(){
   }
 }
 
+function previewColor(){
+  this.style.backgroundImage = `linear-gradient(to right, #fff0 20%, ${this.value} 80%)`
+}
+
 function updateForm(){
   let es = form.elements
   es['t'].value = cfg.title
@@ -538,10 +542,15 @@ function updateForm(){
   es['x'].checked = false
   resetItemFields(cfg.size)
   es['b'].value = cfg.box_bg
+  previewColor.call(es['b'])
   es['s'].value = cfg.selected_bg
+  previewColor.call(es['s'])
   es['c'].value = cfg.box_color
+  previewColor.call(es['c'])
   es['d'].value = cfg.selected_color
+  previewColor.call(es['d'])
   es['l'].value = cfg.lc
+  previewColor.call(es['l'])
 }
 
 function getItemsInfo(n){
@@ -635,6 +644,11 @@ document.getElementById('open').addEventListener('click',toggleCustom)
 document.getElementById('close').addEventListener('click',toggleCustom)
 document.getElementById('n').addEventListener('change',function(){resetItemFields(+this.value)})
 document.getElementById('x').addEventListener('change',function(){resetItemFields(+form.elements['n'].value)})
+document.getElementById('b').addEventListener('change',previewColor)
+document.getElementById('s').addEventListener('change',previewColor)
+document.getElementById('c').addEventListener('change',previewColor)
+document.getElementById('d').addEventListener('change',previewColor)
+document.getElementById('l').addEventListener('change',previewColor)
 document.getElementById('reset').addEventListener('click',function(){
   updateForm()
   resetItemsInfo()
