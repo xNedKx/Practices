@@ -161,7 +161,7 @@ body {
 <label><span class='field_name'>連線顏色</span><input id='l' name='l'></label>
 <hr/>
 <label><input type='button' id='default' name='default' value='初始化' onclick="location.search=''"></label>
-<label><input type='button' id='reset' name='reset' value='還原設定'></label>
+<label><input type='button' id='reset' name='reset' value='還原前次設定'></label>
 <label><input type='button' id='edit' name='edit' value='確認'></label>
 <label><input type='button' id='close' name='close' value='關閉取消'></label>
 <hr/>
@@ -597,6 +597,8 @@ function setCustom(){
     history.replaceState({cfg:copy}, copy.title)
     let u = reset()
     history.pushState({cfg}, cfg.title, u)
+  }else{
+    reset()
   }
 }
 
