@@ -501,6 +501,31 @@ function resetItemFields(n){
   }
 }
 
+function resetItemsInfo(){
+  form.elements['n'].value = cfg.size
+  form.elements['x'].checked = false
+  let ts = form.querySelector('#items')
+  while(ts.firstChild){
+    ts.firstChild.remove()
+  }
+  for(let i = 0; i < Math.max(cfg.size**2,cfg.items.length); i++){
+    let l = document.createElement('label')
+    let p = document.createElement('span')
+    p.innerText = "項目 "+(i+1)
+    p.className = 'field_name'
+    l.appendChild(p)
+    let ta = document.createElement('textarea')
+    ta.id = 'i'+i
+    ta.name = 'i'+i
+    ta.value = typeof cfg.items[i] != 'undefined'? cfg.items[i] : ''
+    l.appendChild(ta)
+    if(i >= s**2 ){
+      l.classList.add('exceed')
+    }
+    ts.appendChild(l)
+  }
+}
+
 function updateForm(){
   let es = form.elements
   es['t'].value = cfg.title
@@ -544,6 +569,7 @@ function getItemsInfo(n){
 
 function setCustom(){
   let copy = Object.assign({},cfg)
+  let oq = generateLink()
   let es = form.elements
   cfg.title = es['t'].value
   let n = +es['n'].value
@@ -560,9 +586,12 @@ function setCustom(){
   if(c){ cfg.box_color = c }
   if(d){ cfg.selected_color = d }
   if(l){ cfg.lc = l }
-  history.replaceState({cfg:copy}, copy.title)
-  let u = reset()
-  history.pushState({cfg}, cfg.title, u)
+  let nq = generateLink()
+  if(oq != nq){
+    history.replaceState({cfg:copy}, copy.title)
+    let u = reset()
+    history.pushState({cfg}, cfg.title, u)
+  }
 }
 
 function reloadLinkHistory(e){
@@ -580,7 +609,7 @@ function toggleCustom(){
       left: 0,
       behavior: 'smooth'
     })
-    if(this.id == 'open'){
+    if(this.id == 'open' || this.id == 'edit'){
       setCustom()
     }
   }else{
@@ -598,17 +627,12 @@ document.getElementById('open').addEventListener('click',toggleCustom)
 document.getElementById('close').addEventListener('click',toggleCustom)
 document.getElementById('n').addEventListener('change',function(){resetItemFields(+this.value)})
 document.getElementById('x').addEventListener('change',function(){resetItemFields(+form.elements['n'].value)})
-document.getElementById('reset').addEventListener('change',function(){updateForm()})
-document.getElementById('edit').addEventListener('click',function(){
-  setCustom()
+document.getElementById('reset').addEventListener('click',function(){
   updateForm()
-  reset()
-  document.documentElement.scrollTo({
-    top: 0,
-    left: 0,
-    behavior: 'smooth'
-  })
+  resetItemsInfo()
 })
+document.getElementById('edit').addEventListener('click',
+ toggleCustom)
 
 window.addEventListener('popstate',reloadLinkHistory)
 </script>
