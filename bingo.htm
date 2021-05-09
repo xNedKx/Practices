@@ -160,6 +160,7 @@ body {
 <label><span class='field_name'>選取文字顏色</span><input id='d' name='d'></label>
 <label><span class='field_name'>連線顏色</span><input id='l' name='l'></label>
 <hr/>
+<label><input type='button' id='default' name='default' value='初始化' onclick="location.search=''"></label>
 <label><input type='button' id='reset' name='reset' value='還原設定'></label>
 <label><input type='button' id='edit' name='edit' value='確認'></label>
 <label><input type='button' id='close' name='close' value='關閉取消'></label>
@@ -477,7 +478,7 @@ document.getElementById('dl').addEventListener('click',dl)
 
 var form = document.getElementById('form')
 function resetItemFields(n){
-  let {size,items,max} = getItemsInfo(n)
+  let {size,items,max,blank} = getItemsInfo(n)
   form.elements['n'].value = size
   let ts = form.querySelector('#items')
   while(ts.firstChild){
@@ -492,7 +493,11 @@ function resetItemFields(n){
     let ta = document.createElement('textarea')
     ta.id = 'i'+i
     ta.name = 'i'+i
-    ta.value = typeof items[i] != 'undefined'? items[i] : typeof cfg.items[i] != 'undefined'? cfg.items[i] : ''
+    if(blank){
+      ta.value = i+1
+    }else{
+      ta.value = typeof items[i] != 'undefined'? items[i] : typeof cfg.items[i] != 'undefined'? cfg.items[i] : ''
+    }
     l.appendChild(ta)
     if(i >= s**2 ){
       l.classList.add('exceed')
@@ -564,7 +569,8 @@ function getItemsInfo(n){
     max = size**2
     items = items.slice(0,max)
   }
-  return {size, items, max}
+  blank = items.filter((v,i)=>+v!=i+1).length == 0
+  return {size, items, max, blank}
 }
 
 function setCustom(){
