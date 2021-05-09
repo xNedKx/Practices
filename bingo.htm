@@ -10,18 +10,21 @@ body {
   margin: 0;
   text-align: center;
   cursor: default;
+  padding-bottom: 1em;
+  font-family: Sans-Serif;
 }
 #header {
   margin: 0.1em;
   padding: 0.25em 0.1em;
   background: #f0f0f0;
-  font-size: 2.5em;
+  font-size: 3.2em;
   font-weight: bold;
   color: #111;
+  user-select: none;
 }
 #main {
   margin: 0.25em auto;
-  max-width: 100vw;
+  max-width: 100%;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -37,15 +40,17 @@ body {
   background: #f0f0f0;
   cursor: pointer;
   color: #333;
+  user-select: none;
 }
 #dl:hover{
   background: #ddffdd;
   font-weight: bold;
 }
-#ch {
+#sh {
   margin: 1.5em 0.1em 0.1em;
   font-sweight: bold;
   color: #777;
+  user-select: none;
 }
 #con {
   max-height: 2.7em;
@@ -55,37 +60,123 @@ body {
 #link {
   font-size: 0.8em;
 }
+#open {
+  margin: 1em auto;
+  max-width: min(100vw,600px);
+  padding: 0.25em;
+  background: #f9f9f9;
+  cursor: pointer;
+  color: #999;
+  font-size: 0.8em;
+  user-select: none;
+}
+#open:hover{
+  background: #f0f0f0;
+  color: #111;
+}
+#custom {
+  display: none;
+  margin: 0 1em;
+}
+#custom.open {
+  display: block;
+}
+#custom label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: 0.25em auto;
+}
+#custom label:nth-child(even) {
+  background-color: #f0f0f0;
+}
+#custom label span.field_name {
+  text-align: right;
+  margin: 0.1em auto;
+  padding: 0.25em;
+  width: 15%;
+  color: #111;
+  user-select: none;
+}
+#custom input, #custom textarea {
+  vertical-align: top;
+  margin: 0.1em auto;
+  padding: 0.25em;
+  width: 75%;
+  border: none;
+  outline: none;
+  background-color: #ddd;
+  border-radius: 2%;
+  box-sizing: border-box;
+  color: #333;
+}
+#custom input {
+  vertical-align: middle;
+  height: 2.5em;
+}
+#custom input[type=checkbox] {
+  height: 1.5em;
+}
+#custom textarea {
+  height: 5.5em;
+  resize: none;
+}
+#custom:has(#x:checked) label.exceed {
+  display: none;
+}
+#custom input:focus, #custom textarea:focus {
+  background-color: #eee;
+  color: #111;
+}
+#custom input[type=button] {
+  cursor: pointer;
+}
+#custom input[type=button]:hover {
+  background-color: #eee;
+}
 </style>
 <body>
 <div id='header'>BINGO</div>
 <canvas id='main' width='600' height='600'></canvas>
 <div id='dl'>儲存圖片</div>
-<div id='ch'>分享連結</div>
+<div id='sh'>分享連結：</div>
 <div id='con'>
 <a id='link' href=''></a>
 </div>
+<div id='open'>變更設定</div>
+<div id='custom' class=''>
+<form id='form'>
+<hr/>
+<label><span class='field_name'>標題</span><input id='t' name='t'></label>
+<hr/><span class='blank'></span>
+<label><span class='field_name'>行數</span><input id='n' name='n'></label>
+<label><span class='field_name'>移除超量項目</span><input id='x' name='x' type='checkbox'></label>
+<hr/><span class='blank'></span>
+<div id='items'></div>
+<hr/><span class='blank'></span>
+<label><span class='field_name'>項目顏色</span><input id='b' name='b'></label>
+<label><span class='field_name'>選取顏色</span><input id='s' name='s'></label>
+<label><span class='field_name'>文字顏色</span><input id='c' name='c'></label>
+<label><span class='field_name'>選取文字顏色</span><input id='d' name='d'></label>
+<label><span class='field_name'>連線顏色</span><input id='l' name='l'></label>
+<hr/>
+<label><input type='button' id='reset' name='reset' value='還原設定'></label>
+<label><input type='button' id='edit' name='edit' value='確認'></label>
+<label><input type='button' id='close' name='close' value='關閉取消'></label>
+<hr/>
+</form>
+</div>
 </body>
 <script>
-var title = 'BINGO'
-var items = Array(25)
-var sep = '|'
-var selected = Array(25)
-var canvas = document.getElementById('main')
-var cc = canvas.getContext('2d')
-let width = 600,
-  height = 600,
-  margin = 10,
-  bsize = 108,
-  pad = (width - margin*2 - bsize*5)/4,
-  radius = 4,
-  bgs = ['#E6E1E1','#ff9999'],
-  colors = ['#4b4b4b','#4b4b4b'],
-  lw = bsize/3,
-  lc = '#E63E3Eaa'
-
-function updateTitle(){
-  document.title = title
-  document.getElementById('header').innerText = title
+/*
+  general function
+*/
+function shuffle(ar){
+  for(let i = ar.length-1; i > 0; i--){
+    let j = Math.floor(Math.random()*(i+1));
+    [ar[i], ar[j]] = [ar[j], ar[i]]
+  }
+  return ar
 }
 
 function arcbox(x,y,w,h,r){
@@ -105,97 +196,135 @@ function arcbox(x,y,w,h,r){
 }
 function drawBox(box){
   let b = arcbox(box.x,box.y,box.w,box.h,box.r)
-  let size = box.h / 4
   cc.fillStyle = box.bg
   cc.fill(arcbox(box.x,box.y,box.w,box.h,box.r),"evenodd")
 }
-function drawText(box){
-  let size = box.h / 4 - 2
+</script>
+<script>
+var defaults = {
+  title: 'BINGO',
+  size: 5,
+  sep: '|',
+  bsize: 108,
+  margin: 10,
+  pad: 10,
+  box_bg: '#E6E1E1',
+  selected_bg: '#FF9999',
+  box_color: '#4b4b4b',
+  selected_color: '#4b4b4b',
+  lc: '#E63E3Eaa',
+  rs: 4,
+  adj: 2,
+  font: 'Sans-Serif',
+  random: true,
+  items: []
+}
+var cfg = Object.assign({},defaults)
+cfg.width = cfg.bsize*cfg.size + cfg.pad*(cfg.size-1) + cfg.margin*2,
+cfg.height = cfg.width
+cfg.radius = cfg.bsize/27
+cfg.lw = cfg.bsize/3
+cfg.selected = []
+cfg.order = Array(cfg.size**2)
+
+var canvas = document.getElementById('main')
+var cc = canvas.getContext('2d')
+
+function drawText(box,style){
+  let f = box.h / cfg.rs - cfg.adj
   cc.fillStyle = box.color
-  cc.font = `bold ${size}px Sans-Serif`
+  cc.font = `bold ${f}px ${cfg.font}`
   cc.textAlign = "center"
   cc.textBaseline = "middle"
-  let t = box.txt.split(/\n+/), ty
-  if(t.length == 1){
-    ty = box.y+size*2+8
-  }else if(t.length == 2){
-    ty = box.y+size*1.5+8
-  }else if(t.length == 3){
-    ty = box.y+size+8
-  }else if(t.length == 4){
-    ty = box.y+size/2+8
-  }else{
-    throw RangeError('too many rows')
+  let t = (box.txt||'').split(/\n+/), ty
+  if(t.length > cfg.rs){
+    t[cfg.rs-1] = t.slice(cfg.rs-1).join('')
   }
+  ty = box.y + f*(cfg.rs+1-t.length)/2 + cfg.rs*cfg.adj
   t.forEach((t,i)=>{
-    cc.fillText(t,box.x+box.w/2,ty+i*size,box.w-2)
+    cc.fillText(t,box.x+box.w/2,ty+i*f,box.w-2)
   })
 }
+
+function updateTitle(){
+  document.title = cfg.title
+  document.getElementById('header').innerText = cfg.title
+}
+
 function drawLine(n1,n2){
-  let x1 = margin + (bsize+pad)*(n1%5),
-    y1 = margin + (bsize+pad)*((n1/5)>>0),
-    x2 = margin + (bsize+pad)*(n2%5),
-    y2 = margin + (bsize+pad)*((n2/5)>>0)
+  let x1 = cfg.margin + (cfg.bsize+cfg.pad)*(n1%cfg.size),
+    y1 = cfg.margin + (cfg.bsize+cfg.pad)*((n1/cfg.size)>>0),
+    x2 = cfg.margin + (cfg.bsize+cfg.pad)*(n2%cfg.size),
+    y2 = cfg.margin + (cfg.bsize+cfg.pad)*((n2/cfg.size)>>0)
   if(x1 == x2){
-    x1 += bsize/2
-    x2 += bsize/2
+    x1 += cfg.bsize/2
+    x2 += cfg.bsize/2
   }else if(x1 > x2){
-    x1 += bsize
+    x1 += cfg.bsize
   }else{
-    x2 += bsize
+    x2 += cfg.bsize
   }
   if(y1 == y2){
-    y1 += bsize/2
-    y2 += bsize/2
+    y1 += cfg.bsize/2
+    y2 += cfg.bsize/2
   }else if(y1 > y2){
-    y1 += bsize
+    y1 += cfg.bsize
   }else{
-    y2 += bsize
+    y2 += cfg.bsize
   }
   cc.beginPath()
   cc.moveTo(x1,y1)
   cc.lineTo(x2,y2)
-  cc.lineWidth = lw
+  cc.lineWidth = cfg.lw
   cc.lineCap = 'round'
-  cc.strokeStyle = lc
+  cc.strokeStyle = cfg.lc
   cc.stroke()
 }
+
+function generateBingoChances(){
+  let vcs = [], hcs = [], ccs = [[],[]]
+  for(let i = 0; i < cfg.size; i++){
+    let vc = Array(cfg.size)
+    for(let j = 0; j < cfg.size; j++){
+      vc[j] = i+j*cfg.size
+    }
+    vcs.push(vc)
+    let hc = Array(cfg.size)
+    for(let j = 0; j < cfg.size; j++){
+      hc[j] = i*cfg.size+j
+    }
+    hcs.push(hc)
+  }
+  for(let i = 0; i < cfg.size; i++){
+    ccs[0][i] = i+i*cfg.size
+    ccs[1][i] = (cfg.size-1-i)+i*cfg.size
+  }
+  return vcs.concat(hcs).concat(ccs)
+}
 function checkBingo(){
-  let bingos = [
-    [0,5,10,15,20],
-    [1,6,11,16,21],
-    [2,7,12,17,22],
-    [3,8,13,18,23],
-    [4,9,14,19,24],
-    [0,1,2,3,4],
-    [5,6,7,8,9],
-    [10,11,12,13,14],
-    [15,16,17,18,19],
-    [20,21,22,23,24],
-    [0,6,12,18,24],
-    [4,8,12,16,20]
-  ]
+  let bingos = generateBingoChances()
   let lines = []
   bingos.forEach(b=>{
-    if(b.reduce((s,n)=>s+(selected[n]?1:0),0) == 5){
-      lines.push([b[0],b[4]])
+    if(b.reduce((s,n)=>s+(cfg.selected[cfg.order[n]]?1:0),0) == cfg.size){
+      lines.push([b[0],b[cfg.size-1]])
     }
   })
   return lines
 }
 function drawAll(){
   let boxs = []
-  for(let i = 0; i<5; i++){
-    for(let j =0; j<5; j++){
+  for(let i = 0; i < cfg.size; i++){
+    for(let j = 0; j < cfg.size; j++){
+      let n = i+j*cfg.size, o = cfg.order[n]
       boxs.push({
-        x: margin + (bsize+pad)*i,
-        y: margin + (bsize+pad)*j,
-        w: bsize,
-        h: bsize,
-        r: radius,
-        txt: items[i+j*5],
-        bg: bgs[selected[i+j*5]?1:0],
-        color: colors[selected[i+j*5]?1:0]
+        x: cfg.margin + (cfg.bsize+cfg.pad)*i,
+        y: cfg.margin + (cfg.bsize+cfg.pad)*j,
+        w: cfg.bsize,
+        h: cfg.bsize,
+        r: cfg.radius,
+        txt: cfg.items[o],
+        bg: cfg.selected[o]?cfg.selected_bg:cfg.box_bg,
+        color: cfg.selected[o]?cfg.selected_color:cfg.box_color
       })
     }
   }
@@ -204,115 +333,134 @@ function drawAll(){
   boxs.forEach(b=>drawText(b))
 }
 function refresh(){
-  cc.clearRect(0,0,width,height)
+  cc.clearRect(0,0,cfg.width,cfg.height)
   drawAll()
 }
 
-function shuffle(ar){
-  for(let i = ar.length-1; i > 0; i--){
-    let j = Math.floor(Math.random()*(i+1));
-    [ar[i], ar[j]] = [ar[j], ar[i]]
-  }
-  return ar
-}
-function shuffleItems(){
-  let x = []
-  for(let i = 0; i < 25; i++){
-    x[i] = i
-  }
-  shuffle(x)
-  let n = [], m = []
-  x.forEach(i=>{
-    n[i] = items[i]
-    m[i] = selected[i]
-  })
-  items = n
-  selected = m
-  refresh()
-}
-
-function parseQuery(){
+function parseQuery(q){
   let u = new URL(location.href)
-  title = u.searchParams.get('t')||title
+  if(q){ u.search = q }
+  let parsed = {}
+  parsed.title = u.searchParams.get('t')||cfg.title
   let ts = u.searchParams.get('i')
+  parsed.items = []
   if(ts){
-    ts = ts.split(sep)
-    for(let i in ts){
-      ts[i] = ts[i].trim()
-    }
-    if(ts.length < 25){
-      let l = shuffle(ts.slice()).slice(0,25%ts.length)
-      for(let n = 0; n < 25/ts.length; n++){
-        ts = ts.concat(ts)
-      }
-      ts = ts.concat(l)
-    }
-    items = shuffle(ts).slice(0,25)
+    ts = ts.split(cfg.sep)
+    ts.forEach((t,i)=>{
+      parsed.items[i] = t
+    })
   }
-  bgs[0] = u.searchParams.get('b')||bgs[0]
-  bgs[1] = u.searchParams.get('s')||bgs[1]
-  colors[0] = u.searchParams.get('c')||colors[0]
-  colors[1] = u.searchParams.get('d')||colors[1]
-  lc = u.searchParams.get('l')||lc
+  parsed.size = +u.searchParams.get('n')||Math.floor(parsed.items.length**(1/2))||cfg.size
+  parsed.box_bg = u.searchParams.get('b')||cfg.box_bg
+  parsed.selected_bg = u.searchParams.get('s')||cfg.selected_bg
+  parsed.box_color = u.searchParams.get('c')||cfg.box_color
+  parsed.selected_color = u.searchParams.get('d')||cfg.selected_color
+  parsed.lc = u.searchParams.get('l')||cfg.lc
+  parsed.random = u.searchParams.has('r')?!!u.searchParams.get('r'):cfg.random
+  return parsed
+}
+function generateLink(){
+  let q = '?'
+  if(cfg.title != defaults.title){
+    q += 't=' + encodeURIComponent(cfg.title)
+  }
+  if(cfg.size != defaults.size){
+    q += '&n=' + cfg.size
+  }
+  if(cfg.items.filter((v,i)=>+v!=i+1).length){
+    q += '&i=' + encodeURIComponent(cfg.items.join(cfg.sep))
+  }
+  if(cfg.box_bg != defaults.box_bg){
+    q += '&b=' + encodeURIComponent(cfg.box_bg)
+  }
+  if(cfg.selected_bg != defaults.selected_bg){
+    q += '&s=' + encodeURIComponent(cfg.selected_bg)
+  }
+  if(cfg.box_color != defaults.box_color){
+    q += '&c=' + encodeURIComponent(cfg.box_color)
+  }
+  if(cfg.selected_color != defaults.selected_color){
+    q += '&d=' + encodeURIComponent(cfg.selected_color)
+  }
+  if(cfg.lc != defaults.lc){
+    q += '&l=' + encodeURIComponent(cfg.lc)
+  }
+  return q
 }
 function updateLink(){
-  let l = document.getElementById('link'), h
-  if(location.search){
-    let u = new URL(location.href)
-    let b = u.searchParams.get('b')
-    let s = u.searchParams.get('s')
-    let c = u.searchParams.get('c')
-    let d = u.searchParams.get('d')
-    let l = u.searchParams.get('l')
-    u.search = '?t='+encodeURIComponent(title)+'&i='+encodeURIComponent(items.join(sep))
-    if(b){
-      u.search += '&b='+b
-    }
-    if(s){
-      u.search += '&s='+s
-    }
-    if(c){
-      u.search += '&c='+c
-    }
-    if(d){
-      u.search += '&d='+d
-    }
-    if(l){
-      u.search += '&l='+l
-    }
-    h = u.href
-  }else{
-    h = location.href
-  }
+  let l = document.getElementById('link')
+  let u = new URL(location.href)
+  u.search = generateLink()
+  let h = u.href
   l.innerText = h
   l.href = h
-}
-function reset(){
-  title = 'BINGO'
-  items = Array(25)
-  selected = Array(25)
-  for(let i = 0; i < 25; i++){
-    items[i] = String(i+1)
-  }
-  shuffle(items)
-  parseQuery()
-  updateTitle()
-  updateLink()
-  refresh()
+  return h
 }
 
-reset()
+function parseReset(q){
+  let parsed = parseQuery(q)
+  cfg.size = parsed.size
+  cfg.title = parsed.title
+  let items = []
+  if(parsed.items.length){
+    for(let i = 0; i < Math.max(cfg.size**2,cfg.items.length); i++){
+      if(typeof parsed.items[i] != 'undefined'){
+        items[i] = parsed.items[i]
+      }else{
+        items[i] = ''
+      }
+    }
+  }else{
+    for(let i = 0; i < cfg.size**2; i++){
+      items[i] = String(i+1)
+    }
+  }
+  cfg.items = items
+  
+  cfg.box_bg = parsed.box_bg
+  cfg.selected_bg = parsed.selected_bg
+  cfg.box_color = parsed.box_color
+  cfg.selected_color = parsed.selected_color
+  cfg.lc = parsed.lc
+  cfg.random = parsed.random
+  
+  reset()
+}
+function reset(){
+  cfg.selected = []
+  cfg.order = []
+  for(let i = 0; i < Math.max(cfg.size**2,cfg.items.length); i++){
+    cfg.order[i] = i
+  }
+  if(cfg.random){
+    shuffle(cfg.order)
+  }
+  
+  cfg.width = cfg.bsize*cfg.size + cfg.pad*(cfg.size-1) + cfg.margin*2
+  cfg.height = cfg.width
+  cfg.radius = cfg.bsize/27
+  cfg.lw = cfg.bsize/3
+  canvas.width = cfg.width
+  canvas.height = cfg.height
+  
+  updateTitle()
+  let h = updateLink()
+  refresh()
+  return h
+}
+
+parseReset()
 
 function click(e){
   e.preventDefault()
-  let mx = e.offsetX/canvas.offsetWidth*width
-  let my = e.offsetY/canvas.offsetHeight*height
-  for(let i = 0; i<5; i++){
-    for(let j =0; j<5; j++){
-      let x = margin + (bsize+pad)*i,
-        y = margin + (bsize+pad)*j
-      if(mx >= x && mx <= x+bsize && my >= y && my <= y+bsize){
-        selected[i+j*5] = !selected[i+j*5]
+  let mx = e.offsetX/canvas.offsetWidth*cfg.width
+  let my = e.offsetY/canvas.offsetHeight*cfg.height
+  for(let i = 0; i < cfg.size; i++){
+    for(let j = 0; j < cfg.size; j++){
+      let x = cfg.margin + (cfg.bsize+cfg.pad)*i,
+        y = cfg.margin + (cfg.bsize+cfg.pad)*j
+      if(mx >= x && mx <= x+cfg.bsize && my >= y && my <= y+cfg.bsize){
+        cfg.selected[cfg.order[i+j*cfg.size]] = !cfg.selected[cfg.order[i+j*cfg.size]]
         refresh()
       }
     }
@@ -326,6 +474,143 @@ function dl(e){
   a.click()
 }
 document.getElementById('dl').addEventListener('click',dl)
+
+var form = document.getElementById('form')
+function resetItemFields(n){
+  let {size,items,max} = getItemsInfo(n)
+  form.elements['n'].value = size
+  let ts = form.querySelector('#items')
+  while(ts.firstChild){
+    ts.firstChild.remove()
+  }
+  for(let i = 0; i < max; i++){
+    let l = document.createElement('label')
+    let p = document.createElement('span')
+    p.innerText = "項目 "+(i+1)
+    p.className = 'field_name'
+    l.appendChild(p)
+    let ta = document.createElement('textarea')
+    ta.id = 'i'+i
+    ta.name = 'i'+i
+    ta.value = typeof items[i] != 'undefined'? items[i] : typeof cfg.items[i] != 'undefined'? cfg.items[i] : ''
+    l.appendChild(ta)
+    if(i >= s**2 ){
+      l.classList.add('exceed')
+    }
+    ts.appendChild(l)
+  }
+}
+
+function updateForm(){
+  let es = form.elements
+  es['t'].value = cfg.title
+  es['n'].value = cfg.size
+  es['x'].checked = false
+  resetItemFields(cfg.size)
+  es['b'].value = cfg.box_bg
+  es['s'].value = cfg.selected_bg
+  es['c'].value = cfg.box_color
+  es['d'].value = cfg.selected_color
+  es['l'].value = cfg.lc
+}
+
+function getItemsInfo(n){
+  let x = form.elements['x'].checked
+  let items = []
+  let ts = form.querySelectorAll('#items textarea')
+  for(let ta of ts){
+    let t = ta.value.trim()
+    if(t.length){ items.push(t) }
+  }
+  let size
+  if(typeof n == 'undefined'){
+    if(!x){
+      size = Math.floor(items.length**(1/2))
+    }else{
+      size = Math.ceil(items.length**(1/2))
+    }
+  }else if(isNaN(n)|| n <= 0){
+    size = cfg.size
+  }else{
+    size = +n
+  }
+  let max = Math.max(size**2,items.length,cfg.items.length)
+  if(x){
+    max = size**2
+    items = items.slice(0,max)
+  }
+  return {size, items, max}
+}
+
+function setCustom(){
+  let copy = Object.assign({},cfg)
+  let es = form.elements
+  cfg.title = es['t'].value
+  let n = +es['n'].value
+  let {size, items, max} = getItemsInfo(n)
+  cfg.size = size
+  cfg.items = items
+  let b = es['b'].value
+  let s = es['s'].value
+  let c = es['c'].value
+  let d = es['d'].value
+  let l = es['l'].value
+  if(b){ cfg.box_bg = b }
+  if(s){ cfg.selected_bg = s }
+  if(c){ cfg.box_color = c }
+  if(d){ cfg.selected_color = d }
+  if(l){ cfg.lc = l }
+  history.replaceState({cfg:copy}, copy.title)
+  let u = reset()
+  history.pushState({cfg}, cfg.title, u)
+}
+
+function reloadLinkHistory(e){
+  if(e.state){
+    cfg = e.state.cfg
+    reset()
+  }
+}
+
+function toggleCustom(){
+  if(form.parentNode.classList.contains('open')){
+    form.parentNode.classList.remove('open')
+    document.documentElement.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    })
+    if(this.id == 'open'){
+      setCustom()
+    }
+  }else{
+    updateForm()
+    form.parentNode.classList.add('open')
+    document.documentElement.scrollTo({
+      top: document.getElementById('open').offsetTop,
+      left: 0,
+      behavior: 'smooth'
+    })
+  }
+}
+
+document.getElementById('open').addEventListener('click',toggleCustom)
+document.getElementById('close').addEventListener('click',toggleCustom)
+document.getElementById('n').addEventListener('change',function(){resetItemFields(+this.value)})
+document.getElementById('x').addEventListener('change',function(){resetItemFields(+form.elements['n'].value)})
+document.getElementById('reset').addEventListener('change',function(){updateForm()})
+document.getElementById('edit').addEventListener('click',function(){
+  setCustom()
+  updateForm()
+  reset()
+  document.documentElement.scrollTo({
+    top: 0,
+    left: 0,
+    behavior: 'smooth'
+  })
+})
+
+window.addEventListener('popstate',reloadLinkHistory)
 </script>
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
