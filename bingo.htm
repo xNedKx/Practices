@@ -607,6 +607,7 @@ function setCustom(){
   let nq = generateLink()
   if(oq != nq){
     history.replaceState({cfg:copy}, copy.title)
+    if(sen){ alert(`「${cfg.sep}」被設為功能性標記，將從項目內容自動移除`) }
     let u = reset()
     history.pushState({cfg}, cfg.title, u)
   }
