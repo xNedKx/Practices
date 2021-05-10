@@ -160,7 +160,7 @@ body {
 <label><span class='field_name'>選取文字顏色</span><input id='d' name='d'></label>
 <label><span class='field_name'>連線顏色</span><input id='l' name='l'></label>
 <hr/>
-<label><input type='button' id='default' name='default' value='初始化' onclick="location.search=''"></label>
+<label><input type='button' id='default' name='default' value='初始化'></label>
 <label><input type='button' id='reset' name='reset' value='還原前次設定'></label>
 <label><input type='button' id='edit' name='edit' value='確認'></label>
 <label><input type='button' id='close' name='close' value='關閉取消'></label>
@@ -617,6 +617,11 @@ function reloadLinkHistory(e){
   }
 }
 
+function resetForm(){
+  updateForm()
+  resetItemsInfo()
+}
+
 function toggleCustom(){
   if(form.parentNode.classList.contains('open')){
     form.parentNode.classList.remove('open')
@@ -627,6 +632,8 @@ function toggleCustom(){
     })
     if(this.id == 'open' || this.id == 'edit'){
       setCustom()
+    }else if(this.id == 'close'){
+      resetForm()
     }
   }else{
     updateForm()
@@ -640,19 +647,21 @@ function toggleCustom(){
 }
 
 document.getElementById('open').addEventListener('click',toggleCustom)
-document.getElementById('close').addEventListener('click',toggleCustom)
-document.getElementById('n').addEventListener('change',function(){resetItemFields(+this.value)})
+document.getElementById('n').addEventListener('change', function(){resetItemFields(+this.value)})
 document.getElementById('x').addEventListener('change',function(){resetItemFields(+form.elements['n'].value)})
-document.getElementById('b').addEventListener('change',previewColor)
-document.getElementById('s').addEventListener('change',previewColor)
-document.getElementById('c').addEventListener('change',previewColor)
-document.getElementById('d').addEventListener('change',previewColor)
-document.getElementById('l').addEventListener('change',previewColor)
-document.getElementById('reset').addEventListener('click',function(){
-  updateForm()
-  resetItemsInfo()
+document.getElementById('b').addEventListener('change', previewColor)
+document.getElementById('s').addEventListener('change', previewColor)
+document.getElementById('c').addEventListener('change', previewColor)
+document.getElementById('d').addEventListener('change', previewColor)
+document.getElementById('l').addEventListener('change', previewColor)
+document.getElementById('default').addEventListener('click', function(){
+  let u = new URL(location.href)
+  u.search = ''
+  location.href = u.href
 })
+document.getElementById('reset').addEventListener('click', resetForm)
 document.getElementById('edit').addEventListener('click', toggleCustom)
+document.getElementById('close').addEventListener('click',toggleCustom)
 
 window.addEventListener('popstate',reloadLinkHistory)
 </script>
