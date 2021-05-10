@@ -368,7 +368,7 @@ function generateLink(){
   if(cfg.size != defaults.size){
     q += '&n=' + cfg.size
   }
-  if(cfg.items.filter((v,i)=>+v!=i+1).length){
+  if(cfg.items.length != cfg.size**2 || cfg.items.filter((v,i)=>+v!=i+1).length){
     q += '&i=' + encodeURIComponent(cfg.items.join(cfg.sep))
   }
   if(cfg.box_bg != defaults.box_bg){
@@ -404,7 +404,7 @@ function parseReset(q){
   cfg.title = parsed.title
   let items = []
   if(parsed.items.length){
-    for(let i = 0; i < Math.max(cfg.size**2,cfg.items.length); i++){
+    for(let i = 0; i < Math.max(cfg.size**2,parsed.items.length); i++){
       if(typeof parsed.items[i] != 'undefined'){
         items[i] = parsed.items[i]
       }else{
@@ -578,7 +578,7 @@ function getItemsInfo(n){
     max = size**2
     items = items.slice(0,max)
   }
-  blank = items.filter((v,i)=>+v!=i+1).length == 0
+  blank = items.length == cfg.size**2 && items.filter((v,i)=>+v!=i+1).length == 0
   return {size, items, max, blank}
 }
 
@@ -651,8 +651,7 @@ document.getElementById('reset').addEventListener('click',function(){
   updateForm()
   resetItemsInfo()
 })
-document.getElementById('edit').addEventListener('click',
- toggleCustom)
+document.getElementById('edit').addEventListener('click', toggleCustom)
 
 window.addEventListener('popstate',reloadLinkHistory)
 </script>
