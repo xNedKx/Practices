@@ -454,17 +454,14 @@ parseReset()
 
 function click(e){
   e.preventDefault()
-  let mx = e.offsetX/canvas.offsetWidth*cfg.width
-  let my = e.offsetY/canvas.offsetHeight*cfg.height
-  for(let i = 0; i < cfg.size; i++){
-    for(let j = 0; j < cfg.size; j++){
-      let x = cfg.margin + (cfg.bsize+cfg.pad)*i,
-        y = cfg.margin + (cfg.bsize+cfg.pad)*j
-      if(mx >= x && mx <= x+cfg.bsize && my >= y && my <= y+cfg.bsize){
-        cfg.selected[cfg.order[i+j*cfg.size]] = !cfg.selected[cfg.order[i+j*cfg.size]]
-        refresh()
-      }
-    }
+  let mx = e.offsetX/canvas.offsetWidth*cfg.width-cfg.margin
+  let my = e.offsetY/canvas.offsetHeight*cfg.height-cfg.margin
+  let bp = cfg.bsize+cfg.pad
+  if( mx%bp < cfg.bsize && my%bp < cfg.bsize ){
+    let n = Math.floor(mx/bp) + Math.floor(my/bp)*cfg.size
+    let o = cfg.order[n]
+    cfg.selected[o] = !cfg.selected[o]
+    refresh()
   }
 }
 canvas.addEventListener('click',click)
