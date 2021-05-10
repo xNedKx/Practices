@@ -555,10 +555,13 @@ function updateForm(){
 
 function getItemsInfo(n){
   let x = form.elements['x'].checked
+  let sen = false
   let items = []
   let ts = form.querySelectorAll('#items textarea')
   for(let ta of ts){
-    let t = ta.value.trim()
+    let t = ta.value.replace(new RegExp(cfg.sep.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),'g'),'')
+    sen |= t != ta.value
+    t = t.trim()
     if(t.length){ items.push(t) }
   }
   let size
@@ -579,7 +582,7 @@ function getItemsInfo(n){
     items = items.slice(0,max)
   }
   blank = items.length == cfg.size**2 && items.filter((v,i)=>+v!=i+1).length == 0
-  return {size, items, max, blank}
+  return {size, items, max, blank, sen}
 }
 
 function setCustom(){
@@ -588,7 +591,7 @@ function setCustom(){
   let es = form.elements
   cfg.title = es['t'].value
   let n = +es['n'].value
-  let {size, items, max} = getItemsInfo(n)
+  let {size, items, max, sen} = getItemsInfo(n)
   cfg.size = size
   cfg.items = items
   let b = es['b'].value
