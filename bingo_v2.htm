@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>賓果不求人</title>
+<meta name="description" content="自己的賓果自己做" />
+<meta name="author" content="xNedKx" />
+<meta name="copyright" content="xNedKx" />
+<style>
+body {
+  margin: 0;
+  text-align: center;
+  cursor: default;
+  padding-bottom: 1em;
+  font-family: Sans-Serif;
+}
+#header {
+  margin: 0.1em;
+  padding: 0.25em 0.1em;
+  background: #f0f0f0;
+  font-size: 3.2em;
+  font-weight: bold;
+  color: #111;
+  user-select: none;
+}
+#main {
+  margin: 0.25em auto;
+  max-width: 100%;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+#main:hover {
+  cursor: pointer;
+}
+#dl {
+  margin: 0.1em auto;
+  max-width: min(100vw,600px);
+  padding: 0.25em;
+  background: #f0f0f0;
+  cursor: pointer;
+  color: #333;
+  user-select: none;
+}
+#dl:hover{
+  background: #ddffdd;
+  font-weight: bold;
+}
+#sh {
+  margin: 1.5em 0.1em 0.1em;
+  font-sweight: bold;
+  color: #777;
+  user-select: none;
+}
+#con {
+  max-height: 2.7em;
+  overflow-y: scroll;
+  overflow-wrap: break-word;
+}
+#link {
+  font-size: 0.8em;
+}
+#open {
+  margin: 1em auto;
+  max-width: min(100vw,600px);
+  padding: 0.25em;
+  background: #f9f9f9;
+  cursor: pointer;
+  color: #999;
+  font-size: 0.8em;
+  user-select: none;
+}
+#open:hover{
+  background: #f0f0f0;
+  color: #111;
+}
+#custom {
+  display: none;
+  margin: 0 1em;
+}
+#custom.open {
+  display: block;
+}
+#custom label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: 0.25em auto;
+}
+#custom label:nth-child(even) {
+  background-color: #f0f0f0;
+}
+#custom label span.field_name {
+  text-align: right;
+  margin: 0.1em auto;
+  padding: 0.25em;
+  width: 15%;
+  color: #111;
+  user-select: none;
+}
+#custom input, #custom textarea {
+  vertical-align: top;
+  margin: 0.1em auto;
+  padding: 0.25em;
+  width: 75%;
+  border: none;
+  outline: none;
+  background-color: #ddd;
+  border-radius: 2%;
+  box-sizing: border-box;
+  color: #333;
+}
+#custom input {
+  vertical-align: middle;
+  height: 2.5em;
+}
+#custom input[type=checkbox] {
+  height: 1.5em;
+}
+#custom textarea {
+  height: 5.6em;
+  resize: none;
+}
+#custom:has(#x:checked) label.exceed {
+  display: none;
+}
+#custom input:focus, #custom textarea:focus {
+  background-color: #eee;
+  color: #111;
+}
+#custom input[type=button] {
+  cursor: pointer;
+}
+#custom input[type=button]:hover {
+  background-color: #eee;
+}
+</style>
+<body>
+<div id='header' title='自己的賓果自己做'>賓果不求人</div>
+<canvas id='main' width='600' height='600'></canvas>
+<div id='dl'>按此儲存圖片</div>
+<div id='sh'>複製下方連結，分享這個賓果：</div>
+<div id='con'>
+<a id='link' href=''></a>
+</div>
+<div id='open'>變更設定</div>
+<div id='custom' class=''>
+<form id='form'>
+<hr/>
+<label><span class='field_name'>標題</span><input id='t' name='t'></label>
+<hr/><span class='blank'></span>
+<label><span class='field_name'>行數</span><input id='n' name='n'></label>
+<label><span class='field_name'>移除超量項目</span><input id='x' name='x' type='checkbox'></label>
+<hr/><span class='blank'></span>
+<div id='items'></div>
+<hr/><span class='blank'></span>
+<label><span class='field_name'>項目顏色</span><input id='b' name='b'></label>
+<label><span class='field_name'>選取顏色</span><input id='s' name='s'></label>
+<label><span class='field_name'>文字顏色</span><input id='c' name='c'></label>
+<label><span class='field_name'>選取文字顏色</span><input id='d' name='d'></label>
+<label><span class='field_name'>連線顏色</span><input id='l' name='l'></label>
+<hr/>
+<label><input type='button' id='default' name='default' value='初始化'></label>
+<label><input type='button' id='reset' name='reset' value='還原前次設定'></label>
+<label><input type='button' id='edit' name='edit' value='確認'></label>
+<label><input type='button' id='close' name='close' value='關閉取消'></label>
+<hr/>
+</form>
+</div>
+</body>
+<script>
+/*
+  general function
+*/
+function shuffle(ar){
+  for(let i = ar.length-1; i > 0; i--){
+    let j = Math.floor(Math.random()*(i+1));
+    [ar[i], ar[j]] = [ar[j], ar[i]]
+  }
+  return ar
+}
+
+function arcbox(x,y,w,h,r){
+  let path = new Path2D()
+  let rr = Math.min(Math.min(w,h)/2,r)
+  path.moveTo(x,y+r)
+  path.lineTo(x,y+h-r)
+  path.arcTo(x,y+h,x+r,y+h,r*Math.PI/2)
+  path.lineTo(x+w-r,y+h)
+  path.arcTo(x+w,y+h,x+w,y+h-r,r*Math.PI/2)
+  path.lineTo(x+w,y+r)
+  path.arcTo(x+w,y,x+w-r,y,r*Math.PI/2)
+  path.lineTo(x+r,y)
+  path.arcTo(x,y,x,y+r,r*Math.PI/2)
+  path.closePath()
+  return path
+}
+function drawBox(box){
+  let b = arcbox(box.x,box.y,box.w,box.h,box.r)
+  cc.fillStyle = box.bg
+  cc.fill(arcbox(box.x,box.y,box.w,box.h,box.r),"evenodd")
+}
+function generateBingoChances(size){
+  let vcs = [], hcs = [], ccs = [[],[]]
+  for(let i = 0; i < size; i++){
+    let vc = Array(size)
+    for(let j = 0; j < size; j++){
+      vc[j] = i+j*size
+    }
+    vcs.push(vc)
+    let hc = Array(size)
+    for(let j = 0; j < size; j++){
+      hc[j] = i*size+j
+    }
+    hcs.push(hc)
+  }
+  for(let i = 0; i < size; i++){
+    ccs[0][i] = i+i*size
+    ccs[1][i] = (size-1-i)+i*size
+  }
+  return vcs.concat(hcs).concat(ccs)
+}
+</script>
+<script>
+var defaults = {
+  title: '賓果不求人',
+  size: 5,
+  sep: '\0',
+  bsize: 108,
+  margin: 10,
+  pad: 10,
+  box_bg: '#E6E1E1',
+  selected_bg: '#FF9999',
+  box_color: '#4B4B4B',
+  selected_color: '#4B4B4B',
+  lc: '#E63E3EAA',
+  rs: 4,
+  adj: 2,
+  font: 'Sans-Serif',
+  random: true,
+  items: []
+}
+var cfg = Object.assign({},defaults)
+cfg.width = cfg.bsize*cfg.size + cfg.pad*(cfg.size-1) + cfg.margin*2,
+cfg.height = cfg.width
+cfg.radius = cfg.bsize/27
+cfg.lw = cfg.bsize/3
+cfg.selected = []
+cfg.order = Array(cfg.size**2)
+cfg.chances = generateBingoChances(cfg.size)
+
+var canvas = document.getElementById('main')
+var cc = canvas.getContext('2d')
+
+function drawText(box,style){
+  let f = box.h / cfg.rs - cfg.adj
+  cc.fillStyle = box.color
+  cc.font = `bold ${f}px ${cfg.font}`
+  cc.textAlign = "center"
+  cc.textBaseline = "middle"
+  let t = (box.txt||'').split(/\n+/), ty
+  if(t.length > cfg.rs){
+    t[cfg.rs-1] = t.slice(cfg.rs-1).join('')
+  }
+  ty = box.y + f*(cfg.rs+1-t.length)/2 + cfg.rs*cfg.adj
+  t.forEach((t,i)=>{
+    cc.fillText(t,box.x+box.w/2,ty+i*f,box.w-2)
+  })
+}
+
+function updateTitle(){
+  document.title = cfg.title
+  document.getElementById('header').innerText = cfg.title
+}
+
+function drawLine(n1,n2){
+  let x1 = cfg.margin + (cfg.bsize+cfg.pad)*(n1%cfg.size),
+    y1 = cfg.margin + (cfg.bsize+cfg.pad)*((n1/cfg.size)>>0),
+    x2 = cfg.margin + (cfg.bsize+cfg.pad)*(n2%cfg.size),
+    y2 = cfg.margin + (cfg.bsize+cfg.pad)*((n2/cfg.size)>>0)
+  if(x1 == x2){
+    x1 += cfg.bsize/2
+    x2 += cfg.bsize/2
+  }else if(x1 > x2){
+    x1 += cfg.bsize
+  }else{
+    x2 += cfg.bsize
+  }
+  if(y1 == y2){
+    y1 += cfg.bsize/2
+    y2 += cfg.bsize/2
+  }else if(y1 > y2){
+    y1 += cfg.bsize
+  }else{
+    y2 += cfg.bsize
+  }
+  cc.beginPath()
+  cc.moveTo(x1,y1)
+  cc.lineTo(x2,y2)
+  cc.lineWidth = cfg.lw
+  cc.lineCap = 'round'
+  cc.strokeStyle = cfg.lc
+  cc.stroke()
+}
+
+function checkBingo(){
+  return cfg.chances.filter( b => b.filter(n=>cfg.selected[cfg.order[n]]).length == cfg.size ).map( l => [l[0], l[cfg.size-1]] )
+}
+function drawAll(){
+  let boxs = []
+  for(let i = 0; i < cfg.size; i++){
+    for(let j = 0; j < cfg.size; j++){
+      let n = i+j*cfg.size, o = cfg.order[n]
+      boxs.push({
+        x: cfg.margin + (cfg.bsize+cfg.pad)*i,
+        y: cfg.margin + (cfg.bsize+cfg.pad)*j,
+        w: cfg.bsize,
+        h: cfg.bsize,
+        r: cfg.radius,
+        txt: cfg.items[o],
+        bg: cfg.selected[o]?cfg.selected_bg:cfg.box_bg,
+        color: cfg.selected[o]?cfg.selected_color:cfg.box_color
+      })
+    }
+  }
+  boxs.forEach(b=>drawBox(b))
+  checkBingo().forEach(l=>drawLine(...l))
+  boxs.forEach(b=>drawText(b))
+}
+function refresh(){
+  cc.clearRect(0,0,cfg.width,cfg.height)
+  drawAll()
+}
+
+function parseQuery(q){
+  let u = new URL(location.href)
+  if(q){ u.search = q }
+  let parsed = {}
+  parsed.title = u.searchParams.get('t')||defaults.title
+  parsed.sep = u.searchParams.get('e')||defaults.sep
+  let ts = u.searchParams.get('i')
+  parsed.items = []
+  if(ts){
+    ts = ts.split(parsed.sep)
+    ts.forEach((t,i)=>{
+      parsed.items[i] = t
+    })
+  }
+  parsed.size = +u.searchParams.get('n')||Math.floor(parsed.items.length**(1/2))||defaults.size
+  parsed.box_bg = u.searchParams.get('b')||defaults.box_bg
+  parsed.selected_bg = u.searchParams.get('s')||defaults.selected_bg
+  parsed.box_color = u.searchParams.get('c')||defaults.box_color
+  parsed.selected_color = u.searchParams.get('d')||defaults.selected_color
+  parsed.lc = u.searchParams.get('l')||defaults.lc
+  parsed.random = u.searchParams.has('r')?!!u.searchParams.get('r'):defaults.random
+  return parsed
+}
+function generateLink(){
+  let q = '?'
+  if(cfg.title != defaults.title){
+    q += 't=' + encodeURIComponent(cfg.title)
+  }
+  if(cfg.size != defaults.size){
+    q += '&n=' + cfg.size
+  }
+  if(cfg.items.length != cfg.size**2 || cfg.items.filter((v,i)=>+v!=i+1).length){
+    q += '&i=' + encodeURIComponent(cfg.items.join(cfg.sep))
+  }
+  if(cfg.box_bg != defaults.box_bg){
+    q += '&b=' + encodeURIComponent(cfg.box_bg)
+  }
+  if(cfg.selected_bg != defaults.selected_bg){
+    q += '&s=' + encodeURIComponent(cfg.selected_bg)
+  }
+  if(cfg.box_color != defaults.box_color){
+    q += '&c=' + encodeURIComponent(cfg.box_color)
+  }
+  if(cfg.selected_color != defaults.selected_color){
+    q += '&d=' + encodeURIComponent(cfg.selected_color)
+  }
+  if(cfg.lc != defaults.lc){
+    q += '&l=' + encodeURIComponent(cfg.lc)
+  }
+  if(cfg.sep != defaults.sep){
+    q += '&e=' + encodeURIComponent(cfg.sep)
+  }
+  return q
+}
+function updateLink(){
+  let l = document.getElementById('link')
+  let u = new URL(location.href)
+  u.search = generateLink()
+  let h = u.href
+  l.innerText = h
+  l.href = h
+  return h
+}
+
+function parseReset(q){
+  let parsed = parseQuery(q)
+  cfg.size = parsed.size
+  cfg.title = parsed.title
+  let items = []
+  if(parsed.items.length){
+    for(let i = 0; i < Math.max(cfg.size**2,parsed.items.length); i++){
+      if(typeof parsed.items[i] != 'undefined'){
+        items[i] = parsed.items[i]
+      }else{
+        items[i] = ''
+      }
+    }
+  }else{
+    for(let i = 0; i < cfg.size**2; i++){
+      items[i] = String(i+1)
+    }
+  }
+  cfg.items = items
+  
+  cfg.box_bg = parsed.box_bg
+  cfg.selected_bg = parsed.selected_bg
+  cfg.box_color = parsed.box_color
+  cfg.selected_color = parsed.selected_color
+  cfg.lc = parsed.lc
+  cfg.random = parsed.random
+  
+  reset()
+}
+function reset(){
+  cfg.selected = []
+  cfg.order = []
+  for(let i = 0; i < Math.max(cfg.size**2,cfg.items.length); i++){
+    cfg.order[i] = i
+  }
+  if(cfg.random){
+    shuffle(cfg.order)
+  }
+  
+  cfg.width = cfg.bsize*cfg.size + cfg.pad*(cfg.size-1) + cfg.margin*2
+  cfg.height = cfg.width
+  cfg.radius = cfg.bsize/27
+  cfg.lw = cfg.bsize/3
+  cfg.chances = generateBingoChances(cfg.size)
+  canvas.width = cfg.width
+  canvas.height = cfg.height
+  
+  updateTitle()
+  let h = updateLink()
+  refresh()
+  return h
+}
+
+parseReset()
+
+function click(e){
+  e.preventDefault()
+  let mx = e.offsetX/canvas.offsetWidth*cfg.width-cfg.margin
+  let my = e.offsetY/canvas.offsetHeight*cfg.height-cfg.margin
+  let bp = cfg.bsize+cfg.pad
+  if( mx%bp < cfg.bsize && my%bp < cfg.bsize ){
+    let n = Math.floor(mx/bp) + Math.floor(my/bp)*cfg.size
+    let o = cfg.order[n]
+    cfg.selected[o] = !cfg.selected[o]
+    refresh()
+  }
+}
+canvas.addEventListener('click',click)
+function dl(e){
+  let a = document.createElement('a')
+  a.href = canvas.toDataURL()
+  a.download = 'bingo.jpg'
+  a.click()
+}
+document.getElementById('dl').addEventListener('click',dl)
+
+var form = document.getElementById('form')
+function resetItemFields(n){
+  let {size,items,max,blank} = getItemsInfo(n)
+  form.elements['n'].value = size
+  let ts = form.querySelector('#items')
+  while(ts.firstChild){
+    ts.firstChild.remove()
+  }
+  for(let i = 0; i < max; i++){
+    let l = document.createElement('label')
+    let p = document.createElement('span')
+    p.innerText = "項目 "+(i+1)
+    p.className = 'field_name'
+    l.appendChild(p)
+    let ta = document.createElement('textarea')
+    ta.id = 'i'+i
+    ta.name = 'i'+i
+    if(blank){
+      ta.value = i+1
+    }else{
+      ta.value = typeof items[i] != 'undefined'? items[i] : typeof cfg.items[i] != 'undefined'? cfg.items[i] : ''
+    }
+    l.appendChild(ta)
+    if(i >= s**2 ){
+      l.classList.add('exceed')
+    }
+    ts.appendChild(l)
+  }
+}
+
+function resetItemsInfo(){
+  form.elements['n'].value = cfg.size
+  form.elements['x'].checked = false
+  let ts = form.querySelector('#items')
+  while(ts.firstChild){
+    ts.firstChild.remove()
+  }
+  for(let i = 0; i < Math.max(cfg.size**2,cfg.items.length); i++){
+    let l = document.createElement('label')
+    let p = document.createElement('span')
+    p.innerText = "項目 "+(i+1)
+    p.className = 'field_name'
+    l.appendChild(p)
+    let ta = document.createElement('textarea')
+    ta.id = 'i'+i
+    ta.name = 'i'+i
+    ta.value = typeof cfg.items[i] != 'undefined'? cfg.items[i] : ''
+    l.appendChild(ta)
+    if(i >= s**2 ){
+      l.classList.add('exceed')
+    }
+    ts.appendChild(l)
+  }
+}
+
+function previewColor(){
+  this.style.backgroundImage = `linear-gradient(to right, #fff0 20%, ${this.value} 80%)`
+}
+
+function updateForm(){
+  let es = form.elements
+  es['t'].value = cfg.title
+  es['n'].value = cfg.size
+  es['x'].checked = false
+  resetItemFields(cfg.size)
+  es['b'].value = cfg.box_bg
+  previewColor.call(es['b'])
+  es['s'].value = cfg.selected_bg
+  previewColor.call(es['s'])
+  es['c'].value = cfg.box_color
+  previewColor.call(es['c'])
+  es['d'].value = cfg.selected_color
+  previewColor.call(es['d'])
+  es['l'].value = cfg.lc
+  previewColor.call(es['l'])
+}
+
+function getItemsInfo(n){
+  let x = form.elements['x'].checked
+  let sen = false
+  let items = []
+  let ts = form.querySelectorAll('#items textarea')
+  for(let ta of ts){
+    let t = ta.value.replace(new RegExp(cfg.sep.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),'g'),'')
+    sen |= t.length != ta.value.length
+    t = t.trim()
+    if(t.length){ items.push(t) }
+  }
+  let size
+  if(typeof n == 'undefined'){
+    if(!x){
+      size = Math.floor(items.length**(1/2))
+    }else{
+      size = Math.ceil(items.length**(1/2))
+    }
+  }else if(isNaN(n)|| n <= 0){
+    size = cfg.size
+  }else{
+    size = +n
+  }
+  let max = Math.max(size**2,items.length,cfg.items.length)
+  if(x){
+    max = size**2
+    items = items.slice(0,max)
+  }
+  blank = items.length == cfg.size**2 && items.filter((v,i)=>+v!=i+1).length == 0
+  return {size, items, max, blank, sen}
+}
+
+function setCustom(){
+  let copy = Object.assign({},cfg)
+  let oq = generateLink()
+  let es = form.elements
+  cfg.title = es['t'].value
+  let n = +es['n'].value
+  let {size, items, max, sen} = getItemsInfo(n)
+  cfg.size = size
+  cfg.items = items
+  let b = es['b'].value
+  let s = es['s'].value
+  let c = es['c'].value
+  let d = es['d'].value
+  let l = es['l'].value
+  if(b){ cfg.box_bg = b }
+  if(s){ cfg.selected_bg = s }
+  if(c){ cfg.box_color = c }
+  if(d){ cfg.selected_color = d }
+  if(l){ cfg.lc = l }
+  let nq = generateLink()
+  if(sen){ alert(`「${cfg.sep}」被設為功能性標記，將從項目內容自動移除`) }
+  if(oq != nq){
+    history.replaceState({cfg:copy}, copy.title)
+    let u = reset()
+    history.pushState({cfg}, cfg.title, u)
+  }
+}
+
+function reloadLinkHistory(e){
+  if(e.state){
+    cfg = e.state.cfg
+    reset()
+  }
+}
+
+function resetForm(){
+  updateForm()
+  resetItemsInfo()
+}
+
+function toggleCustom(){
+  if(form.parentNode.classList.contains('open')){
+    form.parentNode.classList.remove('open')
+    document.documentElement.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    })
+    if(this.id == 'open' || this.id == 'edit'){
+      setCustom()
+    }else if(this.id == 'close'){
+      resetForm()
+    }
+  }else{
+    updateForm()
+    form.parentNode.classList.add('open')
+    document.documentElement.scrollTo({
+      top: document.getElementById('open').offsetTop,
+      left: 0,
+      behavior: 'smooth'
+    })
+  }
+}
+
+document.getElementById('open').addEventListener('click',toggleCustom)
+document.getElementById('n').addEventListener('change', function(){resetItemFields(+this.value)})
+document.getElementById('x').addEventListener('change',function(){resetItemFields(+form.elements['n'].value)})
+document.getElementById('b').addEventListener('change', previewColor)
+document.getElementById('s').addEventListener('change', previewColor)
+document.getElementById('c').addEventListener('change', previewColor)
+document.getElementById('d').addEventListener('change', previewColor)
+document.getElementById('l').addEventListener('change', previewColor)
+document.getElementById('default').addEventListener('click', function(){
+  let u = new URL(location.href)
+  u.search = ''
+  location.href = u.href
+})
+document.getElementById('reset').addEventListener('click', resetForm)
+document.getElementById('edit').addEventListener('click', toggleCustom)
+document.getElementById('close').addEventListener('click',toggleCustom)
+
+window.addEventListener('popstate',reloadLinkHistory)
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-78696465-1', 'auto');
+  ga('send', 'pageview');
+</script>
+</html>
