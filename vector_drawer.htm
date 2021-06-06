@@ -372,7 +372,7 @@ function leftMouse(e){
               p.dx += dx
               p.dy += dy
               return p
-            })), r=2 )
+            })) )
             tracing.drag.object.style.transform = ''
             tracing.drag.object.setAttribute('d',d)
             tracing.drag = null
@@ -527,7 +527,7 @@ function trace2path(ps, r=2){
 
 function finishTrace(t){
   if(!drawable){return}
-  let ps = pointReduce(t.trace), r = 2
+  let ps = pointReduce(t.trace), r = 5/2
   let d = trace2path(ps,r)
   if(d){
     let path = document.createElementNS('http://www.w3.org/2000/svg','path')
