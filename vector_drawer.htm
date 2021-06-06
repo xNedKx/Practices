@@ -356,14 +356,6 @@ function leftMouse(e){
           tracing.btn = null
           tracing.leave = false
         break
-        case 'mouseleave':
-          MM(e)
-          tracing.leave = true
-        break
-        case 'mouseenter':
-          tracing.leave = false
-          tracing.enter = true
-        break
         default:
       }
     }else if(tracing.btn == null){
@@ -429,11 +421,8 @@ function MM(e){
   }
   if(tracing.btn == 'left'){
     let m = extractMoveEv(e), l = tracing.trace.length
-    if(!tracing.enter){
-      moveAddCalc(m, tracing.trace[l-1])
-    }
+    moveAddCalc(m, tracing.trace[l-1])
     tracing.trace.push(m)
-    tracing.enter = false
     runMouseFns('left',e.type,tracing)
   }else if(tracing.drag){
     let m = extractMoveEv(e)
@@ -468,10 +457,12 @@ let preview = document.getElementById('preview')
 let svg = document.getElementById('svg')
 
 function dl(e){
-  let a = document.createElement('a')
-  a.href = 'data:svg/plain;charset=utf-8,' + encodeURIComponent(`<svg width="${svg.width}" height="${svg.height}" version="2.0" xmlns="http://www.w3.org/2000/svg">${svg.innerHTML}</svg>`)
-  a.download = 'vd.svg'
-  a.click()
+  if(svg.firstChild){
+    let a = document.createElement('a')
+    a.href = 'data:svg/plain;charset=utf-8,' + encodeURIComponent(`<svg width="${svg.width}" height="${svg.height}" version="2.0" xmlns="http://www.w3.org/2000/svg">${svg.innerHTML}</svg>`)
+    a.download = 'vd.svg'
+    a.click()
+  }
 }
 
 </script>
