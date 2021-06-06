@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Simplify Vector Drawer</title>
+<meta name="description" content="簡易化向量繪板 - 長點選取筆跡(顯示紅框+半透明白填充)，之後可以移動或刪除([Delete]/[Backspace])；[ctrl+s]可下載 SVG 圖檔(但可能存在軟體格式問題)。" />
+<meta name="author" content="xNedKx" />
+<meta name="copyright" content="xNedKx" />
+<script src='./fit_viewport.js'></script>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+main {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  
+  background-color: #f0f0f0;
+}
+#view, #viewbox, svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+#viewbox {
+  background-color: #999;
+}
+#preview {
+  pointer-events: none;
+}
+.selected {
+  outline: #f00 solid 1px;
+  fill: #f0f0f033;
+}
+</style>
+<body>
+<main>
+  <div id='view'>
+    <div id='viewbox'>
+      <svg id='svg'></svg>
+      <svg id='preview'></svg>
+    </div>
+  </div>
+  <div id='overlays'></div>
+</main>
+</body>
+<script>
+let drawable = true
+
+</script>
+<script> // point fns
+function pointReduce(track){
+  let ps = track.filter(p=>p.d)
+  let sp = [], s = []
+  for(let i = 1; i < ps.length; i++){
+    let pl = ps[i-1], pn = ps[i]
+    if(pl.d == 1){
+      s.push(pl)
+      s.push(pn)
+      if(pn.d == 1){
+        sp.push(s)
+        s = []
+      }
+    }else{
+      s.push(pn)
+      if(pn.d == 1){
+        sp.push(s)
+        s = []
+      }
+    }
+  }
+  return sp.reduce((r,p)=>[...r,...dp(p)],[])
+}
+function ld(p1,p2){
+  return ((p1.dx-p2.dx)**2 + (p1.dy-p2.dy)**2)**(1/2)
+}
+function lpd(lp1,lp2,tp){
+  // line: lx*x-ly*y = lc
+  // p-line: ly*x+lx*y = pc, tp
+  // cross point: [ (lx*lc+ly*pc)/(lx**2+ly**2), (lx*pc-ly*lc)/(lx**2+ly**2) ]
+  let lx = lp1.dy-lp2.dy,
+      ly = lp1.dx-lp2.dx,
+      lc = lp1.dy*lp2.dx-lp2.dy*lp1.dx,
+      pc = ly*tp.dx+lx*tp.dy,
+      w = (lx**2+ly**2),
+      cpx = (lx*lc+ly*pc)/w,
+      cpy = (lx*pc-ly*lc)/w
+  return ld({dx:cpx,dy:cpy},tp)
+}
+function lpd2(lp1,lp2,tp){
+  let lx = lp1.dy-lp2.dy,
+      ly = lp1.dx-lp2.dx,
+      lc = lp1.dy*lp2.dx-lp2.dy*lp1.dx,
+      pc = ly*tp.dx+lx*tp.dy,
+      w = (lx**2+ly**2),
+      cpx = (lx*lc+ly*pc)/w,
+      cpy = (lx*pc-ly*lc)/w,
+      d = ld({dx:cpx,dy:cpy},tp),
+      r1 = (lp1.mx**2+lp1.my**2),
+      r2 = (lp2.mx**2+lp2.my**2),
+      rt = (tp.mx**2+tp.my**2),
+      mx1 = lp1.mx/r1 || 0,
+      mx2 = lp2.mx/r2 || 0,
+      my1 = lp1.my/r1 || 0,
+      my2 = lp2.my/r2 || 0,
+      tmx = tp.mx/rt || 0,
+      tmy = tp.my/rt || 0,
+      dm = ((mx2-mx1)**2+(my2-my1)**2)**(1/2)/8**(1/2),
+      dmp = (((mx1+mx2)/2-tmx)**2+((my1+my2)/2-tmy)**2)**(1/2)/8**(1/2)
+  if(isNaN(dmp)||isNaN(dm)){
+    console.log(lp1,lp2,tp)
+  }
+  return d*(2-dmp)*(1+dm)/4
+}
+function cbMaxH(p1,p2){
+  let x0 = p1.dx, y0 = p1.dy,
+      x3 = p2.dx, y3 = p2.dy,
+      x1 = x0+p1.mx, y1 = y0+p1.my,
+      x2 = x3-p2.mx, y2 = y3-p2.my,
+      ma1 = Math.atan2(p1.my,p1.mx),
+      ma2 = Math.atan2(p2.my,p2.mx),
+      a = Math.atan2((y3-y0),(x3-x0))
+  let c = Math.cos(a), s = Math.sin(a)
+  let px = c*x0+s*y0, py = c*y0-s*x0,
+      px0 = 0, py0 = 0,
+      px1 = c*x1+s*y1-px, py1 = c*y1-s*x1-py,
+      px2 = c*x2+s*y2-px, py2 = c*y2-s*x2-py,
+      px3 = c*x3+s*y3-px, py3 = 0
+  if(py1 < 0){
+    py1 *= -1
+    py2 *= -1
+  }
+  let t1 = (py0-2*py1+py2 + (-py0*py2+py0*py3+py1**2-py1*py2-py1*py3+py2**2)**(1/2)) / (py0-3*py1+3*py2-py3) || 0,
+      t2 = (py0-2*py1+py2 - (-py0*py2+py0*py3+py1**2-py1*py2-py1*py3+py2**2)**(1/2)) / (py0-3*py1+3*py2-py3) || 0,
+      t3 = (2*py1-3*py2+py3) / (2*py1-4*py2+2*py3) || 0,
+      f = (t)=>(1-t)**3*py0+(1-t)**2*t*py1+(1-t)*t**2*py2+t**3*py3,
+      mh
+  if(py0-py3 == 3*(py1-py2)){
+    if(py1+py3 != 2*py2){
+      mh = f(t3)
+    }else{
+      mh = 0
+    }
+  }else{
+    let ts = [t1,t2,t3].filter(n=>n>0&&n<1), hs = ts.map(t=>f(t)), h = hs.filter(n=>n>=0)
+    if(h.length == 1){
+      mh = h[0]
+    }else if(h.length > 1){
+      mh = Math.min.apply(null,h)
+    }else{
+      mh = 0
+    }
+  }
+  /*if(mh <= 0 || isNaN(mh)){
+  console.log(p1,p2)
+  console.log(x0,y0)
+  console.log(x1,y1)
+  console.log(x2,y2)
+  console.log(x3,y3)
+  console.log(180*ma1/Math.PI)
+  console.log(180*ma2/Math.PI)
+  console.log(180*a/Math.PI)
+  console.log(px0,py0)
+  console.log(px1,py1)
+  console.log(px2,py2)
+  console.log(px3,py3)
+  console.log(t1,f(t1))
+  console.log(t2,f(t2))
+  console.log(t3,f(t3))
+  console.log(mh)
+  }*/
+  return mh
+}
+function dp(ps,e=0.2,min=1.5){ // Ramer-Douglas-Peucker
+  let p1 = ps[0], p2 = ps[ps.length-1]
+  let max = 0, i = 0, t1 = 0, t2 = 0, m1x = 0, m1y = 0, m2x = 0, m2y = 0
+  for(let j = 1; j < ps.length-1; j++){
+    let d = lpd2(p1,p2,ps[j])
+    if(d > max){
+      i = j
+      max = d
+    }
+  }
+  if(max > Math.max(cbMaxH(p1,p2)*(1-e),min)){
+    return [ ...dp(ps.slice(0,i),e,min), ...dp(ps.slice(i),e,min).slice(1) ]
+  }else{
+    return [ p1, p2 ]
+  }
+}
+
+</script>
+<script> // keyboard 
+function kv(e){
+  switch(e.type){
+    case 'keydown':
+      if(e.key == 'Delete' || e.key == 'Backspace'){
+        let s = document.querySelectorAll('.selected')
+        if(s.length){
+          e.preventDefault()
+          for(d of s){
+            d.remove()
+          }
+        } 
+      }else if(e.key == 's' && e.ctrlKey){
+        e.preventDefault()
+        dl(e)
+      }
+    break
+    case 'keyup':
+    break
+  }
+}
+window.addEventListener('keydown',kv)
+window.addEventListener('keyup',kv)
+</script>
+<script> // mouse/touch input & tracing
+function extractMoveEv(e){
+  return {
+    ts: e.timeStamp,
+    te: this,
+    tr: e.relatedTarget,
+    cx: e.clientX, // visable viewport (frame)
+    cy: e.clientY,
+    px: e.pageX, // document (html), do not change when scrolling
+    py: e.pageY,
+    ox: e.offsetX, // the edge between border - padding of the target, start form 0 (-1: border, 0: padding)
+    oy: e.offsetY,
+    sx: e.screenX, // the whole screen (window desktop)
+    sy: e.screenY,
+    mx: e.movementX, // current screenX - last screenX (mousemove only, others = 0)
+    my: e.movementY
+  }
+}
+
+function calcMove(now,last){
+  let c = {}
+  c.td = now.ts-last.ts
+  c.vx = (now.sx-last.sx)/c.td
+  c.vy = (now.sy-last.sy)/c.td
+  c.ax = now.vx-(last.vx||0)
+  c.ay = now.vy-(last.vy||0)
+  return c
+}
+function moveAddCalc(now,last){ return last? Object.assign(now,calcMove(now,last)) : undefined }
+
+function extractPointerEv(e){
+  return {
+    elm: this,
+    target: e.target,
+    type: e.deltaMode? 'wheel' : e.pointerType, // wheel / mouse|pen|touch
+    
+    alt: e.altKey,
+    ctrl: e.ctrlKey,
+    meta: e.metaKey,
+    shift: e.shiftKey,
+    
+    m: {
+      b: e.button, // 0: primary(left) 1: mid 2: sec(right) 3: back 4: forward
+      bs: e.buttons, // flags 0: none 1: primary(left) 2: sec(right) 4: mid 8: back 16: forward
+      t: {
+        left: e.button == 0,
+        right: e.button == 2,
+        mid: e.button == 1,
+        back: e.button == 3,
+        forward: e.button == 4,
+      },
+      d: {
+        left: e.buttons & 0b00001,
+        right: e.buttons & 0b00010,
+        mid: e.buttons & 0b00100,
+        back: e.buttons & 0b01000,
+        forward: e.buttons & 0b10000,
+      }
+    },
+    t: {
+      ch: e.changedTouches,
+      cs: e.targetTouches,
+      ts: e.touches,
+    },
+    p: {
+      id: e.pointerId,
+      pr: e.isPrimary,
+      w: e.width,
+      h: e.height,
+      p: e.pressure, // 0~1 (act: 0.5, cease: 0)
+      tp: e.tangentialPressure, // -1~1/0~1 (default:0),
+      tx: e.tiltX, // yz plane -90~90
+      ty: e.tiltY, // xz plane -90~90
+      tw: e.twist // 0-359
+    },
+    w: {
+      dm: e.deltaMode, // (unit) 0: px 1: line 2: page
+      dx: e.deltaX, // (ltr?)
+      dy: e.deltaY, // (utb?)
+      dz: e.deltaZ // (ntf?)
+    }
+  }
+}
+
+let mfns = {}
+function addMouseFns(btn,ev,fn){
+  if(typeof fn != 'function'){return false}
+  if(!mfns[btn]){
+    mfns[btn] = {}
+  }
+  if(!mfns[btn][ev]){
+    mfns[btn][ev] = new Set
+  }
+  mfns[btn][ev].add(fn)
+  return true
+}
+function removeMouseFns(btn,ev,fn){
+  if(mfns[btn] && mfns[btn][ev]){
+    if(!mfns[btn][ev].has(fn)){return false}
+    mfns[btn][ev].remove(fn)
+    if(mfns[btn][ev].size == 0){
+      delete mfns[btn][ev]
+      if(Object.keys(mfns[btn]).length == 0){
+        delete mfns[btn]
+      }
+    }
+  }
+  return true
+}
+function runMouseFns(btn,ev,data){
+  if(mfns[btn] && mfns[btn][ev]){
+    return [...mfns[btn][ev]].map(fn=>fn(data))
+  }
+  return null
+}
+
+let tracing = {btn: null, target: null, leave: false, enter: false, trace: [], object: null, delay: null, drag: null}
+
+function leftMouse(e){
+  let p = extractPointerEv(e)
+  if(p.m.t.left){
+    if(tracing.btn == 'left'){
+      switch(e.type){
+        case 'mouseup':
+          tracing.btn = null
+          tracing.leave = false
+        break
+        case 'mouseleave':
+          MM(e)
+          tracing.leave = true
+        break
+        case 'mouseenter':
+          tracing.leave = false
+          tracing.enter = true
+        break
+        default:
+      }
+    }else if(tracing.btn == null){
+      switch(e.type){
+        case 'mouseup':
+          if(tracing.delay){
+            clearTimeout(tracing.delay)
+            tracing.delay = null
+          }
+          if(tracing.drag){
+            let dx = e.pageX - tracing.drag.opx
+            let dy = e.pageY - tracing.drag.opy
+            let d = trace2path( pointReduce(tracing.drag.object.trace.map(p=>{
+              p.dx += dx
+              p.dy += dy
+              return p
+            })), r=2 )
+            tracing.drag.object.style.transform = ''
+            tracing.drag.object.setAttribute('d',d)
+            tracing.drag = null
+          }
+        break
+        case 'mousedown':
+          if(e.target.parentNode == svg){
+            if(!isSelected(e.target)){
+              tracing.object = e.target
+              tracing.delay = setTimeout(()=>{
+                select(e.target)
+                tracing.delay = null
+              },350)
+            }else{
+              tracing.drag = {
+                object: e.target,
+                opx: e.pageX,
+                opy: e.pageY
+              }
+            }
+          }else{
+            select()
+            tracing.btn = 'left'
+            tracing.target = this
+            tracing.trace = []
+            tracing.enter = true
+          }
+        break
+        default:
+      }
+    }
+    runMouseFns('left',e.type,tracing)
+  }
+}
+
+function MM(e){
+  if(tracing.delay){
+    if(e.movementX**2+e.movementY**2 > 16){
+      clearTimeout(tracing.delay)
+      tracing.delay = null
+      tracing.btn = 'left'
+      tracing.target = this
+      tracing.trace = []
+      tracing.enter = true
+    }
+  }
+  if(tracing.btn == 'left'){
+    let m = extractMoveEv(e), l = tracing.trace.length
+    if(!tracing.enter){
+      moveAddCalc(m, tracing.trace[l-1])
+    }
+    tracing.trace.push(m)
+    tracing.enter = false
+    runMouseFns('left',e.type,tracing)
+  }else if(tracing.drag){
+    let m = extractMoveEv(e)
+    let dx = m.px - tracing.drag.opx
+    let dy = m.py - tracing.drag.opy
+    tracing.drag.object.style.transform = `translate(${dx}px,${dy}px)`
+  }
+}
+
+function select(dom){
+  document.querySelectorAll('.selected').forEach(d=>d.classList.remove('selected'))
+  if(dom){
+    dom.classList.add('selected')
+  }
+}
+function isSelected(dom){
+  return dom.classList.contains('selected')
+}
+
+document.addEventListener('mousemove',MM)
+document.addEventListener('mouseup',leftMouse)
+
+function addMouseTrace(dom){
+  dom.addEventListener('mousedown',leftMouse)
+  dom.addEventListener('mouseleave',leftMouse)
+  dom.addEventListener('mouseenter',leftMouse)
+}
+
+</script>
+<script> // ui
+let preview = document.getElementById('preview')
+let svg = document.getElementById('svg')
+
+function dl(e){
+  let a = document.createElement('a')
+  a.href = 'data:svg/plain;charset=utf-8,' + encodeURIComponent(`<svg width="${svg.width}" height="${svg.height}" version="2.0" xmlns="http://www.w3.org/2000/svg">${svg.innerHTML}</svg>`)
+  a.download = 'vd.svg'
+  a.click()
+}
+
+</script>
+<script> // draw
+let brush = { stroke: '#333', strokeWidth: 3, strokeLinejoin: 'miter', fill: '#fff0' }
+
+function beginTrace(t){
+  if(!drawable){return}
+  let g = preview.querySelector('#trace')||document.createElementNS('http://www.w3.org/2000/svg','g')
+  g.id = 'trace'
+  g.setAttribute('stroke',brush.stroke)
+  g.setAttribute('stroke-width',brush.strokeWidth)
+  g.setAttribute('stroke-linejoin',brush.strokeLinejoin)
+  g.setAttribute('fill',brush.fill)
+  while(g.lastChild){g.lastChild.remove()}
+  preview.appendChild(g)
+}
+function updateTrace(t){
+  if(!drawable){return}
+  if(t.trace.length > 1){
+    if(!t.leave){
+      let l = t.trace.length
+      let last = t.trace[l-2], now = t.trace[l-1]
+      last.d = (last.d||0)+1
+      now.d = (now.d||0)+1
+      last.dx = last.ox
+      last.dy = last.oy
+      now.dx = now.ox
+      now.dy = now.oy
+      let line = document.createElementNS('http://www.w3.org/2000/svg','line')
+      line.setAttribute('x1',last.dx)
+      line.setAttribute('y1',last.dy)
+      line.setAttribute('x2',now.dx)
+      line.setAttribute('y2',now.dy)
+      preview.querySelector('#trace').appendChild(line)
+    }
+  }
+}
+function trace2path(ps, r=2){
+  let pd = [], d = ''
+  if(ps.length > 1){
+    for(let i = 1; i < ps.length; i++){
+      let pl = ps[i-1], pn = ps[i]
+      if(pl.d == 1){ // begin of part
+        d += `M ${pl.dx} ${pl.dy}`
+        d += ` C ${pl.dx+pl.mx/r} ${pl.dy+pl.my/r}, ${pn.dx-pn.mx/r} ${pn.dy-pn.my/r}, ${pn.dx} ${pn.dy}` // use cubic bezier curve with movement
+        if(pn.d == 1){ // end of part
+          pd.push(d)
+          d = ""
+        }
+      }else{ // continue part
+        d += ` S ${pn.dx-pn.mx/r} ${pn.dy-pn.my/r}, ${pn.dx} ${pn.dy}`
+        if(pn.d == 1){
+          pd.push(d)
+          d = ""
+        }
+      }
+    }
+  }
+  return pd.join(' ')
+}
+
+function finishTrace(t){
+  if(!drawable){return}
+  let ps = pointReduce(t.trace), r = 2
+  let d = trace2path(ps,r)
+  if(d){
+    let path = document.createElementNS('http://www.w3.org/2000/svg','path')
+    path.setAttribute('d',d)
+    path.setAttribute('stroke',brush.stroke)
+    path.setAttribute('stroke-width',brush.strokeWidth)
+    path.setAttribute('stroke-linejoin',brush.strokeLinejoin)
+    path.setAttribute('fill',brush.fill)
+    path.trace = t.trace
+    t.trace = []
+    let g = preview.querySelector('#trace')
+    while(g.lastChild){g.lastChild.remove()}
+    svg.appendChild(path)
+    return path
+  }
+}
+
+addMouseFns('left','mousedown',beginTrace)
+addMouseFns('left','mouseup',finishTrace)
+addMouseFns('left','mousemove',updateTrace)
+
+
+addMouseTrace(svg)
+
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-78696465-1', 'auto');
+  ga('send', 'pageview');
+</script>
+</html>
