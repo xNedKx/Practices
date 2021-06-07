@@ -385,7 +385,7 @@ function leftMouse(e){
               tracing.delay = setTimeout(()=>{
                 select(e.target)
                 tracing.delay = null
-              },350)
+              },100)
             }else{
               tracing.drag = {
                 object: e.target,
@@ -410,7 +410,7 @@ function leftMouse(e){
 
 function MM(e){
   if(tracing.delay){
-    if(e.movementX**2+e.movementY**2 > 16){
+    if(e.movementX**2+e.movementY**2 > 9){
       clearTimeout(tracing.delay)
       tracing.delay = null
       tracing.btn = 'left'
