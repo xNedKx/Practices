@@ -643,7 +643,7 @@ async function protectKeys(ks,kid){
 }
 async function unprotectKeys(str){
   let pwd = prompt("Please input the protection password: (Will override current keys. Leave blank or cancel to abort.)")
-  if(!pwd){return}
+  if(pwd == ''){return}
   try{
     let wkey = await passwordDeriveED(pwd)
     let rows = str.split("\n").map(r=>r.split("|"))
