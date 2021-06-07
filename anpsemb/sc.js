@@ -630,7 +630,7 @@ async function decryptAndVerify(data,dkey,vkey,iv_ctr){
 async function protectKeys(ks,kid){
   if(!ks){return}
   let pwd = prompt("Please input a password for protection:")
-  if(!pwd){return console.log("download canceled")}
+  if(pwd == ''){return}
   try{
     let wkey = await passwordDeriveED(pwd)
     let wks = []
