@@ -134,6 +134,9 @@ function loop(ts){
       stop();
       timer.classList.add("timeup");
       timer.style.backgroundColor = "rgb(200,55,55)";
+      try {
+        navigator.vibrate(750);
+      }catch(e){}
     }
   }else{
     timer.innerText = "";
@@ -154,6 +157,9 @@ function start(){
     timer.style.backgroundColor = "rgb(255,255,255)";
     triggered = length;
     audio.volume = 0.5;
+    try {
+      navigator.vibrate(0);
+    }catch(e){}
   }
 }
 function stop(){
