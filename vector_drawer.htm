@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Simplify Vector Drawer</title>
-<meta name="description" content="簡易化向量繪板 - 長點選取筆跡(顯示紅框+半透明白填充)，之後可以移動或刪除([Delete]/[Backspace])；[ctrl+s]可下載 SVG 圖檔(但可能存在軟體格式問題)。" />
+<meta name="description" content="簡易化向量繪板 - 長點選取筆跡(顯示紅框+半透明白填充)，之後可以移動或刪除([Delete]/[Backspace])；[ctrl+s]可下載 SVG 圖檔(但可能存在軟體格式問題)；[ctrl+alt+s]可下載PNG圖檔。" />
 <meta name="author" content="xNedKx" />
 <meta name="copyright" content="xNedKx" />
 <script src='./fit_viewport.js'></script>
@@ -219,7 +219,11 @@ function kv(e){
         } 
       }else if(e.key == 's' && e.ctrlKey){
         e.preventDefault()
-        dl(e)
+        if(e.altKey){
+          dlri(e)
+        }else{
+          dl(e)
+        }
       }
     break
     case 'keyup':
@@ -456,10 +460,33 @@ function addMouseTrace(dom){
 let preview = document.getElementById('preview')
 let svg = document.getElementById('svg')
 
+function dlri(){
+  if(svg.firstChild){
+    let c = document.createElement('canvas')
+    c.width = svg.width.baseVal.value
+    c.height = svg.height.baseVal.value
+    document.body.appendChild(c)
+    let ct = c.getContext('2d')
+    ct.fillStyle = getComputedStyle(document.getElementById('viewbox')).backgroundColor
+    ct.fillRect(0,0,c.width,c.height)
+    svg.querySelectorAll('path').forEach((p)=>{
+      let cp = new Path2D(p.getAttribute('d'))
+      ct.lineWidth = p.getAttribute('stroke-width')
+      ct.strokeStyle = p.getAttribute('stroke')
+      ct.fillStyle = '#fff0'
+      ct.stroke(cp)
+    })
+    let a = document.createElement('a')
+    a.href = c.toDataURL('image/png')
+    a.download = 'vd.png'
+    a.click()
+  }
+}
+
 function dl(e){
   if(svg.firstChild){
     let a = document.createElement('a')
-    a.href = 'data:svg/plain;charset=utf-8,' + encodeURIComponent(`<svg width="${svg.width}" height="${svg.height}" version="2.0" xmlns="http://www.w3.org/2000/svg">${svg.innerHTML}</svg>`)
+    a.href = 'data:svg/plain;charset=utf-8,' + encodeURIComponent(`<svg width="${svg.width.baseVal.value}" height="${svg.height.baseVal.value}" version="2.0" xmlns="http://www.w3.org/2000/svg">${svg.innerHTML}</svg>`)
     a.download = 'vd.svg'
     a.click()
   }
