@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<div style='font-family:monospace;font-size:1.25em;'>Slides to your phone number:</div>
+<phone-slider></phone-slider>
+<script>
+class PhoneSlider extends HTMLElement {
+  static parseTpl(tpl){
+    let d = (new DOMParser()).parseFromString(tpl,'text/html')
+    let f = document.createDocumentFragment()
+    for(let c of d.head.childNodes){
+      f.appendChild(c)
+    }
+    for(let c of d.body.childNodes){
+      f.appendChild(c)
+    }
+    return f
+  }
+  static tpl_main = `
+<style>
+#n {
+  position: absolute;
+  font-size: 1.8em;
+  border: none;
+  width: 7.5em;
+  text-align: center;
+  background: #f0f0f0;
+  border-radius: 0.5em;
+}
+#r {
+  width: 100%;
+}
+.invalid {
+  color: red;
+}
+</style>
+<input id='r' type='range' step='1' title='Scroll to increase/decrease the number. Press [ctrl][alt][shift] keys to spped up.'>
+<input id='n'title='Scroll to increase/decrease the number. Press [ctrl][alt][shift] keys to spped up.'>
+`
+  constructor() { super()
+    let slider = PhoneSlider.parseTpl(PhoneSlider.tpl_main)
+    this.attachShadow({mode: 'open'}).appendChild(slider)
+    let n = this.shadowRoot.querySelector('#n')
+    let r = this.shadowRoot.querySelector('#r')
+    let d9 = [32,33,34,35,36,372,373,374,375,376,377,378,379,38,39,47,48,52,53,54,55,56,57,62,63,65,66,67,68,69,72,73,74,75,76,77,78,79,822,823,824,825,826,827,828,829,836,84,87,88,892,893,894,895,896,897,898,899]
+    let d10 = [22,23,25,28,42,43,492,493,494,495,496,497,498,499,85,86,9]
+    this.pnlist = []
+    for(let n of d9){
+      n = n.toString()
+      if(n.length == 2){
+        for(let i = 0; i < 10; i++){
+          this.pnlist.push(`${n}${i}`)
+        }
+      }else{
+        this.pnlist.push(n)
+      }
+    }
+    let w = this.pnlist.length
+    for(let n of d10){
+      n = n.toString()
+      if(n.length == 1){
+        for(let i = 0; i < 1000; i++){
+          this.pnlist.push(`${n}${i.toString().padStart(3,'0')}`)
+        }
+      }else if(n.length == 2){
+        for(let i = 0; i < 100; i++){
+          this.pnlist.push(`${n}${i.toString().padStart(2,'0')}`)
+        }
+      }else{
+        for(let i = 0; i < 10; i++){
+          this.pnlist.push(`${n}${i}`)
+        }
+      }
+    }
+    n.max = this.pnlist[this.pnlist.length-1]+'99999'
+    n.min = this.pnlist[0]+'00001'
+    r.max = this.pnlist.length * 100000 - 1
+    r.min = 1
+    r.addEventListener('input',()=>this.update())
+    n.addEventListener('change',()=>this.changeN())
+    n.addEventListener('input',()=>{
+      let v = n.value.toString()
+      let i = n.selectionStart, c = 0
+      if(/[^\d]/.test(v)){
+        v = v.replace(/[^\d]/g,(x)=>{c++;return ''})
+      }
+      n.value = v.slice(0,10)
+      n.setSelectionRange(i-c,i-c)
+    })
+    n.addEventListener('wheel',e=>{
+      e.preventDefault()
+      let i = 1
+      if(e.shiftKey && e.altKey && e.ctrlKey){
+        i *= 100000
+      }else if((e.altKey && e.ctrlKey) || (e.shiftKey && e.ctrlKey) || (e.shiftKey && e.altKey)){
+        i *= 1000
+      }else if(e.shiftKey || e.altKey || e.ctrlKey){
+        i *= 20
+      }
+      if(e.deltaY > 0){
+        r.value = +r.value+i
+      }else if(e.deltaY < 0){
+        r.value = +r.value-i
+      }
+      this.update()
+    },{passive:false})
+    r.addEventListener('wheel',e=>{
+      e.preventDefault()
+      let i = 100000
+      if(e.shiftKey && e.altKey && e.ctrlKey){
+        i *= 10
+      }else if((e.altKey && e.ctrlKey) || (e.shiftKey && e.ctrlKey) || (e.shiftKey && e.altKey)){
+        i *= 5
+      }else if(e.shiftKey || e.altKey || e.ctrlKey){
+        i *= 2
+      }
+      if(e.deltaY > 0){
+        r.value = +r.value+i
+      }else if(e.deltaY < 0){
+        r.value = +r.value-i
+      }
+      this.update()
+    },{passive:false})
+  }
+  connectedCallback(){
+    let n = this.shadowRoot.querySelector('#n')
+    let r = this.shadowRoot.querySelector('#r')
+    let d = this.getAttribute('value')
+    if(typeof d == 'string' && this.pnValid(d)){
+      n.value = d
+      this.changeN()
+    }else{
+      r.value = Math.random()*(1+Number(r.max))
+      this.update()
+    }
+  }
+  pnValid(str){
+      var pnRe = /^(?<a>\+?886|0)(?:(?<b1>(?:2[2358]|4[23]|8[56]|9[0-9])(?<c1>\d{7}))|(?:(?<b2>3[2-689]|4(?:[78]|9[2-9])|5[2-7]|6[235-9]|7[2-9]|8[478])(?<c2>\d{6}))|(?:(?<b3>37[2-9]|8(?:2[2-9]|36|9[2-9]))(?<c3>\d{5})))$/;
+      if(typeof str != 'string'){throw 'pnValid needs input to be a string.'}
+      var r = str.replace(/-/g, '').match(pnRe);
+      return r? r[0] : null;
+  }
+  update(){
+    let n = this.shadowRoot.querySelector('#n')
+    let r = this.shadowRoot.querySelector('#r')
+    let str = ((i)=>`0${this.pnlist[Math.trunc(i/1e5)]}${(i%1e5).toString().padStart(5,'0')}`)(r.value)
+    n.value = str
+    if(!this.pnValid(str)){
+      n.classList.add('invalid')
+    }else{
+      n.classList.remove('invalid')
+    }
+    n.style.top = `${r.offsetTop + r.offsetHeight + 5}px`
+    let l = r.offsetLeft + r.offsetWidth*r.value/r.max - n.offsetWidth/2
+    n.style.left = `${Math.min(Math.max(l,r.offsetLeft),r.offsetLeft+r.offsetWidth-n.offsetWidth)}px`
+  }
+  changeN(){
+    let n = this.shadowRoot.querySelector('#n')
+    let r = this.shadowRoot.querySelector('#r')
+    function getR(s){
+      let m = pnValid(s)
+      if(!m){ return NaN }
+      let i
+      if(s.length == 9){
+        i = this.pnlist.slice(0,w).findIndex(p=>new RegExp(`^0${p}`).test(s))
+      }else if(s.length == 10){
+        i = this.pnlist.slice(w).findIndex(p=>new RegExp(`^0${p}`).test(s)) + w
+      }
+      return i * 100000 + Number(s.slice(-5))
+    }
+    let number = n.value
+    let s = getR(number)
+    if(!isNaN(s)){
+      r.value = s
+      this.update()
+      n.classList.remove('invalid')
+    }else{
+      n.classList.add('invalid')
+    }
+  }
+}
+customElements.define('phone-slider',PhoneSlider)
+</script>
+</html>
