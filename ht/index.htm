@@ -31,7 +31,18 @@ img-list::part(list) {
   width: 1024px;
   aspect-ratio: 1 / 1;
   max-width: 100%;
-  margin: 1em auto 10em;
+  margin: 1em auto 8em;
+}
+#footer {
+  font-size: 0.8em;
+  color: #222;
+  padding-bottom: 0.5em;
+}
+#footer a[href]{
+  color: #060606;
+}
+#footer a[href]:hover {
+  color: #444;
 }
 </style>
 </head>
@@ -39,6 +50,7 @@ img-list::part(list) {
 <div id='header'>Houndtooth Drawer Gallery</div>
 <div id='intro'>Belows are some demo images created with the houndtooth drawer tool.</div>
 <img-list src='img01.png,img02.png,img03.png,img04.png,img05.png,img06.png,img07.png,img08.png,img09.png'></img-list>
+<div id='footer'><a href='https://creativecommons.org/licenses/by-nc-nd/4.0/' target='cc'>CC BY-NC-ND</a></div>
 </body>
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
