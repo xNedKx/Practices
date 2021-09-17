@@ -69,9 +69,10 @@ Instruction:
 3. Select one of the ids that you want to message with. Write something in the textarea then click the post button. 
 4. The message will be saved on the server. Only the user who has the private key can revert the transform of the message to see it. You can't see what you send except you send message to yourself. Or you can toggle the checkbox on the right of the post button, it makes you send a copy for yourself. Click on the copy will hint you the related message if it exists.
 5. Messages will be recognized automatically when you load a new key pack.
-6. Shared key packs and messages are updated immediately, but there is a cooldown between every post. If update successes, the textarea will be cleared.
-7. You can save the created key pack to a file with passwords. You have to enter the same password per key pack to load the key pack.
-8. Out-of-date messages and public keys are removed automatically.
+6. If you send messages without sharing public keys, the receiver is not able to verify the message and the message will not be decrypted.
+7. Shared key packs and messages are updated immediately, but there is a cooldown between every post. If update successes, the textarea will be cleared.
+8. You can save the created key pack to a file with passwords. You have to enter the same password per key pack to load the key pack.
+9. Out-of-date messages and public keys are removed automatically.
 
 #    All messages are encrypted and signed before upload.
 ##   All keys are extractable and inputs are not secured, they can be manipulated by scripts.
