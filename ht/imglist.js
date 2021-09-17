@@ -145,6 +145,7 @@ class ImgList extends HTMLElement {
   margin: 0 0.1em;
   display: inline-block;
   cursor: pointer;
+  user-select: none;
 }
 .thumbs img-box:hover {
   filter: contrast(1.25) brightness(1.25);
