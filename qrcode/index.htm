@@ -232,8 +232,8 @@ function updateImg(qrc){
     output.getContext("2d").fillRect(0,0,output.width,output.height)
     output.style.width = ""
   }else{
-    let margin = 2
-    let pixel = Math.max(Math.floor(maxMobileWidth/(qrc.getModuleCount()+margin*2)),2)
+    let margin = 2, maxp = 5, minp = 2
+    let pixel = Math.min(Math.max(Math.floor(maxMobileWidth/(qrc.getModuleCount()+margin*2)),minp),maxp)
     let cv = document.createElement("canvas")
     cv.width = qrc.getModuleCount() * pixel
     cv.height = qrc.getModuleCount() * pixel
@@ -244,6 +244,7 @@ function updateImg(qrc){
     output.getContext("2d").drawImage(cv,margin * pixel, margin * pixel)
     output.style.width = ""
     output.title = "Maxmized (Click to change the view size.)"
+    output.scale = 'max'
     return output
   }
 }
@@ -280,45 +281,34 @@ document.getElementById("EC_level").addEventListener("change",(e)=>{
 })
 document.getElementById("img").addEventListener("click",function(e){
   let c = getComputedStyle(document.getElementById("code"))
-  let maxWidth = Math.min(531, +c.maxWidth.replace("px",""))
-  let currentWidth = this.offsetWidth
-  if(currentWidth >= maxWidth){
-      this.style.width = `${this.width}px`
-      this.title = "Original Size"
-  }else if(currentWidth >= this.width * 5){
-    this.style.width = ""
-    this.title = "Maximized"
-  }else if(currentWidth >= this.width * 3){
-    if(this.width*5 < maxWidth){
-      this.style.width = `${this.width*5}px`
-      this.title = "5x"
-    }else{
-      this.style.width = ""
-      this.title = "Maximized"
-    }
-  }else if(currentWidth >= this.width * 2){
-    if(this.width*3 < maxWidth){
-      this.style.width = `${this.width*3}px`
-      this.title = "3x"
-    }else{
-      this.style.width = ""
-      this.title = "Maximized"
-    }
-  }else if(currentWidth >= this.width * 1.5){
-    if(this.width*2 < maxWidth){
-      this.style.width = `${this.width*2}px`
-      this.title = "2x"
-    }else{
-      this.style.width = ""
-      this.title = "Maximized"
-    }
+  let maxWidth = Math.min(531, +c.maxWidth.replace("px","")), mx = maxWidth/this.width
+  let currentWidth = this.offsetWidth, cx = currentWidth/this.width
+  let scaleOrder = [1,1.5,2,3,5]
+  if(this.scale == 'max'){
+    this.scale = 1
+    this.style.width = this.width + 'px'
+    this.title = 'Original size'
   }else{
-    if(this.width*1.5 < maxWidth){
-      this.style.width = `${this.width*1.5}px`
-      this.title = "1.5x"
+    let ci = scaleOrder.indexOf(this.scale)
+    if(ci == -1){
+      this.scale = 'max'
+      this.style.width = ''
+      this.title = 'Maxmized size'
+    }else if(ci == scaleOrder.length-1){
+      this.scale = 1
+      this.style.width = this.width + 'px'
+      this.title = 'Original size'
     }else{
-      this.style.width = ""
-      this.title = "Maximized"
+      let s = scaleOrder[ci+1]
+      if(s*this.width > maxWidth){
+        this.scale = 'max'
+        this.style.width = ''
+        this.title = 'Maxmized size'
+      }else{
+        this.scale = scaleOrder[ci+1]
+        this.style.width = (this.width*this.scale) + 'px'
+        this.title = `${this.scale}x`
+      }
     }
   }
 })
