@@ -11,13 +11,13 @@
     hidden.style.cursor = "";
     hidden.style.pointerEvent = "none";
     hidden.style.position = "absolute";
-    hidden.style.height = "auto";
+    hidden.style.height = "unset";
     hidden.style.maxHeight = "";
     hidden.style.minHeight = "";
+    hidden.style.userSelect = "none";
+    hidden.style.overflow = 'scroll';
 
-    hidden.innerHTML = dom.value.replace(/[\u00A0-\u9999<>\&]/gim, function(i) {
-      return '&#' + i.charCodeAt(0) + ';';
-    }).replace(/\n/g,"<br>") + "<br>";
+    hidden.textContent = dom.value
 
     dom.parentNode.insertBefore(hidden, dom);
 

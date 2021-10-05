@@ -8,7 +8,7 @@
 <meta name="author" content="xNedKx" />
 <meta name="copyright" content="xNedKx" />
 <script src="./qrcode.js"></script>
-<script src="./ihae2.js" async></script>
+<script src="./ihae3.js" async></script>
 <style>
 document,body {
   margin: 0;
@@ -51,6 +51,8 @@ input:focus, select:focus, textarea:focus {
   padding: 0.25em;
   box-shadow: 0 0 1em #0006;
   scrollbar-width: thin;
+  white-space: break-spaces;
+  word-break: break-all;
 }
 
 #code {
@@ -101,7 +103,7 @@ input:focus, select:focus, textarea:focus {
       <label title="Type Number [modules x modules]">Version: <select id="type_number" name="typeNumber"></select></label>
       <label title="Error Correction Level (tolerance)">EC: <select id="EC_level" name="ECLevel"></select></label>
       <input id="mode" name="mode" type="hidden" value="Byte"/>
-      <label title="Check to encode non-URL characters.">isURL:<input id="uriencode" name="uriencode" type="checkbox"/></label>
+      <input id="encode" name="encode" type="hidden" value="UTF-8">
     </div>
     <textarea id="data" name="data" autofocus></textarea>
   </form>
@@ -114,7 +116,6 @@ input:focus, select:focus, textarea:focus {
 </div>
 <hr>
 <div id="footer">
-  <div class="gray">Unicode charcters are undecodable in many decoders. You can escape it with isURL option.</div>
   <div>This service uses <a href="https://github.com/kazuhikoarase/qrcode-generator" target="_blank" title="qrcode-generator (open in github)">qrcode-generator (MIT License)</a> to provide the core functions.</div>
   <div>UI designed by xNedKx.</div>
   <div></div>
@@ -141,7 +142,6 @@ var modes = {
   'Byte': {value:'Byte',text:'Byte(default)'},
   'Kanji': {value:'Kanji',text:'Kanji'}
 }
-var margin = 4
 var maximum = {
   "L": {'Numeric': 7089, 'Alphanumeric': 4296, 'Byte': 2953, 'Kanji': 1817},
   "M": {'Numeric': 5596, 'Alphanumeric': 3391, 'Byte': 2331, 'Kanji': 1435},
@@ -174,14 +174,13 @@ function collectData(){
   let ec = f.elements.EC_level.value
   let mode = f.elements.mode.value
   let data = f.elements.data.value
-  let uriencode = f.elements.uriencode.checked
-  return {tn,ec,mode,data,uriencode}
+  return {tn,ec,mode,data}
 }
 
 var auto = true
 var old_length = 0
 function createQR(change_tn = true){
-  let {tn,ec,mode,data,uriencode} = collectData()
+  let {tn,ec,mode,data} = collectData()
   document.getElementById("data").title = data
   if(!data){
     if(auto){
@@ -191,17 +190,17 @@ function createQR(change_tn = true){
     return null
   }
   document.body.classList.remove("null-data")
-  let encoded_data = uriencode ? encodeURI(data).replace(/%5B/g, '[').replace(/%5D/g, ']') : data
   if(old_length > data.length && auto){
     tn = 0
   }
   old_length = data.length
-  if(encoded_data.length > maximum[ec][mode]){
+  if(data.length > maximum[ec][mode]){
     document.body.classList.add("invalid-version")
     return null
   }
   let qrc = qrcode(tn, ec)
-  qrc.addData(encoded_data,mode)
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs[document.getElementById("encode").value ?? 'default'] // SJIS, UTF-8,default
+  qrc.addData(data,mode)
   try{
     log(`Trying to generate QR code:\n[Version]: ${typeNumbers[tn].text}\n[EC Level]: ${EC_levels[ec].text}`)
     qrc.make()
@@ -210,9 +209,9 @@ function createQR(change_tn = true){
       rtn = (qrc.getModuleCount() - 17) / 4
       document.getElementById("type_number").value = rtn
     }
-    log(`QR code generated.\n[Version]: ${rtn}\n[EC Level]: ${EC_levels[ec].text}\n[Data]: ${encoded_data}\n[QR code]:\n${qrc.createASCII()}`)
+    log(`QR code generated.\n[Version]: ${rtn}\n[EC Level]: ${EC_levels[ec].text}\n[Data]: ${data}\n[QR code]:\n${qrc.createASCII()}`)
     document.body.classList.remove("invalid-version")
-    document.getElementById("data").title = encoded_data
+    document.getElementById("data").title = data
     return qrc
   }catch(er){
     if(auto && tn > 0 && tn < 40){
@@ -225,6 +224,7 @@ function createQR(change_tn = true){
   }
 }
 
+let maxMobileWidth = 480
 function updateImg(qrc){
   let output = document.getElementById("img")
   if(!qrc){
@@ -232,21 +232,22 @@ function updateImg(qrc){
     output.getContext("2d").fillRect(0,0,output.width,output.height)
     output.style.width = ""
   }else{
+    let margin = 2
+    let pixel = Math.max(Math.floor(maxMobileWidth/(qrc.getModuleCount()+margin*2)),2)
     let cv = document.createElement("canvas")
-    cv.width = qrc.getModuleCount() * 2
-    cv.height = qrc.getModuleCount() * 2
+    cv.width = qrc.getModuleCount() * pixel
+    cv.height = qrc.getModuleCount() * pixel
     let canvas = cv.getContext("2d")
-    qrc.renderTo2dContext(canvas)
-    output.width = (qrc.getModuleCount() + 2 * margin) * 2
-    output.height = (qrc.getModuleCount() + 2 * margin) * 2
-    output.getContext("2d").drawImage(cv,margin * 2,margin * 2)
+    qrc.renderTo2dContext(canvas,pixel)
+    output.width = (qrc.getModuleCount() + 2 * margin) * pixel
+    output.height = (qrc.getModuleCount() + 2 * margin) * pixel
+    output.getContext("2d").drawImage(cv,margin * pixel, margin * pixel)
     output.style.width = ""
     output.title = "Maxmized (Click to change the view size.)"
     return output
   }
 }
 
-let maxMobileWidth = 480
 let wait
 document.getElementById("data").addEventListener("keyup",(e)=>{
   clearTimeout(wait)
@@ -270,15 +271,6 @@ document.getElementById("type_number").addEventListener("change",function(e){
 })
 document.getElementById("EC_level").addEventListener("change",(e)=>{
   if(auto){
-    document.getElementById("type_number").value = 0
-  }
-  updateImg(createQR())
-  if(screen.width > maxMobileWidth){
-    document.getElementById("data").focus()
-  }
-})
-document.getElementById("uriencode").addEventListener("change",(e)=>{
-  if(auto && !this.checked){
     document.getElementById("type_number").value = 0
   }
   updateImg(createQR())
