@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-hant">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="description" content="" />
+<meta name="author" content="" />
+<meta name="copyright" content="" />
+<title>傳染數模擬</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="./is.js"></script>
+<style>
+body {
+  text-align: center;
+  color: #030303;
+}
+#header {
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #010101;
+  line-height: 2em;
+}
+#form {
+  display: flex;
+  flex-direction: column;
+}
+label {
+  display: flex;
+}
+label > span {
+  width: 11%;
+  font-size: 0.8em;
+  text-align: start;
+}
+input {
+  width: 100%;
+}
+pre {
+  text-align: start;
+  color: #666;
+}
+footer {
+  font-size: 0.6em;
+  color: #333;
+}
+footer a:link {
+  text-decoration: none;
+  color: #666;
+}
+footer a:hover {
+  color: #111;
+}
+</style>
+</head>
+<body>
+<div id='header'>傳染數模擬</div>
+<pre>
+此模擬設定為：
+每個個體只會處在三種狀態之一：
+受感期 -> 傳染期 -> 免疫期 -> 受感期
+受感期個體會因為傳染期個體的傳染力影響進入傳染期
+傳染期滿進入免疫期，免疫期滿回到受感期
+傳染力的影響規則為：每個周期點可以有不同的傳染力，把整個周期的傳染力加總後，把同數量受感期的個體變為傳染期，若傳染力總和超過剩餘的個體數，不會造成更多的影響。
+現實情況下，各種數值應該都不會是固定的，模擬只是用來參考可能的變化態勢。
+另外由於演算法沒有優化，效能不是很好，限制了一些參數的範圍，這點也會限制能觀察到的可能(如群體大小)。
+</pre>
+<form id='form' action='#'>
+<label><span>周期數(1~360)</span><input id='n' type='range' min='1' max='360' step='1'></label>
+<label><span>群體大小(1~50000)</span><input id='p' type='range' min='1' max='50000' step='1'></label>
+<label><span>起始狀態(逗號分隔的當下周期數)</span><input id='s'></label>
+<label><span>傳染力(逗號分隔的影響人數，可以是小數)</span><input id='f'></label>
+<label><span>免疫期(0~360)</span><input id='m' type='range' min='0' max='360' step='1'></label>
+</form>
+<div><canvas id="c"></canvas></div>
+<footer>圖表使用 <a href='https://www.chartjs.org/' target='_blank'>chart.js</a> 呈現</footer>
+</body>
+<script>
+/* chart */
+const data = {
+  labels: [],
+  datasets: [
+    {
+      label: '受感期',
+      data: [],
+      backgroundColor: '#99ff99',
+      stack: 's',
+    },
+    {
+      label: '傳染期',
+      data: [],
+      backgroundColor: '#ff9999',
+      stack: 's',
+    },
+    {
+      label: '免疫期',
+      data: [],
+      backgroundColor: '#9999ff',
+      stack: 's',
+    },
+  ]
+};
+
+const config = {
+  type: 'bar',
+  data: data,
+  options: {
+    plugins: {
+      title: {
+        display: true,
+        text: ''
+      },
+      legend: {
+        reverse: true
+      }
+    },
+    responsive: true,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+      reverse: true
+    },
+    scales: {
+      x: {
+        stacked: true,
+        title: {
+          display: true,
+          text: '周期編號'
+        }
+      },
+      y: {
+        stacked: true,
+        title: {
+          display: true,
+          text: '個體數'
+        }
+      }
+    }
+  }
+};
+
+let chart = new Chart(document.getElementById('c'), config)
+
+/* refresh chart */
+function draw(model){
+  let rs = [[],[],[]], param = model.getParam()
+  model.getRecord().forEach(r=>{
+    let d = model.detail(r)
+    rs[0].push(d[0].length)
+    rs[1].push(d[1].length)
+    rs[2].push(d[2].length)
+  })
+
+  chart.data.labels = [...Array(vars.cycles).keys()]
+  chart.data.datasets.forEach((dataset,i) => {
+    dataset.data = rs[i]
+  })
+
+  let title = `傳染數模擬 {傳染力: [ ${param.infect_powers.join(', ')} ] 免疫期: ${param.immune_period} 群體總數: ${param.total_population} 周期數: ${vars.cycles}}`
+  console.log(title)
+  chart.options.plugins.title.text = title
+
+  chart.update()
+}
+
+/* vars */
+let defaults = {
+  initial_states: [1],
+  total_population: 5000,
+  infect_powers: [0,1,1],
+  immune_period: 15,
+  cycles: 90
+}
+let vars = Object.assign({},defaults)
+
+/* ui */
+function parseNumberList(raw){
+  let ns = raw.split(/[\p{Z}\p{P}]+/u)
+  for(let i in ns){
+    ns[i] = parseFloat(ns[i])
+    if(isNaN(ns[i])){ throw TypeError() }
+  }
+  return ns
+}
+function parseNumber(raw,min=-Infinity,max=Infinity){
+  if(isNaN(raw)){ throw RangeError() }
+  let n = Math.round(parseFloat(raw))
+  if(isNaN(n) || n < min || n > max){ throw RangeError() }
+  return n
+}
+
+function verifyIS(){
+  let d = document.getElementById('s')
+  try{
+    d.parsed = parseNumberList(d.value)
+    d.setCustomValidity('')
+    exec()
+  }catch(er){
+    d.setCustomValidity('請輸入逗號分隔的數字')
+  }
+}
+function verifyPo(){
+  let d = document.getElementById('p')
+  try{
+    d.parsed = parseNumber(d.value,1)
+    d.setCustomValidity('')
+    exec()
+  }catch(er){
+    d.setCustomValidity('請輸入範圍內的數字')
+  }
+}
+function verifyIP(){
+  let d = document.getElementById('f')
+  try{
+    d.parsed = parseNumberList(d.value)
+    d.setCustomValidity('')
+    exec()
+  }catch(er){
+    d.setCustomValidity('請輸入逗號分隔的數字(接受小數，總合後會四捨五入)')
+  }
+}
+function verifyMP(){
+  let d = document.getElementById('m')
+  try{
+    d.parsed = parseNumber(d.value,0)
+    d.setCustomValidity('')
+    exec()
+  }catch(er){
+    d.setCustomValidity('請輸入範圍內的數字')
+  }
+}
+function verifyCs(){
+  let d = document.getElementById('n')
+  try{
+    d.parsed = parseNumber(d.value,1)
+    d.setCustomValidity('')
+    exec()
+  }catch(er){
+    d.setCustomValidity('請輸入範圍內的數字')
+  }
+}
+
+function resetVars(){
+  document.getElementById('s').value = vars.initial_states.join(',')
+  document.getElementById('p').value = vars.total_population
+  document.getElementById('f').value = vars.infect_powers.join(',')
+  document.getElementById('m').value = vars.immune_period
+  document.getElementById('n').value = vars.cycles
+  delete document.getElementById('s').parsed
+  delete document.getElementById('p').parsed
+  delete document.getElementById('f').parsed
+  delete document.getElementById('m').parsed
+  delete document.getElementById('n').parsed
+  document.getElementById('s').title = document.getElementById('s').value
+  document.getElementById('p').title = document.getElementById('p').value
+  document.getElementById('f').title = document.getElementById('f').value
+  document.getElementById('m').title = document.getElementById('m').value
+  document.getElementById('n').title = document.getElementById('n').value
+}
+
+function updateVars(){
+  if(form.checkValidity()){
+    vars.initial_states = document.getElementById('s').parsed ?? vars.initial_states
+    vars.total_population = document.getElementById('p').parsed ?? vars.total_population
+    vars.infect_powers = document.getElementById('f').parsed ?? vars.infect_powers
+    vars.immune_period = document.getElementById('m').parsed ?? vars.immune_period
+    vars.cycles = document.getElementById('n').parsed ?? vars.cycles
+    resetVars()
+    return true
+  }
+  return false
+}
+
+document.getElementById('s').addEventListener('change',verifyIS)
+document.getElementById('p').addEventListener('input',verifyPo)
+document.getElementById('f').addEventListener('change',verifyIP)
+document.getElementById('m').addEventListener('input',verifyMP)
+document.getElementById('n').addEventListener('input',verifyCs)
+
+/* model */
+function exec(){
+  if(updateVars()){
+    let f = createModel(vars.initial_states,vars.total_population,vars.infect_powers,vars.immune_period)
+    f.progress(vars.cycles-1)
+    draw(f)
+  }
+}
+
+/* init */
+resetVars()
+exec()
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-78696465-1', 'auto');
+  ga('send', 'pageview');
+</script>
+</html>
