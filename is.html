@@ -175,7 +175,7 @@ let vars = Object.assign({},defaults)
 
 /* ui */
 function parseNumberList(raw){
-  let ns = raw.split(/[\p{Z}\p{P}]+/u)
+  let ns = raw.split(/[\p{Z},，;；]+/u)
   for(let i in ns){
     ns[i] = parseFloat(ns[i])
     if(isNaN(ns[i])){ throw TypeError() }
