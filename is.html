@@ -83,7 +83,7 @@ EX: 預設的數值 [0,1,1] 代表第一個周期不會傳染，第二跟三週�
 </pre>
 <form id='form' action='#'>
 <label for='nv'><span class='c1'>周期數(1~1000)</span><span class='c2'><input id='nv' name='nv'></span><span class='c3'><input id='n' type='range' min='1' max='1000' step='1'></span></label>
-<label for='pv'><span class='c1'>群體大小(1~10000000)</span><span class='c2'><input id='pv' name='pv'></span><span class='c3'><input id='p' type='range' min='1' max='10000000' step='1'></span></label>
+<label for='pv'><span class='c1'>群體大小(1~1000000000)</span><span class='c2'><input id='pv' name='pv'></span><span class='c3'><input id='p' type='range' min='1' max='1000000000' step='1'></span></label>
 <label><span class='c1'>起始狀態<br>(逗號分隔的個數)</span><span class='c4'><input id='s' title='如:「1,5」代表一開始在傳染期周期 1 的有 1 個人，周期 2 有 5 個人'></span></label>
 <label><span class='c1'>傳染力<br>(逗號分隔的影響數)</span><span class='c4'><input id='f' title='如:「0,1,1」代表傳染期周期 1 不會傳染，周期 2 傳 1 個，周期 3 也傳 1 個'></span></label>
 <label for='mv'><span class='c1'>免疫期(0~1000)</span><span class='c2'><input id='mv' name='mv'></span><span class='c3'><input id='m' type='range' min='0' max='1000' step='1'></span></label>
@@ -186,7 +186,7 @@ function parseNumber(raw,min=-Infinity,max=Infinity){
 function verifyIS(){
   let d = document.getElementById('s')
   try{
-    d.parsed = parseNumberList(d.value)
+    vars.initial_states = parseNumberList(d.value)
     d.setCustomValidity('')
     exec()
   }catch(er){
@@ -194,9 +194,9 @@ function verifyIS(){
   }
 }
 function verifyPo(e){
-  let d = e.target
+  let d = this
   try{
-    d.parsed = parseNumber(d.value,1,10000000)
+    vars.total_population = parseNumber(d.value,1,1000000000)
     d.setCustomValidity('')
     exec()
   }catch(er){
@@ -206,7 +206,7 @@ function verifyPo(e){
 function verifyIP(){
   let d = document.getElementById('f')
   try{
-    d.parsed = parseNumberList(d.value)
+    vars.infect_powers = parseNumberList(d.value)
     d.setCustomValidity('')
     exec()
   }catch(er){
@@ -214,9 +214,9 @@ function verifyIP(){
   }
 }
 function verifyMP(e){
-  let d = e.target
+  let d = this
   try{
-    d.parsed = parseNumber(d.value,0,1000)
+    vars.immune_period = parseNumber(d.value,0,1000)
     d.setCustomValidity('')
     exec()
   }catch(er){
@@ -224,9 +224,9 @@ function verifyMP(e){
   }
 }
 function verifyCs(e){
-  let d = e.target
+  let d = this
   try{
-    d.parsed = parseNumber(d.value,1,1000)
+    vars.cycles = parseNumber(d.value,1,1000)
     d.setCustomValidity('')
     exec()
   }catch(er){
@@ -243,24 +243,6 @@ function resetVars(){
   document.getElementById('mv').value = vars.immune_period
   document.getElementById('n').value = vars.cycles
   document.getElementById('nv').value = vars.cycles
-  delete document.getElementById('s').parsed
-  delete document.getElementById('p').parsed
-  delete document.getElementById('f').parsed
-  delete document.getElementById('m').parsed
-  delete document.getElementById('n').parsed
-}
-
-function updateVars(){
-  if(form.checkValidity()){
-    vars.initial_states = document.getElementById('s').parsed ?? vars.initial_states
-    vars.total_population = document.getElementById('p').parsed ?? vars.total_population
-    vars.infect_powers = document.getElementById('f').parsed ?? vars.infect_powers
-    vars.immune_period = document.getElementById('m').parsed ?? vars.immune_period
-    vars.cycles = document.getElementById('n').parsed ?? vars.cycles
-    resetVars()
-    return true
-  }
-  return false
 }
 
 document.getElementById('s').addEventListener('change',verifyIS)
@@ -268,13 +250,13 @@ document.getElementById('p').addEventListener('input',verifyPo)
 document.getElementById('f').addEventListener('change',verifyIP)
 document.getElementById('m').addEventListener('input',verifyMP)
 document.getElementById('n').addEventListener('input',verifyCs)
-document.getElementById('pv').addEventListener('input',verifyPo)
-document.getElementById('mv').addEventListener('input',verifyMP)
-document.getElementById('nv').addEventListener('input',verifyCs)
+document.getElementById('pv').addEventListener('change',verifyPo)
+document.getElementById('mv').addEventListener('change',verifyMP)
+document.getElementById('nv').addEventListener('change',verifyCs)
 
 /* model */
 function exec(){
-  if(updateVars()){
+  if(form.checkValidity()){
     let g = run(setup(vars.total_population,vars.infect_powers,vars.immune_period,vars.initial_states),vars.cycles)
     
     let rs = [[],[],[]]
@@ -289,12 +271,13 @@ function exec(){
       dataset.data = rs[i]
     })
 
-    let title = `傳染數模擬 {傳染力: [ ${g.o.t.slice(1,g.o.l[0]+1).join(', ')} ] 免疫期: ${g.o.l[1]} 群體總數: ${g.o.p} 周期數: ${g.r.length}}`
+    let title = `傳染數模擬 {傳染力: [ ${g.o.t.slice(1,g.o.l[0]+1).join(', ')} ] 免疫期: ${g.o.l[1]} 群體總數: ${g.o.p} 周期數: ${g.c}}`
     console.log(title)
     chart.options.plugins.title.text = title
 
     chart.update()
     
+    resetVars()
   }
 }
 
