@@ -96,3 +96,51 @@ function createModel(initial_states=[],total_population=100,infect_powers=[0,1,1
   }
   return {progress,getRecord,detail,getParam}
 }
+
+/* optimise to record data by state instead of unit */
+function setup(p=1,f=[1],m=1,s=[1]){
+  const l = [f.length,m]
+  let o = {p,a:Array(1+l[0]+l[1]).fill(0),t:[0],l}
+  for(let i = 0; i < f.length; i++){
+    o.t[i+1] = f[i]
+  }
+  for(let i = 0; i < m; i++){
+    o.t.push(0)
+  }
+  o.a[0] = p
+  for(let i = 0; i < s.length; i++){
+    if(s[i]){
+      let x = Math.min(Math.max(s[i],0),o.a[0])
+      o.a[i+1] = x
+      o.a[0] -= x
+    }
+  }
+  return o
+}
+function next(o){
+  let fn = 0
+  for(let i = 1; i <= o.l[0]; i++){
+    fn += o.a[i]*o.t[i]
+  }
+  fn = Math.min(Math.round(fn),o.a[0])
+  let na = [o.a[0]-fn+o.a[o.a.length-1],fn,...o.a.slice(1,-1)]
+  return {p:o.p,a:na,t:o.t.slice(),l:o.l.slice()}
+}
+function toGroup(o){
+  let g = [o.a[0],0,0]
+  for(let i = 0; i < o.l[0]; i++){
+    g[1] += o.a[1+i]
+  }
+  for(let i = 0; i < o.l[1]; i++){
+    g[2] += o.a[1+o.l[0]+i]
+  }
+  return g
+}
+function run(o,c){
+  let r = [toGroup(o)], t = o
+  for(let i = 0; i < c; i++){
+    t = next(t)
+    r.push(toGroup(t))
+  }
+  return {o,c,r,t}
+}
