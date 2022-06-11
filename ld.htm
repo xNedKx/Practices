@@ -161,9 +161,9 @@ function next(){
   let cs = getComputedStyle(cts[0].querySelector('canvas'))
   let m = +cs.margin.slice(0,-2), h = +cs.height.slice(0,-2), r = h+2*m
   let t = +getComputedStyle(cts[0]).top.slice(0,-2) + (spd>=0?Math.max(getS()**2 * r / 10,1):Math.min(getS()**2 * r / 10,-1))
-  if( spd > 0 && t > 0){
+  if(t > 0){
     t -= r
-  }else if(spd < 0 && t < -r){
+  }else if(t < -r){
     t += r
   }
   cts.forEach(ct=>ct.style.top = `${t}px`)
@@ -262,8 +262,12 @@ function updateImage(){
   let s = getS()
   if(s == 0){
     sd = rd
+    document.getElementById('t').textContent = `Speed:(${(e.data.s*100).toFixed(2)}% light speed)`
+    refreshCanvas()
   }else if(cache[s]){
     sd = cache[s]
+    document.getElementById('t').textContent = `Speed:(${(e.data.s*100).toFixed(2)}% light speed)`
+    refreshCanvas()
   }else{
     wr(s)
     document.getElementById('t').textContent = `Rendering...`
@@ -276,7 +280,6 @@ next()
 document.getElementById('speed').addEventListener('change',function(e){
   spd = +this.value
   updateImage()
-  refreshCanvas()
 })
 document.getElementById('img').addEventListener('change',upload)
 document.querySelector('.box').addEventListener('click',function(e){
