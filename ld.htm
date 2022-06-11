@@ -262,11 +262,11 @@ function updateImage(){
   let s = getS()
   if(s == 0){
     sd = rd
-    document.getElementById('t').textContent = `Speed:(${(e.data.s*100).toFixed(2)}% light speed)`
+    document.getElementById('t').textContent = `Speed:(${(s*100).toFixed(2)}% light speed)`
     refreshCanvas()
   }else if(cache[s]){
     sd = cache[s]
-    document.getElementById('t').textContent = `Speed:(${(e.data.s*100).toFixed(2)}% light speed)`
+    document.getElementById('t').textContent = `Speed:(${(s*100).toFixed(2)}% light speed)`
     refreshCanvas()
   }else{
     wr(s)
