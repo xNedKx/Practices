@@ -160,7 +160,7 @@ function next(){
   let cts = document.querySelectorAll('.ct')
   let cs = getComputedStyle(cts[0].querySelector('canvas'))
   let m = +cs.margin.slice(0,-2), h = +cs.height.slice(0,-2), r = h+2*m
-  let t = +getComputedStyle(cts[0]).top.slice(0,-2) + (spd>=0?Math.max(getS()**2 * r / 10,1):Math.min(getS()**2 * r / 10,-1))
+  let t = +getComputedStyle(cts[0]).top.slice(0,-2) + (spd>=0?Math.max(getS() * r / 10,1):Math.min(getS() * r / 10,-1))
   if(t > 0){
     t -= r
   }else if(t < -r){
