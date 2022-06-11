@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-hant">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Light Doppler Simulation</title>
+<style>
+body {
+  margin: 0;
+  overflow: hidden;
+}
+main {
+  background-color: #010101;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  perspective: 10em;
+  perspective-origin: center;
+}
+.box {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  transform-style: preserve-3d;
+}
+.plane {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.top {
+  transform: rotateX(90deg)  translateZ(10em);
+}
+.right {
+  transform: rotateY(90deg)  translateZ(10em);
+}
+.bottom {
+  transform: rotateX(90deg)  translateZ(-10em);
+}
+.left {
+  transform: rotateY(90deg)  translateZ(-10em);
+}
+.block {
+  position: relative;
+  width: 30vw;
+  height: 100vh;
+  margin: auto;
+  font-size: 20em;
+}
+.top > .block {
+  transform: rotate(180deg) scale(1,-1);
+}
+.right > .block {
+  transform: rotate(90deg) scale(-1,1);
+}
+.left > .block {
+  transform: rotate(90deg);
+}
+.ct {
+  position: absolute;
+  top: -36vh;
+  width: 100%;
+  height: 300vh;
+  display: flex;
+  flex-direction: column;
+  justify-items: center;
+  align-items: center;
+}
+.ct > canvas {
+  height: 30vh;
+  width: 30vh;
+  margin: 3vh;
+  background-color: #fff1;
+}
+
+aside {
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+}
+aside > label {
+  display: flex;
+  background-color: #fffc;
+  width: 100%;
+  justify-content: center;
+}
+#speed {
+  width: 60vw;
+}
+
+</style>
+</head>
+<body>
+<main>
+  <div class='box'>
+    <div class='plane loop top'>
+      <div class='block'>
+        <div class="ct">
+          <canvas height='400' width='400'></canvas>
+          <canvas height='400' width='400'></canvas>
+          <canvas height='400' width='400'></canvas>
+        </div>
+      </div>
+    </div>
+    <div class='plane loop right'>
+      <div class='block'>
+        <div class="ct">
+          <canvas height='400' width='400'></canvas>
+          <canvas height='400' width='400'></canvas>
+          <canvas height='400' width='400'></canvas>
+        </div>
+      </div>
+    </div>
+    <div class='plane loop bottom'>
+      <div class='block'>
+        <div class="ct">
+          <canvas height='400' width='400'></canvas>
+          <canvas height='400' width='400'></canvas>
+          <canvas height='400' width='400'></canvas>
+        </div>
+      </div>
+    </div>
+    <div class='plane loop left'>
+      <div class='block'>
+        <div class="ct">
+          <canvas height='400' width='400'></canvas>
+          <canvas height='400' width='400'></canvas>
+          <canvas height='400' width='400'></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<aside>
+  <input type="file" id='img' accept="image/png, image/jpeg image/gif image/jpg" style='display:none;'>
+  <label><span id='t'>Speed:</span><input id='speed' type='range' step='0.01' max='1' min='-1' value='0'></label>
+</aside>
+</body>
+<script>
+</script>
+<script>
+var worker = new Worker('ldw.js')
+worker.addEventListener("message", function(e){
+  sd = e.data.sd
+  cache[e.data.s] = sd
+  document.getElementById('t').textContent = `Speed:(${(e.data.s*100).toFixed(2)}% light speed)`
+  document.getElementById('speed').disabled = false
+  refreshCanvas()
+}, false)
+function wr(s){
+  worker.postMessage({rd,s})
+}
+</script>
+<script>
+var spd = 0 //-0.55~1(:0.05)
+function next(){
+  let cts = document.querySelectorAll('.ct')
+  let cs = getComputedStyle(cts[0].querySelector('canvas'))
+  let m = +cs.margin.slice(0,-2), h = +cs.height.slice(0,-2), r = h+2*m
+  let t = +getComputedStyle(cts[0]).top.slice(0,-2) + (spd>=0?Math.max(getS()**2 * r / 10,1):Math.min(getS()**2 * r / 10,-1))
+  if( spd > 0 && t > 0){
+    t -= r
+  }else if(spd < 0 && t < -r){
+    t += r
+  }
+  cts.forEach(ct=>ct.style.top = `${t}px`)
+  requestAnimationFrame(next)
+}
+
+var img = null, rc = document.createElement('canvas')
+rc.width = 400
+rc.height = 400
+var th, tw, rx = rc.getContext('2d'), rd = new ImageData(400,400), sd, cache = {}
+function upload(e){
+  if(this.files.length){
+    img = new Image
+    img.addEventListener("load", img_load, false)
+    img.src = URL.createObjectURL(this.files[0])
+    spd = 0
+    document.getElementById('speed').value = spd
+  }
+}
+function img_load(){
+  tw = img.naturalWidth
+  th = img.naturalHeight
+  rx = rc.getContext('2d')
+  rx.clearRect(0,0, 400, 400)
+  let dh,dw,x,y
+  if(th > 400){
+    if(tw > 400){
+      if(tw > th){
+        dw = 400
+        dh = th/tw*400
+        x = 0
+        y = (400-dh)/2
+      }else{
+        dh = 400
+        dw = tw/th*400
+        y = 0
+        x = (400-dw)/2
+      }
+    }else{
+      dh = 400
+      dw = tw/th*400
+      y = 0
+      x = (400-dw)/2
+    }
+  }else if(tw > 400){
+    dw = 400
+    dh = th/tw*400
+    x = 0
+    y = (400-dh)/2
+  }else{
+    dh = th
+    dw = tw
+    x = (400-dw)/2
+    y = (400-dh)/2
+  }
+  rx.drawImage(img,0,0,tw,th,x,y,dw,dh)
+  rd = rx.getImageData(0, 0, 400, 400)
+  sd = rd
+  URL.revokeObjectURL(img.src)
+  cache = {0:rd}
+  refreshCanvas()
+}
+function refreshCanvas(){
+  document.querySelectorAll('canvas').forEach(c=>{
+    let d = c.getContext('2d')
+    d.putImageData(sd,0,0)
+  })
+}
+
+function getS(){
+  let s = 0
+  if(spd >= 1){
+    s == 1
+  }else if(spd >= 0.75){
+    s = (spd - 0.75) * 2 + 0.5
+  }else if(spd >= 0.5){
+    s = (spd - 0.5) * 6/5 + 0.2
+  }else if(spd >= 0.3){
+    s = (spd - 0.3) / 2 + 0.1
+  }else if(spd >= 0.05){
+    s = (spd - 0.05) * 2 / 5
+  }else if(spd < -1){
+    s = -0.55
+  }else if(spd < -0.5){
+    s = (spd + 0.5) * 0.7 - 0.2
+  }else if(spd < -0.3){
+    s = (spd + 0.3) * 0.5 - 0.05
+  }else if(spd < -0.05){
+    s = (spd + 0.05) / 5
+  }
+  return s
+}
+
+function updateImage(){
+  let nd = new ImageData(400,400)
+  let s = getS()
+  if(s == 0){
+    sd = rd
+  }else if(cache[s]){
+    sd = cache[s]
+  }else{
+    wr(s)
+    document.getElementById('t').textContent = `Rendering...`
+    document.getElementById('speed').disabled = true
+  }
+}
+
+// init
+next()
+document.getElementById('speed').addEventListener('change',function(e){
+  spd = +this.value
+  updateImage()
+  refreshCanvas()
+})
+document.getElementById('img').addEventListener('change',upload)
+document.querySelector('.box').addEventListener('click',function(e){
+  document.getElementById('img').click()
+})
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-78696465-1', 'auto');
+  ga('send', 'pageview');
+</script>
+</html>
