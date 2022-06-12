@@ -148,6 +148,7 @@ worker.addEventListener("message", function(e){
   cache[e.data.s] = sd
   document.getElementById('t').textContent = `Speed:(${(e.data.s*100).toFixed(2)}% light speed)`
   document.getElementById('speed').disabled = false
+  document.getElementById('speed').focus()
   refreshCanvas()
 }, false)
 function wr(s){
