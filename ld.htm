@@ -148,6 +148,7 @@ worker.addEventListener("message", function(e){
   cache[e.data.s] = sd
   document.getElementById('t').textContent = `Speed:(${(e.data.s*100).toFixed(2)}% light speed)`
   document.getElementById('speed').disabled = false
+  document.getElementById('img').disabled = false
   document.getElementById('speed').focus()
   refreshCanvas()
 }, false)
@@ -273,6 +274,7 @@ function updateImage(){
     wr(s)
     document.getElementById('t').textContent = `Rendering...`
     document.getElementById('speed').disabled = true
+    document.getElementById('img').disabled = true
   }
 }
 
