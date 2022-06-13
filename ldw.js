@@ -11,7 +11,7 @@ function w2xyz(wl,t=wavelength_xyz_1964){
   if(tail){
     let n = t[i+1].slice()
     return xyz.map((v,i)=>{
-      return v+n[i]*tail/s
+      return v*(s-tail)/s+n[i]*tail/s
     })
   }
   return xyz
