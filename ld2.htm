@@ -190,42 +190,11 @@ function createCache(){
 }
 new Promise(()=>createCache())
 
-function cd(a,b){
-  let s = 0, d = [], l = Math.max(a.length,b.length)
-  for(let i = 0; i < l; i++){
-    const v1 = a[i] ?? 0, v2 = b[i] ?? 0
-    d[i] = (v1-v2)**2
-    s += d[i]
-  }
-  return s**(1/2)
-}
-function estimate(rgb){
-  const b = 380, h = 780, s = 5
-  let xyz = rgb2xyz(rgb)
-  let ds = wavelength_xyz_1964.map((c,i)=>[cd(c,xyz),b+i*s,c])
-  let mds = [Infinity,NaN], near = []
-  for(let i = 0; i < ds.length; i++){
-    const [d,l] = ds[i]
-    if(d < mds[0]){
-      mds = ds[i]
-      let p = ds[i-1]??ds[i]
-      let n = ds[i+1]??ds[i]
-      if(p[0]<n[0]){
-        near = p
-      }else{
-        near = n
-      }
-    }
-  }
-  let dx = near[2][0] - mds[2][0], dy = near[2][1] - mds[2][1], dz = near[2][2] - mds[2][2], dl = mds[0]/(mds[0]+near[0])
-  return [Math.round((mds[1]+dl*(near[1]-mds[1]))*10),[mds[2][0]+dl*dx,mds[2][1]+dl*dy,mds[2][2]+dl*dz]]
-}
-
-let wcache = {}
-function rgb2w(rgb, cache = wcache){
+let rcache = {}
+function rgb2r(rgb, cache = rcache){
   const k = rgb[0]<<16|rgb[1]<<8|rgb[2]
   if(!cache.hasOwnProperty(k)){
-    cache[k] = estimate(rgb)
+    cache[k] = [rgb[0]/255,rgb[1]/255,rgb[2]/255]
   }
   return cache[k]
 }
@@ -233,9 +202,9 @@ function rgb2w(rgb, cache = wcache){
 async function img2wlm(img){
   let wlm = new Array(img.width*img.height*2)
   for(let i = 0, j = 0; i < img.data.length; i += 4, j += 3){
-    const [w,xyz] = rgb2w(img.data.slice(i,i+3))
-    wlm[j] = w
-    wlm[j+1] = xyz
+    const rgb = img.data.slice(i,i+3)
+    wlm[j] = rgb2xyz(rgb)
+    wlm[j+1] = rgb2r(rgb)
     wlm[j+2] = img.data[i+3]
   }
   return wlm
@@ -249,6 +218,17 @@ function wlShift(rs,wl,cache=wscache){
   }
   return cache[k]
 }
+// B 4568 G 5278 R 6260
+// R0 7348 Y 5659 C 4959(G) 4851(GB) P 4348
+// => P 4348 B 4568 C 4851 G 5278 Y 5659 R 6260 7348
+let rwl = 6260, gwl = 5278, bwl = 4568
+function dwShift(cr,rs){
+  const r = w2rgb(wlShift(rs,rwl))
+  const g = w2rgb(wlShift(rs,gwl))
+  const b = w2rgb(wlShift(rs,bwl))
+  const rgb = [Math.round(r[0]*cr[0]+g[0]*cr[1]+b[0]*cr[2]),Math.round(r[1]*cr[0]+g[1]*cr[1]+b[1]*cr[2]),Math.round(r[2]*cr[0]+g[2]*cr[1]+b[2]*cr[2])]
+  return rgb
+}
 function xyzLightness(xyz,Y){
   const [x,y,z] = xyz, r = Y/y
   return [r*x,Y,r*z]
@@ -256,8 +236,7 @@ function xyzLightness(xyz,Y){
 async function wlm2img(wlm,rs,w,h){
   let imgdata = new Uint8ClampedArray(wlm.length*4/3)
   for(let i = 0, j = 0; i < imgdata.length; i += 4, j += 3){
-    const xyz = xyzLightness(w2xyz(wlShift(rs,wlm[j])/10),wlm[j+1][1])
-    const [r,g,b] = xyz2rgb(xyz)
+    const [r,g,b] = xyz2rgb(xyzLightness(rgb2xyz(dwShift(wlm[j+1],rs)),wlm[j+1][1]))
     imgdata[i] = r
     imgdata[i+1] = g
     imgdata[i+2] = b
@@ -337,7 +316,7 @@ async function loaded(e){
     if(!cache.hasOwnProperty(k)){
       cache[k] = await wlm2img(wlMap,spd,cw,ch)
     }
-    s += 0.1
+    s += 0.02
   }
 }
 
