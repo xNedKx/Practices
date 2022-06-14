@@ -232,11 +232,10 @@ function rgb2w(rgb, cache = wcache){
 
 async function img2wlm(img){
   let wlm = new Array(img.width*img.height*2)
-  for(let i = 0, j = 0; i < img.data.length; i += 4, j += 3){
+  for(let i = 0, j = 0; i < img.data.length; i += 4, j += 2){
     const [w,xyz] = rgb2w(img.data.slice(i,i+3))
     wlm[j] = w
-    wlm[j+1] = xyz
-    wlm[j+2] = img.data[i+3]
+    wlm[j+1] = img.data[i+3]
   }
   return wlm
 }
@@ -254,14 +253,13 @@ function xyzLightness(xyz,Y){
   return [r*x,Y,r*z]
 }
 async function wlm2img(wlm,rs,w,h){
-  let imgdata = new Uint8ClampedArray(wlm.length*4/3)
-  for(let i = 0, j = 0; i < imgdata.length; i += 4, j += 3){
-    const xyz = xyzLightness(w2xyz(wlShift(rs,wlm[j])/10),wlm[j+1][1])
-    const [r,g,b] = xyz2rgb(xyz)
+  let imgdata = new Uint8ClampedArray(wlm.length*2)
+  for(let i = 0, j = 0; i < imgdata.length; i += 4, j += 2){
+    const [r,g,b] = w2rgb(wlShift(rs,wlm[j]))
     imgdata[i] = r
     imgdata[i+1] = g
     imgdata[i+2] = b
-    imgdata[i+3] = wlm[j+2]
+    imgdata[i+3] = wlm[j+1]
   }
   return new ImageData(imgdata,w,h)
 }
