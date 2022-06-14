@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-hant">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Light Doppler Simulation (Definitely Not Accurate)</title>
+<style>
+body {
+  margin: 0;
+  overflow: hidden;
+}
+main {
+  background-color: #010101;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  perspective: 10em;
+  perspective-origin: center;
+}
+.box {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  transform-style: preserve-3d;
+}
+.plane {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.top {
+  transform: rotateX(90deg)  translateZ(10em);
+}
+.right {
+  transform: rotateY(90deg)  translateZ(10em);
+}
+.bottom {
+  transform: rotateX(90deg)  translateZ(-10em);
+}
+.left {
+  transform: rotateY(90deg)  translateZ(-10em);
+}
+.block {
+  position: relative;
+  width: 30vw;
+  height: 100vh;
+  margin: auto;
+  font-size: 20em;
+}
+.top > .block {
+  transform: rotate(180deg) scale(1,-1);
+}
+.right > .block {
+  transform: rotate(90deg) scale(-1,1);
+}
+.left > .block {
+  transform: rotate(90deg);
+}
+.ct {
+  position: absolute;
+  top: -36vh;
+  width: 100%;
+  height: 300vh;
+  display: flex;
+  flex-direction: column;
+  justify-items: center;
+  align-items: center;
+}
+.ct > canvas {
+  height: 30vh;
+  width: 30vh;
+  margin: 3vh;
+  background-color: #fff1;
+}
+
+aside {
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+}
+aside > label {
+  display: flex;
+  background-color: #fffc;
+  width: 100%;
+  justify-content: center;
+}
+#speed {
+  width: 60vw;
+}
+
+</style>
+</head>
+<body>
+<main>
+  <div class='box'>
+    <div class='plane loop top'>
+      <div class='block'>
+        <div class="ct">
+          <canvas height='400' width='400'></canvas>
+          <canvas height='400' width='400'></canvas>
+          <canvas height='400' width='400'></canvas>
+        </div>
+      </div>
+    </div>
+    <div class='plane loop right'>
+      <div class='block'>
+        <div class="ct">
+          <canvas height='400' width='400'></canvas>
+          <canvas height='400' width='400'></canvas>
+          <canvas height='400' width='400'></canvas>
+        </div>
+      </div>
+    </div>
+    <div class='plane loop bottom'>
+      <div class='block'>
+        <div class="ct">
+          <canvas height='400' width='400'></canvas>
+          <canvas height='400' width='400'></canvas>
+          <canvas height='400' width='400'></canvas>
+        </div>
+      </div>
+    </div>
+    <div class='plane loop left'>
+      <div class='block'>
+        <div class="ct">
+          <canvas height='400' width='400'></canvas>
+          <canvas height='400' width='400'></canvas>
+          <canvas height='400' width='400'></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<aside>
+  <input type="file" id='img' accept="image/png, image/jpeg, image/gif, image/jpg" style='display:none;'>
+  <label><span id='t'>Speed:</span><input id='speed' type='range' step='0.01' max='1' min='-1' value='0'></label>
+</aside>
+</body>
+<script>
+/* color wavelength */
+let wavelength_xyz_1964 = [[0.00016,0.000017,0.000705],[0.000662,0.000072,0.002928],[0.002362,0.000253,0.010482],[0.007242,0.000769,0.032344],[0.01911,0.002004,0.086011],[0.0434,0.004509,0.19712],[0.084736,0.008756,0.389366],[0.140638,0.014456,0.65676],[0.204492,0.021391,0.972542],[0.264737,0.029497,1.2825],[0.314679,0.038676,1.55348],[0.357719,0.049602,1.7985],[0.383734,0.062077,1.96728],[0.386726,0.074704,2.0273],[0.370702,0.089456,1.9948],[0.342957,0.106256,1.9007],[0.302273,0.128201,1.74537],[0.254085,0.152761,1.5549],[0.195618,0.18519,1.31756],[0.132349,0.21994,1.0302],[0.080507,0.253589,0.772125],[0.041072,0.297665,0.57006],[0.016172,0.339133,0.415254],[0.005132,0.395379,0.302356],[0.003816,0.460777,0.218502],[0.015444,0.53136,0.159249],[0.037465,0.606741,0.112044],[0.071358,0.68566,0.082248],[0.117749,0.761757,0.060709],[0.172953,0.82333,0.04305],[0.236491,0.875211,0.030451],[0.304213,0.92381,0.020584],[0.376772,0.961988,0.013676],[0.451584,0.9822,0.007918],[0.529826,0.991761,0.003988],[0.616053,0.99911,0.001091],[0.705224,0.99734,0],[0.793832,0.98238,0],[0.878655,0.955552,0],[0.951162,0.915175,0],[1.01416,0.868934,0],[1.0743,0.825623,0],[1.11852,0.777405,0],[1.1343,0.720353,0],[1.12399,0.658341,0],[1.0891,0.593878,0],[1.03048,0.527963,0],[0.95074,0.461834,0],[0.856297,0.398057,0],[0.75493,0.339554,0],[0.647467,0.283493,0],[0.53511,0.228254,0],[0.431567,0.179828,0],[0.34369,0.140211,0],[0.268329,0.107633,0],[0.2043,0.081187,0],[0.152568,0.060281,0],[0.11221,0.044096,0],[0.081261,0.0318,0],[0.05793,0.022602,0],[0.040851,0.015905,0],[0.028623,0.01113,0],[0.019941,0.007749,0],[0.013842,0.005375,0],[0.009577,0.003718,0],[0.006605,0.002565,0],[0.004553,0.001768,0],[0.003145,0.001222,0],[0.002175,0.000846,0],[0.001506,0.000586,0],[0.001045,0.000407,0],[0.000727,0.000284,0],[0.000508,0.000199,0],[0.000356,0.00014,0],[0.000251,0.000098,0],[0.000178,0.00007,0],[0.000126,0.00005,0],[0.00009,0.000036,0],[0.000065,0.000025,0],[0.000046,0.000018,0],[0.000033,0.000013,0]]
+let d65_10_xyz2rgb = [[3.2404542, -1.5371385, -0.4985314],[-0.9692660, 1.8760108, 0.0415560],[0.0556434, -0.2040259, 1.0572252]]
+let d65_10_rgb2xyz = [[0.4124564, 0.3575761, 0.1804375],[0.2126729, 0.7151522, 0.0721750],[0.0193339, 0.1191920, 0.9503041]]
+
+function xyz2rgb(xyz,m=d65_10_xyz2rgb){
+  const [x,y,z] = xyz, [r,g,b] = m
+  return [
+    Math.round(Math.min(Math.max(r[0]*x+r[1]*y+r[2]*z,0),1)*255),
+    Math.round(Math.min(Math.max(g[0]*x+g[1]*y+g[2]*z,0),1)*255),
+    Math.round(Math.min(Math.max(b[0]*x+b[1]*y+b[2]*z,0),1)*255)
+  ]
+}
+function rgb2xyz(rgb,m=d65_10_rgb2xyz){
+  const [x,y,z] = m, [r,g,b] = rgb
+  return [
+    (x[0]*r+x[1]*g+x[2]*b)/255,
+    (y[0]*r+y[1]*g+y[2]*b)/255,
+    (z[0]*r+z[1]*g+z[2]*b)/255
+  ]
+}
+function w2xyz(wl,t=wavelength_xyz_1964){
+  const b = 380, h = 780, s = 5
+  if(!(wl >= b && wl <= h)){ return [0,0,0] }
+  let tail = wl%s, i = (wl-tail-b)/s
+  let xyz = t[i].slice()
+  //console.log(wl,xyz.slice(),tail)
+  if(tail>0){
+    let n = t[i+1].slice()
+    let o = xyz.map((v,i)=>v*(s-tail)/s+n[i]*tail/s)
+    //console.log(tail,o)
+    return o
+  }
+  return xyz
+}
+
+let rgbcache = {}
+function w2rgb(wl, cache = rgbcache){
+  const w = wl/10
+  if(!cache.hasOwnProperty(wl)){
+    cache[wl] = xyz2rgb(w2xyz(w))
+  }
+  return cache[wl]
+}
+
+function createCache(){
+  for(let wl = 3800; wl <= 7800; wl++){ w2rgb(wl) }
+}
+new Promise(()=>createCache())
+
+function cd(a,b){
+  let s = 0, d = [], l = Math.max(a.length,b.length)
+  for(let i = 0; i < l; i++){
+    const v1 = a[i] ?? 0, v2 = b[i] ?? 0
+    d[i] = (v1-v2)**2
+    s += d[i]
+  }
+  return s**(1/2)
+}
+function estimate(rgb){
+  const b = 380, h = 780, s = 5
+  let xyz = rgb2xyz(rgb)
+  let ds = wavelength_xyz_1964.map((c,i)=>[cd(c,xyz),b+i*s,c])
+  let mds = [Infinity,NaN], near = []
+  for(let i = 0; i < ds.length; i++){
+    const [d,l] = ds[i]
+    if(d < mds[0]){
+      mds = ds[i]
+      let p = ds[i-1]??ds[i]
+      let n = ds[i+1]??ds[i]
+      if(p[0]<n[0]){
+        near = p
+      }else{
+        near = n
+      }
+    }
+  }
+  let dx = near[2][0] - mds[2][0], dy = near[2][1] - mds[2][1], dz = near[2][2] - mds[2][2], dl = mds[0]/(mds[0]+near[0])
+  return [Math.round((mds[1]+dl*(near[1]-mds[1]))*10),[mds[2][0]+dl*dx,mds[2][1]+dl*dy,mds[2][2]+dl*dz]]
+}
+
+let wcache = {}
+function rgb2w(rgb, cache = wcache){
+  const k = rgb[0]<<16|rgb[1]<<8|rgb[2]
+  if(!cache.hasOwnProperty(k)){
+    cache[k] = estimate(rgb)
+  }
+  return cache[k]
+}
+
+async function img2wlm(img){
+  let wlm = new Array(img.width*img.height*2)
+  for(let i = 0, j = 0; i < img.data.length; i += 4, j += 3){
+    const [w,xyz] = rgb2w(img.data.slice(i,i+3))
+    wlm[j] = w
+    wlm[j+1] = xyz
+    wlm[j+2] = img.data[i+3]
+  }
+  return wlm
+}
+
+let wscache = {}
+function wlShift(rs,wl,cache=wscache){
+  const k = `${rs}-${wl}`
+  if(!cache.hasOwnProperty(k)){
+    cache[k] = Math.round(3e6/((1+rs)*3e6/wl))
+  }
+  return cache[k]
+}
+function xyzLightness(xyz,Y){
+  const [x,y,z] = xyz, r = Y/y
+  return [r*x,Y,r*z]
+}
+async function wlm2img(wlm,rs,w,h){
+  let imgdata = new Uint8ClampedArray(wlm.length*4/3)
+  for(let i = 0, j = 0; i < imgdata.length; i += 4, j += 3){
+    const xyz = xyzLightness(w2xyz(wlShift(rs,wlm[j])/10),wlm[j+1][1])
+    const [r,g,b] = xyz2rgb(xyz)
+    imgdata[i] = r
+    imgdata[i+1] = g
+    imgdata[i+2] = b
+    imgdata[i+3] = wlm[j+2]
+  }
+  return new ImageData(imgdata,w,h)
+}
+
+/*  */
+
+var txt = document.getElementById('t')
+var sin = document.getElementById('speed')
+var fin = document.getElementById('img')
+
+function lock(t){
+  if(typeof t === 'string'){ txt.textContent = t }
+  sin.disabled = true
+  fin.disabled = true
+}
+function unlock(t,f=true){
+  if(typeof t === 'string'){ txt.textContent = t }
+  sin.disabled = false
+  fin.disabled = false
+  if(f){ sin.focus() }
+}
+
+var speed = 0, img = null, wlMap = null, cache = {}
+function upload(e){
+  if(this.files.length && img == null){
+    wlMap = null
+    cache = {}
+    img = new Image
+    img.addEventListener("load", loaded, false)
+    img.src = URL.createObjectURL(this.files[0])
+    document.getElementById('speed').value = speed
+    document.querySelector('main').classList.add('loading')
+    lock(`Loading...`)
+  }
+}
+async function loaded(e){
+  let cv = document.createElement('canvas'), c = cv.getContext("2d"), cw = 400, ch = 400
+  cv.width = cw
+  cv.height = ch
+  let w = img.naturalWidth, h = img.naturalHeight, dw, dh, x, y
+  if((h > ch && w > cw && w > h) || (h <= ch && w > cw)){
+    dw = cw
+    dh = h/w*ch
+  }else if((h > ch && w > cw && w <= h) || (w <= cw && h > ch)){
+    dh = ch
+    dw = w/h*cw
+  }else{
+    dw = w
+    dh = h
+  }
+  x = (cw-dw)/2
+  y = (ch-dh)/2
+  c.drawImage(img,0,0,w,h,x,y,dw,dh)
+  
+  let clip = c.getImageData(0, 0, cw, ch)
+  wlMap = await img2wlm(clip)
+  cache[0] = clip
+  speed = 0
+  sin.value = 0
+  
+  updateImage(0)
+  
+  URL.revokeObjectURL(img.src)
+  img = null
+  
+  document.querySelector('main').classList.remove('loading')
+  unlock(`Speed:`)
+  
+  let wlm = wlMap, s = -1
+  while(wlm === wlMap && cache[0] && s <= 1){
+    let spd = speedAdjust(s)
+    let k = Math.round(spd*10000)/100
+    if(!cache.hasOwnProperty(k)){
+      cache[k] = await wlm2img(wlMap,spd,cw,ch)
+    }
+    s += 0.1
+  }
+}
+
+/*  */
+
+let cts = document.querySelectorAll('.ct'), cm, ch, cr, ct
+
+function resized(){
+  const cc = getComputedStyle(cts[0]), cs = getComputedStyle(cts[0].querySelector('canvas'))
+  cm = +cs.margin.slice(0,-2)
+  ch = +cs.height.slice(0,-2)
+  cr = ch+2*cm
+  ct = +cc.top.slice(0,-2)
+}
+
+function speedAdjust(spd){
+  let s = 0
+  if(spd >= 1){
+    s = 1
+  }else if(spd >= 0.75){
+    s = (spd - 0.75) * 2 + 0.5
+  }else if(spd >= 0.5){
+    s = (spd - 0.5) * 6/5 + 0.2
+  }else if(spd >= 0.3){
+    s = (spd - 0.3) / 2 + 0.1
+  }else if(spd >= 0.05){
+    s = (spd - 0.05) * 2 / 5
+  }else if(spd < -1){
+    s = -0.55
+  }else if(spd < -0.5){
+    s = (spd + 0.5) * 0.7 - 0.2
+  }else if(spd < -0.3){
+    s = (spd + 0.3) * 0.5 - 0.05
+  }else if(spd < -0.05){
+    s = (spd + 0.05) / 5
+  }
+  return s
+}
+
+function nextframe(){
+  let s = speed, d = s*cr/10, t = ct
+  if(s >=0){
+    t += Math.max(d,1)
+    if(t > 0){t -= cr}
+  }else{
+    t += Math.min(d,-1)
+    if(t < -cr){t += cr}
+  }
+  for(let c of cts){
+    c.style.top = `${t}px`
+  }
+  ct = t
+  requestAnimationFrame(nextframe)
+}
+
+var cvs = document.querySelectorAll('canvas'), cs = []
+for(let cv of cvs){
+  cs.push(cv.getContext('2d'))
+}
+
+function refreshCanvas(k){
+  if(cache[k]){
+    for(let c of cs){
+      c.putImageData(cache[k],0,0)
+    }
+    return true
+  }
+  return false
+}
+
+async function updateImage(s){
+  let k = Math.round(s*10000)/100
+  if(wlMap && cache[0]){
+    //lock(`Rendering...`)
+    txt.textContent = `Rendering...`
+    if( !cache.hasOwnProperty(k)){
+      const kk = Math.floor(k)
+      if(cache.hasOwnProperty(kk)){
+        refreshCanvas(kk)
+      }else if(cache.hasOwnProperty(kk+1)){
+        refreshCanvas(kk+1)
+      }
+      cache[k] = await wlm2img(wlMap,s,400,400)
+      refreshCanvas(k)
+    }else{
+      refreshCanvas(k)
+    }
+    //unlock(`Speed:(${(s*100).toFixed(2)}% light speed)`)
+    txt.textContent = `Speed:(${(s*100).toFixed(2)}% light speed)`
+  }
+}
+
+/*  */
+resized()
+window.addEventListener('resize', resized)
+
+nextframe()
+sin.addEventListener('input',function(e){
+  const s = speedAdjust(+this.value)
+  updateImage(s)
+  speed = s
+})
+fin.addEventListener('change',upload)
+document.querySelector('.box').addEventListener('click',function(e){ fin.click() })
+
+</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-78696465-1', 'auto');
+  ga('send', 'pageview');
+</script>
+</html>
