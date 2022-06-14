@@ -223,10 +223,11 @@ function wlShift(rs,wl,cache=wscache){
 // => P 4348 B 4568 C 4851 G 5278 Y 5659 R 6260 7348
 let rwl = 6260, gwl = 5278, bwl = 4568
 function dwShift(cr,rs){
+  const a = cr[0]+cr[1]+cr[2]
   const r = w2rgb(wlShift(rs,rwl))
   const g = w2rgb(wlShift(rs,gwl))
   const b = w2rgb(wlShift(rs,bwl))
-  const rgb = [Math.round(r[0]*cr[0]+g[0]*cr[1]+b[0]*cr[2]),Math.round(r[1]*cr[0]+g[1]*cr[1]+b[1]*cr[2]),Math.round(r[2]*cr[0]+g[2]*cr[1]+b[2]*cr[2])]
+  const rgb = [Math.round((r[0]*cr[0]+g[0]*cr[1]+b[0]*cr[2])/a),Math.round((r[1]*cr[0]+g[1]*cr[1]+b[1]*cr[2])/a),Math.round((r[2]*cr[0]+g[2]*cr[1]+b[2]*cr[2])/a)]
   return rgb
 }
 function xyzLightness(xyz,Y){
@@ -316,7 +317,7 @@ async function loaded(e){
     if(!cache.hasOwnProperty(k)){
       cache[k] = await wlm2img(wlMap,spd,cw,ch)
     }
-    s += 0.02
+    s += 0.05
   }
 }
 
