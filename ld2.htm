@@ -323,7 +323,7 @@ async function loaded(e){
   document.querySelector('main').classList.remove('loading')
   unlock(`Speed:`)
   
-  let wlm = wlMap, s = -0.5
+  let wlm = wlMap, s = -1
   while(wlm === wlMap && cache[0] && s <= 1){
     let spd = speedAdjust(s)
     let k = Math.round(spd*10000)/100
