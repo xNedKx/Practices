@@ -312,6 +312,8 @@ async function loaded(e){
   let clip = c.getImageData(0, 0, cw, ch)
   wlMap = await img2wlm(clip)
   cache[0] = clip
+  speed = 0
+  sin.value = 0
   
   updateImage(0)
   
