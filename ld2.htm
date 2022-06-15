@@ -237,7 +237,7 @@ function xyzLightness(xyz,Y){
 async function wlm2img(wlm,rs,w,h){
   let imgdata = new Uint8ClampedArray(wlm.length*4/3)
   for(let i = 0, j = 0; i < imgdata.length; i += 4, j += 3){
-    const [r,g,b] = xyz2rgb(xyzLightness(rgb2xyz(dwShift(wlm[j+1],rs)),wlm[j+1][1]))
+    const [r,g,b] = xyz2rgb(xyzLightness(rgb2xyz(dwShift(wlm[j+1],rs)),wlm[j][1]))
     imgdata[i] = r
     imgdata[i+1] = g
     imgdata[i+2] = b
