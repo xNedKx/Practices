@@ -494,7 +494,7 @@ function dl(e){
 
 </script>
 <script> // draw
-let brush = { stroke: '#333', strokeWidth: 3, strokeLinejoin: 'miter', fill: '#fff0' }
+let brush = { stroke: '#333', strokeWidth: 3, strokeLinejoin: 'miter', fill: '#ffffff', fillOpacity: 0 }
 
 function beginTrace(t){
   if(!drawable){return}
@@ -503,7 +503,9 @@ function beginTrace(t){
   g.setAttribute('stroke',brush.stroke)
   g.setAttribute('stroke-width',brush.strokeWidth)
   g.setAttribute('stroke-linejoin',brush.strokeLinejoin)
+  g.setAttribute('stroke-opacity',1)
   g.setAttribute('fill',brush.fill)
+  g.setAttribute('fill-opacity',brush.fillOpacity)
   while(g.lastChild){g.lastChild.remove()}
   preview.appendChild(g)
 }
@@ -562,7 +564,9 @@ function finishTrace(t){
     path.setAttribute('stroke',brush.stroke)
     path.setAttribute('stroke-width',brush.strokeWidth)
     path.setAttribute('stroke-linejoin',brush.strokeLinejoin)
+    path.setAttribute('stroke-opacity',1)
     path.setAttribute('fill',brush.fill)
+    path.setAttribute('fill-opacity',brush.fillOpacity)
     path.trace = t.trace
     t.trace = []
     let g = preview.querySelector('#trace')
